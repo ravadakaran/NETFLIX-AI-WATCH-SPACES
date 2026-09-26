@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: netflix-ai-watch-spaces
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:ep-damp-fog-b8x2ookd-pooler.c-14.us-east-1.aws.neon.tech}:${DB_PORT:5432}/${DB_NAME:neondb}${DB_PARAMS:?sslmode=require}
+    username: ${DB_USER:neondb_owner}
+    password: ${DB_PASSWORD:npg_6LheBgIqdOm2}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: ${SERVER_PORT:8081}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    expirationMs: ${JWT_EXPIRATION_MS:86400000}
+    refreshExpirationMs: ${JWT_REFRESH_EXPIRATION_MS:604800000}
