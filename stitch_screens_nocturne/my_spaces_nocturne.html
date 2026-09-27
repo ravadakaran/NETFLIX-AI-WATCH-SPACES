@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface-variant": "#323441",
+          "surface-bright": "#363846",
+          "inverse-on-surface": "#2d303d",
+          "surface-container": "#141a33",
+          "on-secondary-fixed": "#23005c",
+          "outline": "#8c909f",
+          "secondary-fixed-dim": "#d0bcff",
+          "surface": "#050712",
+          "primary-fixed-dim": "#adc6ff",
+          "primary": "#adc6ff",
+          "on-secondary-fixed-variant": "#5516be",
+          "on-error": "#690005",
+          "on-tertiary-container": "#570032",
+          "surface-container-highest": "#1c244b",
+          "surface-tint": "#adc6ff",
+          "surface-container-lowest": "#050712",
+          "error-container": "#93000a",
+          "outline-variant": "#222c54",
+          "tertiary-fixed": "#ffd9e4",
+          "on-background": "#e0e1f2",
+          "surface-container-high": "#182042",
+          "surface-container-low": "#0b1026",
+          "inverse-primary": "#005ac2",
+          "on-primary-fixed": "#001a42",
+          "secondary-container": "#571bc1",
+          "background": "#050712",
+          "primary-container": "#3b82f6",
+          "on-primary-container": "#ffffff",
+          "tertiary-container": "#f751a1",
+          "on-surface-variant": "#9ba3c4",
+          "inverse-surface": "#e0e1f2",
+          "on-secondary-container": "#c4abff",
+          "on-primary-fixed-variant": "#004395",
+          "on-surface": "#e0e1f2",
+          "on-tertiary-fixed": "#3e0022",
+          "primary-fixed": "#d8e2ff",
+          "secondary": "#a78bfa",
+          "on-secondary": "#3c0091",
+          "on-tertiary-fixed-variant": "#8c0053",
+          "tertiary": "#f472b6",
+          "error": "#ffb4ab",
+          "on-tertiary": "#640039",
+          "surface-dim": "#050712",
+          "secondary-fixed": "#e9ddff",
+          "on-primary": "#002e6a",
+          "tertiary-fixed-dim": "#ffb0cd",
+          "on-error-container": "#ffdad6"
+        },
+        borderRadius: {
+          "DEFAULT": "1rem",
+          "lg": "2rem",
+          "xl": "3rem",
+          "full": "9999px"
+        },
+        spacing: {
+          "margin-mobile": "1.25rem",
+          "gutter-mobile": "1rem",
+          "gutter": "1.5rem",
+          "margin": "3rem",
+          "space-lg": "1.5rem",
+          "space-sm": "0.5rem",
+          "space-md": "1rem",
+          "space-xl": "2.5rem",
+          "space-xs": "0.25rem"
+        },
+        fontFamily: {
+          "headline-xl-mobile": ["Geist"],
+          "display-hero-mobile": ["Geist"],
+          "display-hero": ["Geist"],
+          "headline-lg-mobile": ["Geist"],
+          "headline-md": ["Geist"],
+          "headline-lg": ["Geist"],
+          "title-sm": ["Geist"],
+          "body-sm": ["Geist"],
+          "body-md": ["Geist"],
+          "label-caps": ["Geist"],
+          "label-md": ["Geist"],
+          "headline-xl": ["Geist"],
+          "body-lg": ["Geist"],
+          "label-sm": ["Geist"],
+          "display-lg": ["Geist"],
+          "headline-sm": ["Geist"],
+          "title-md": ["Geist"]
+        }
+      }
+    }
+  }
+</script></head><body class="bg-[#050712] font-body-md text-on-surface min-h-screen selection:bg-[#3b82f6]/40 selection:text-white"><header class="fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-[#050712]/80 backdrop-blur-2xl border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"><div class="h-20 w-full px-margin-mobile md:px-gutter lg:px-margin flex items-center justify-between"><div class="flex items-center gap-3"><div class="h-9 w-auto flex items-center"><svg class="h-9 w-auto" fill="none" viewbox="0 0 180 44" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient id="ws-cosmic-glow-hdr" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#3B82F6"></stop>
+<stop offset="50%" stop-color="#8B5CF6"></stop>
+<stop offset="100%" stop-color="#EC4899"></stop>
+</lineargradient>
+<filter height="140%" id="glow-blur-hdr" width="140%" x="-20%" y="-20%">
+<fegaussianblur result="blur" stddeviation="2"></fegaussianblur>
+<fecomposite in="SourceGraphic" in2="blur" operator="over"></fecomposite>
+</filter>
+</defs>
+<g transform="translate(4, 6)">
+<rect fill="#0D1535" height="32" rx="10" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" width="32"></rect>
+<path d="M12 11L21 16L12 21V11Z" fill="url(#ws-cosmic-glow-hdr)" filter="url(#glow-blur-hdr)"></path>
+<circle cx="23" cy="11" fill="#38BDF8" r="2.5"></circle>
+<circle cx="23" cy="21" fill="#EC4899" r="2.5"></circle>
+</g>
+<text fill="#FFFFFF" font-family="Geist, sans-serif" font-size="14.5" font-weight="800" letter-spacing="0.16em" x="46" y="23">WATCH</text>
+<text fill="#F472B6" font-family="Geist, sans-serif" font-size="14.5" font-weight="400" letter-spacing="0.2em" x="110" y="23">SPACES</text>
+<text fill="#858AA3" font-family="Geist, sans-serif" font-size="6.5" font-weight="600" letter-spacing="0.24em" x="46" y="33">SYNCHRONIZED CINEMA</text>
+</svg></div></div><nav class="hidden md:flex items-center gap-space-sm lg:gap-space-md" data-active-classes="text-white font-label-md font-semibold tracking-[0.14em] px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 border border-purple-500/40 shadow-[0_0_16px_rgba(139,92,246,0.25)]"><a class="font-label-md text-[13px] tracking-[0.14em] text-on-surface-variant hover:text-white px-3 py-1.5 rounded-full transition-colors duration-300 uppercase" data-path="home" href="#">Home</a><a class="font-label-md text-[13px] tracking-[0.14em] text-on-surface-variant hover:text-white px-3 py-1.5 rounded-full transition-colors duration-300 uppercase" data-path="discover" href="#">Discover</a><a aria-current="page" class="font-label-md text-[13px] tracking-[0.14em] text-white font-semibold px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-pink-600/30 border border-purple-400/40 shadow-[0_0_20px_rgba(168,85,247,0.35)] uppercase transition-all duration-300" data-path="my-spaces" href="#">My Spaces</a><a class="font-label-md text-[13px] tracking-[0.14em] text-on-surface-variant hover:text-white px-3 py-1.5 rounded-full transition-colors duration-300 uppercase" data-path="live-theater" href="#">Live Theater</a></nav><div class="flex items-center gap-space-md"><button class="text-on-surface-variant hover:text-white transition-colors duration-200 flex items-center justify-center p-2 rounded-full hover:bg-white/5" type="button"><span class="material-symbols-outlined text-[20px]">search</span></button><button class="text-on-surface-variant hover:text-white transition-colors duration-200 flex items-center justify-center p-2 rounded-full hover:bg-white/5 relative" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span></button><div class="relative flex items-center justify-center p-[2px] rounded-full bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 shadow-[0_0_16px_rgba(139,92,246,0.4)]"><img alt="Profile" class="w-8 h-8 rounded-full object-cover border border-[#050712]" src="https://lh3.googleusercontent.com/aida/AEtjO1UJ8sWrZGIYN4nVCScgMHlh5H90oA2T163Hm2la7bfz6PG5TMJfF3o09YMdP0Kmi5jpS6WO9p4rCnqNomYRzQqIOiJC6gPbuwP5P0HaIJciRoYgVboErSTo7swPyPmvzZhoF2AP_2Mk8mbxaVtbx4NE8Zg72dyyB6MjJU30kpqMseq1yFnSlwWrPLQs2uit5xJGmbgGkovLjI3PGgcYAr0l010c9273IR5ilEgSODXu78G-8xWU3mTenXeH"/></div></div></div></header><main class="w-full pt-20 bg-[#050712] relative overflow-hidden"><div class="flex flex-col w-full">
+<!-- PAGE HEADER -->
+<section class="w-full px-margin-mobile md:px-gutter lg:px-margin pt-[60px] pb-8 relative overflow-hidden">
+<!-- Nocturne Luminary Atmospheric Blooms -->
+<div class="absolute -top-32 -left-20 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[150px] pointer-events-none -z-10"></div>
+<div class="absolute top-10 right-1/4 w-[450px] h-[450px] bg-purple-600/15 rounded-full blur-[160px] pointer-events-none -z-10"></div>
+<div class="absolute top-40 right-10 w-[350px] h-[350px] bg-pink-500/10 rounded-full blur-[140px] pointer-events-none -z-10"></div>
+<div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-space-lg">
+<div class="max-w-4xl">
+<div class="flex items-center gap-space-xs mb-space-sm">
+<span class="w-2 h-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-400 shadow-[0_0_10px_#38bdf8]"></span>
+<span class="font-label-sm text-xs tracking-[0.22em] uppercase font-semibold bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">PERSONAL VAULT &amp; ARCHIVE</span>
+</div>
+<h1 class="font-headline-xl text-4xl md:text-5xl lg:text-6xl text-white font-semibold tracking-[-0.03em] leading-tight mb-space-md">
+          Your Watch Spaces<span class="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-[#9ba3c4] max-w-2xl font-light leading-relaxed">
+          Your private cinema rooms, shared watchlists, and synchronized circles—calibrated for master acoustics and pristine theater fidelity.
+        </p>
+</div>
+<!-- Action Triggers -->
+<div class="flex items-center gap-space-sm flex-wrap self-start lg:self-end">
+<button class="group relative px-6 py-3.5 rounded-full bg-gradient-to-r from-blue-600 via-violet-600 to-pink-600 text-white font-label-md text-xs tracking-[0.16em] uppercase font-semibold transition-all duration-300 shadow-[0_0_30px_rgba(139,92,246,0.45)] hover:shadow-[0_0_45px_rgba(236,72,153,0.65)] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-space-xs" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Create New Space</span>
+</button>
+<button class="px-6 py-3.5 rounded-full bg-[#0D1535]/80 hover:bg-[#141d47] text-white border border-white/10 font-label-md text-xs tracking-[0.16em] uppercase font-semibold backdrop-blur-xl transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-white/20 flex items-center gap-space-xs" type="button">
+<span class="material-symbols-outlined text-[18px] text-blue-300">dialpad</span>
+<span>Join with Invite Code</span>
+</button>
+</div>
+</div>
+</section>
+<!-- SECTION 1: CURRENTLY ACTIVE ROOMS (IMMERSIVE CINEMATIC PORTALS) -->
+<section class="w-full px-margin-mobile md:px-gutter lg:px-margin pt-[90px]">
+<div class="flex items-center justify-between mb-space-lg">
+<div class="flex items-center gap-space-sm">
+<div class="relative flex items-center justify-center w-3 h-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_12px_#22d3ee]"></span>
+</div>
+<span class="font-label-md text-xs tracking-[0.18em] uppercase font-semibold text-white">CURRENTLY STREAMING • LIVE SYNC</span>
+</div>
+<span class="font-label-sm text-xs uppercase tracking-[0.18em] px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300">2 Screenings Synchronized</span>
+</div>
+<!-- Cinematic Widescreen Duo -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- Portal 1: The Dune Chronicles -->
+<article class="group relative w-full aspect-[16/9] rounded-2xl overflow-hidden bg-[#0A0F28]/85 border border-white/10 shadow-2xl flex flex-col justify-end p-space-md md:p-space-lg transition-transform duration-700 hover:scale-[1.015]">
+<!-- Full-bleed Backdrop Image -->
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="Ultra-wide cinematic still of an epic golden desert with massive rippling dunes, a solitary figure cloaked in dark fabric facing a colossal spice harvester on the horizon under a hazy twin-sun sky, moody volumetric dust particles, shot on IMAX 70mm, warm amber and obsidian shadow tones." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAO1giF3EWuSUeLrQWGIFSYGN5l78D-bOnTEicZpdyZJv_tzj96li4F7yIp84u1fIbLWIOrYs5OrMq90lYVb6q6ZoDehG_G9OnmjEcqEjjeDYAjOQeS5lBRFyDQ0WVVWow1eV-zKkyEAtwwyXjzVKjt5BupHVZTsPP5N8I-XX4usGMpu1cfJQoyl7XLjiqFH_08QuEr33FN23gdmJzRHkaiToaAAIXidtnCw7JArEwh1Eijp9tLqTJVIg')">
+</div>
+<!-- Quadratic Atmospheric Scrim Gradient in midnight navy -->
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-[#080D24]/70 to-transparent pointer-events-none"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-[#050712]/85 via-transparent to-transparent pointer-events-none"></div>
+<!-- Specular Glass Accent Rim -->
+<div class="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400/30 to-pink-500/20"></div>
+<!-- Top Status Bar Inside Card -->
+<div class="absolute top-space-md left-space-md right-space-md flex items-center justify-between pointer-events-none">
+<div class="flex items-center gap-space-xs px-3 py-1 rounded-full bg-[#080D24]/85 border border-white/10 backdrop-blur-md">
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
+<span class="font-label-sm text-[11px] text-white uppercase tracking-[0.14em] font-semibold">IMAX 4K HDR • ATMOS</span>
+</div>
+<span class="font-label-sm text-[11px] text-blue-200 uppercase tracking-[0.18em] px-3 py-1 rounded-full bg-[#080D24]/80 border border-white/10 backdrop-blur-md">
+            Private Vault #08
+          </span>
+</div>
+<!-- Foreground Content Block -->
+<div class="relative z-10 flex flex-col gap-space-sm">
+<div class="flex items-center gap-space-xs text-purple-300 font-label-sm text-xs uppercase tracking-[0.16em]">
+<span class="material-symbols-outlined text-[15px]">pause_circle</span>
+<span>Paused at 01:14:02 • Spatial Voice Active</span>
+</div>
+<h2 class="font-headline-lg text-2xl md:text-3xl text-white font-semibold tracking-tight drop-shadow-md">
+            The Dune Chronicles
+          </h2>
+<p class="font-body-md text-sm text-[#9ba3c4] line-clamp-1 max-w-lg">
+            Dune: Part Two • Directed by Denis Villeneuve • Master Sync Track A
+          </p>
+<div class="pt-space-xs flex flex-wrap items-center justify-between gap-space-md">
+<!-- Friend Avatars Lobby -->
+<div class="flex items-center gap-space-xs">
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full object-cover ring-2 ring-[#080D24]" data-alt="Close-up portrait of a chic creative director woman with sleek minimal styling and dark moody lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMVNAbeuW3WGB4zXqhgB-ImolL8T-OuqrrSPiBQaxZoDVVmAYjbouXCtU33tNRAxSZfE9F_nts9iI0mrrcZupXf2o3btY_-7MeKOuKhh4h8m7aMMeMwYoX3ZWH5QQgV8DogFObc5r4XX-XeHGhi9rnvTJy1_KzpCDqc2fiqn_7MTTVnUVQeDUZ3N3_FOln3qfFt5_vVdl-LiRNaxjudHFFMqxi1VrUDSRD7oaw-dBzHmjwCWO9hr4iwQ"/>
+<img class="w-8 h-8 rounded-full object-cover ring-2 ring-[#080D24]" data-alt="Portrait of an architect man wearing architectural glasses with warm golden rim light in a dark room" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzcsvggoC7PO_2iFNLyUulVvpFFRETatLvUd9DJvVA216gvBhYYWmmdatpJIkWYfcHWdCN-JGqmI6djqL5-8viHfpmbj5GG-tzAdA18-ejlEyiTPW8Y6p8liHE08XGymqdxM7wSIGiMeK6v3BgxrsKlsWLX6YhvLGC4VRxYuscc5NIL05uUY62tnKBciE35zJUEJbGD40bar0N-1zon0jDKzCdr4CFcVFjPBbfYNwAV_y_R7Fqifjp4w"/>
+<img class="w-8 h-8 rounded-full object-cover ring-2 ring-[#080D24]" data-alt="Cinematic portrait of a young sound engineer with headphones glowing in subtle red studio light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgprpdA156LCOVTMX9g1xbBfn0YxaH0Z1-jpuZx35dFBUZn0P-bkD0Ovk3lUULhqZ3rBGQpMK1rRI9GlVDQs0X5Vvxj1mWDEGQWi1dQD0AXYFboaA8mrloB5gxxrLeLhlGmGtDqGxu6PLe_NLNFwFjt1hJZBEFZzna34mD9_1Tp4HCe5FtNsjPPxxSeOcdL-0kX0g31dDEuNCTOIjjeYhQyW2kJaSI1dPdJp0Jv1qj1RLpu8vk0ilupw"/>
+<img class="w-8 h-8 rounded-full object-cover ring-2 ring-[#080D24]" data-alt="Moody ambient studio portrait of a woman looking sideways with soft rim lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWQMs4YoQBDkawAchctZc9fAb4DI9J8_X_JeAJjTDkwvWvACbCHHd-9lPf-VaEoO-6l0l2ehQRt08P1Cj32UsEOQofAG1YQNhG-c-mjQcbEwCIX0zJSq94Wroh1kPb9ar9WYt_eqqXuFPjV9QM2pixKnUDsup9NkdMYOgSgx6TGm_x530HRImfIhAeP5BgozgambSSCbMqhKbWfIM-_8HLaPkJQ7aoPcqIng-OFsOtB2QJpTQdW3jx4g"/>
+<div class="w-8 h-8 rounded-full bg-[#1C244B] border border-white/10 flex items-center justify-center text-white font-label-sm text-xs ring-2 ring-[#080D24]">
+                  +1
+                </div>
+</div>
+<span class="font-label-sm text-xs text-[#9ba3c4] tracking-[0.14em] uppercase ml-1">5 in Room</span>
+</div>
+<!-- Nocturne Luminary Rejoin Room CTA -->
+<button class="px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-600 via-violet-600 to-pink-600 text-white font-label-md text-xs tracking-[0.14em] uppercase font-semibold hover:opacity-95 transition-all duration-300 shadow-[0_0_24px_rgba(139,92,246,0.5)] flex items-center gap-space-xs" type="button">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span>Rejoin Room</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Portal 2: Friday Anime Night -->
+<article class="group relative w-full aspect-[16/9] rounded-2xl overflow-hidden bg-[#0A0F28]/85 border border-white/10 shadow-2xl flex flex-col justify-end p-space-md md:p-space-lg transition-transform duration-700 hover:scale-[1.015]">
+<!-- Full-bleed Backdrop Image -->
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="High-contrast anime battle sequence key-frame set in a rain-slicked Tokyo metropolis at night, brilliant electric blue cursed energy sparks colliding against deep crimson flashes, reflective asphalt, shattered glass shards suspended in slow motion, cinematic animation masterwork aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDnzJBYp6UWAXvd4t9BZsq0fpg0rQoE9aprlHqwkEAlH-YyTp0rd9YVoYWJ1GcX1FCu2ph0ig0SCr9TJzJZHLLafrR5we24RZUMIT2cmL_cKXbD7mRDr_BhXrEPcsYEqzxMVISpp_AOEWolk1k4BuLML47UtxGA5r5QJXdzy363OClr9vUrK7Kvb9FDMP9tvEqxJwkQIaqtleuZqtFVKvtK2zXoOQRviojIp-uXEXMt71frjtQnD9YwqA')">
+</div>
+<!-- Quadratic Atmospheric Scrim Gradient -->
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-[#080D24]/70 to-transparent pointer-events-none"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-[#050712]/85 via-transparent to-transparent pointer-events-none"></div>
+<!-- Specular Glass Rim -->
+<div class="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/30 to-purple-500/20"></div>
+<!-- Top Status Bar Inside Card -->
+<div class="absolute top-space-md left-space-md right-space-md flex items-center justify-between pointer-events-none">
+<div class="flex items-center gap-space-xs px-3 py-1 rounded-full bg-[#080D24]/85 border border-white/10 backdrop-blur-md">
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
+<span class="font-label-sm text-[11px] text-white uppercase tracking-[0.14em] font-semibold">LIVE STREAMING</span>
+</div>
+<span class="font-label-sm text-[11px] text-pink-200 uppercase tracking-[0.18em] px-3 py-1 rounded-full bg-[#080D24]/80 border border-white/10 backdrop-blur-md">
+            Circle: Shibuya Arc
+          </span>
+</div>
+<!-- Foreground Content Block -->
+<div class="relative z-10 flex flex-col gap-space-sm">
+<div class="flex items-center gap-space-xs text-cyan-300 font-label-sm text-xs uppercase tracking-[0.16em]">
+<span class="material-symbols-outlined text-[15px] animate-pulse">sensors</span>
+<span>Now Streaming • 3 friends watching • AI Subtitle Sync On</span>
+</div>
+<h2 class="font-headline-lg text-2xl md:text-3xl text-white font-semibold tracking-tight drop-shadow-md">
+            Friday Anime Night
+          </h2>
+<p class="font-body-md text-sm text-[#9ba3c4] line-clamp-1 max-w-lg">
+            Jujutsu Kaisen Season 2 • Episode 17 • Ultra-fidelity Remaster
+          </p>
+<div class="pt-space-xs flex flex-wrap items-center justify-between gap-space-md">
+<!-- Friend Avatars Lobby -->
+<div class="flex items-center gap-space-xs">
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full object-cover ring-2 ring-[#080D24]" data-alt="Portrait of an animator with vibrant lighting reflections on face in a dimly lit studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsDtE9ePgE8jGnYypZ2HylAXnFvh0mw-tHZXHcbGSZfVRh1plL9Dy79lf5odEY5gSWdMN0XR3zjxeq0YWrgXdprVtgrdaMxhpcVEkzlx66f4K8NQ33ZE120Rlfn4ZtgKKQqNZsUyjuPhmokjdYoBNkaf7lxHXOe1wdA2xF1AiFTPH8YaGKFiEZiA-Ia6xSwl_s1MMs9aWRZSuv-U3fA8dipkbJcCnfn8sZjxgr0gmszrvcE5LddQIfIQ"/>
+<img class="w-8 h-8 rounded-full object-cover ring-2 ring-[#080D24]" data-alt="Studio portrait of a film critic woman smiling subtly with cool cyan and magenta backlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQRY5XNJODjey61qK4LMpwIGth547wzetvcVDePWbsouWlZd_ysW8EpiJsPNKpVRP6KSeBaxJhpKT5uW8rLiTFeD9G6CedsNd_jsQSgZoU5E9vY_L7tW7OM69w1-en_qXAvKhz58PaIgD_FTjrRaX1qkvWUKMR_6COmS33CLOHLFaNIsCz8AlVcR8-xWZ7RfyoLEy0KSRj5mRfyn1bBUEY6PuRk9krJDG5UBIMwWS4PylKxVGQsNZmA"/>
+<img class="w-8 h-8 rounded-full object-cover ring-2 ring-[#080D24]" data-alt="Close up profile of a male video editor illuminated by vibrant neon monitor screen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbJIZH50F1bD6wPsQc1D6im6YqU0RR2XYJoTXH9N5XlCTGLj1HvtlO5bk96EBYhSQT5cbXUcnD_ockNm-NkoQmsk-j02GYQ8qqd7rwLA5I3nw5gL6_5TX2gGCFRgxQ8vFryC__CYQu6qHAL7D3Q7noKDHwoyK9h_2F_z4dS9ISfimUpGt1RKCz1_7hph-tVmIh3HtTJBsViy4PZwYqMyB2htivjtzlvE3UE5MSjFBen_q7z7IUX4CGHg"/>
+</div>
+<span class="font-label-sm text-xs text-[#9ba3c4] tracking-[0.14em] uppercase ml-1">3 Watching Now</span>
+</div>
+<!-- Enter Theater CTA -->
+<button class="px-5 py-2.5 rounded-full bg-white text-[#050712] font-label-md text-xs tracking-[0.14em] uppercase font-semibold hover:bg-slate-200 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)] flex items-center gap-space-xs" type="button">
+<span class="material-symbols-outlined text-[18px]">meeting_room</span>
+<span>Enter Theater</span>
+</button>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- SECTION 2: SLATED PREMIERES & WATCH PARTIES -->
+<section class="w-full px-margin-mobile md:px-gutter lg:px-margin pt-[110px]">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-sm mb-space-lg">
+<div>
+<span class="font-label-sm text-xs uppercase tracking-[0.2em] text-purple-300 font-semibold">CALIBRATED CALENDAR</span>
+<h2 class="font-headline-lg text-2xl md:text-3xl text-white font-semibold tracking-tight mt-1">
+          Scheduled Watch Parties
+        </h2>
+</div>
+<p class="font-body-md text-sm text-[#9ba3c4] max-w-md">
+        Synchronizations confirmed across time zones. Pre-roll theater lobbies open 15 minutes prior to curtain call.
+      </p>
+</div>
+<!-- 3 Wide Horizon Cards in Midnight Navy Glass -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Party 1: Succession -->
+<article class="relative flex flex-col justify-between rounded-2xl bg-[#0A0F28]/75 border border-white/10 hover:border-purple-400/30 hover:bg-[#0D1535]/85 transition-all duration-500 p-space-md overflow-hidden group shadow-xl">
+<div class="h-44 w-full rounded-xl overflow-hidden relative mb-space-md border border-white/5">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="High-end penthouse boardroom overlooking the Manhattan skyline at twilight, sleek glass architecture, tailored bespoke wool suits in silhouette, cool corporate midnight blue and steel gray tones, cinematic prestige television lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA3c5W4JL7BEtFzNWtJSL1xUBerVxheQD4i2Pj_dd4dw9UdcbpIjcsfrs61tBYHRIoIb0RH1ZucEoU8zBAoevia0WA0Mab0A2dVsCeRdeksU6CHX3NptTyv8fGZxv8qVUqhG4lxw15uFAzN_D1ip_M8XULxqvM1z3pw5jeDKU9YLQEbv7YCQZyhEAlIgReQSM3icxZQkxVAVk_UMRAhksshb22YYtGuHhJ2ONVfJnAAUnffdxlDL1SQcw')">
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0A0F28] via-transparent to-transparent"></div>
+<div class="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#050712]/80 border border-white/10 backdrop-blur-md font-label-sm text-[11px] uppercase text-cyan-300 tracking-[0.14em] font-semibold">
+            TONIGHT • 21:00 EST
+          </div>
+</div>
+<div class="flex flex-col flex-grow">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="font-label-sm text-[11px] tracking-[0.18em] text-[#9ba3c4] uppercase">PRESTIGE DRAMA SYNDICATE</span>
+</div>
+<h3 class="font-headline-sm text-lg text-white font-medium tracking-tight mb-2">
+            Succession: Series Finale
+          </h3>
+<p class="font-body-md text-sm text-[#9ba3c4] line-clamp-2 mb-space-md">
+            Rewatch and acoustic post-mortem of "With Open Eyes". Master uncompressed 5.1 vocal track.
+          </p>
+</div>
+<div class="pt-space-sm mt-auto">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center -space-x-1.5">
+<img class="w-6 h-6 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Portrait of a male screenwriter in his 30s with soft directional lamp light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQtAy2Rerh7Dw3oWIT2sPVBz0j_WAPW0ZP86AAeZjuDGKbIDYXV4bExpDpEPtbMEEVcXvEkWvnJ7pCa0npMYdRKTAwwo7aMRj8YN2J9duwuK5ha9WFnTo2Jr963DCGPTEi2_IpSdrmWPTImqe9hi9WZtjrOA0a9GOkQwBOYAOkkvslHW6Jq5ZWhIFhfwTsNmUhqP31-dGIW7yk1klw3f0j83GbeEuhxflmupVKazarX6ToOCyWjos9Wg"/>
+<img class="w-6 h-6 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Portrait of a female film programmer in studio rim lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOOucKgwNnLnRuF3v9VIirqWv8r19wNKREDqfeRMvR1aHBi5WtIvI-tJ_nqEG7tX68E-W7EWE27KP3KJC5R4kPxJkF3sC4yt_jU6Qzfqcks2mRfWvUi0kC1YT5I_835_LvMCfRiXsFJ3eBmPwNVVwsQ5meCJoSTk3WHjU8JCqcSCicyfoCgeRgozNipVOHwv-761IYYwueKU5mqXzO-SqJ9Q-FCqb1ZBN9jaMvAWFVWQnIvlzsbpR8gg"/>
+<img class="w-6 h-6 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Minimalist portrait of an art director under dim warm light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBVdeoE0BdRChyM1x7rpT8OVdnbMsjvl4243E1zzIdybOgP5_YSWLkiZO2GweDU2nSVNT1RWfD69TEwWwritr1rVZepQgaCra02mJqRUiTHp0Klt2Igv5ZpMNA3PCdW_LdVrZ8YfLfpvXXmVa4of87XOKE5bmw5YufFKeBsSxMJF9o7RLmGFFpwmZkdRPnE-rPyH2qheR-dHubwONDtgbi8ATpo4UVQ7o_XDKLnXri5KsECZrtVmkmIA"/>
+<span class="font-label-sm text-[11px] text-[#9ba3c4] uppercase pl-2 tracking-widest">+6 RSVP'd</span>
+</div>
+<span class="px-2.5 py-1 rounded-full text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 font-label-sm text-[11px] uppercase tracking-wider font-semibold">RSVP Confirmed</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="w-full py-2.5 rounded-full bg-[#141A33] hover:bg-[#1E274E] text-white border border-white/10 font-label-md text-xs tracking-[0.14em] uppercase font-semibold transition-colors duration-200" type="button">
+              Room Details
+            </button>
+<button class="p-2.5 rounded-full bg-[#141A33] hover:bg-[#1E274E] text-[#9ba3c4] hover:text-white border border-white/10 transition-colors" title="Sync Calendar" type="button">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Party 2: Severance S2 -->
+<article class="relative flex flex-col justify-between rounded-2xl bg-[#0A0F28]/75 border border-white/10 hover:border-pink-400/30 hover:bg-[#0D1535]/85 transition-all duration-500 p-space-md overflow-hidden group shadow-xl">
+<div class="h-44 w-full rounded-xl overflow-hidden relative mb-space-md border border-white/5">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Sterile endless fluorescent subterranean office corridor with clinical white walls and dark green carpet, symmetry perspective, surreal corporate mystery atmosphere, eerie cold luminescent lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAczj-AFbu7Oemtipbvd1-6f1BMMaGRz1mlvTqwaqgogPZuy7cd2_H7eAMvt4qE2vSMJLNfrMzaJ3AB6hTWT-ccVVpkrmlXr_fcJ5GKAKyDuW9hio4bERB6k7ZWHd1GCHgIDk3EjV4dCFM4GO8HN36HixhnXcIeJUmD_kLDQfgNHn8BwpzBndMRqPl2Sw1DxpNzMxkZoz8cGMzyEHGuQfH-8Zx4s2ye8usQDFe7V30U3mvNzujuvWIx3w')">
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0A0F28] via-transparent to-transparent"></div>
+<div class="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#050712]/80 border border-white/10 backdrop-blur-md font-label-sm text-[11px] uppercase text-purple-300 tracking-[0.14em] font-semibold">
+            FRI • JAN 17 • 20:00 PST
+          </div>
+</div>
+<div class="flex flex-col flex-grow">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="font-label-sm text-[11px] tracking-[0.18em] text-[#9ba3c4] uppercase">MYSTERY COLLECTIVE</span>
+</div>
+<h3 class="font-headline-sm text-lg text-white font-medium tracking-tight mb-2">
+            Severance Season 2 Premiere
+          </h3>
+<p class="font-body-md text-sm text-[#9ba3c4] line-clamp-2 mb-space-md">
+            World broadcast premiere screening with instant spoiler-isolated chat chambers and theory board sync.
+          </p>
+</div>
+<div class="pt-space-sm mt-auto">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center -space-x-1.5">
+<img class="w-6 h-6 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Portrait of a young tech founder in dark studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYLXkY2OVFBApvcOrKSjpuSn-6zEZWWsarFRYvf6DbIpjktJbZnbAtOj8ZuO-vrbgYsR-Na0LOaWw6bdcTDSraLQ7xNWFXo3bWTTr_5WXFIGhJtl-r_Lfx9-qNIIA1S28MrPUJQYkWBRB0tMxg6TKWG0Hh4sd4uwq45wMU5GqyO7fUoPYIPmOcMuCb6fouNo5F5uKc8NsmoGncfeZb_tAKPZZbD9DeHiPjKpBfgiqIOLMrumoAXKBP9w"/>
+<img class="w-6 h-6 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Portrait of a designer woman smiling softly in low key lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaPzeYboWoA7Qm9JWUOlCXHu34gVPcq9I1ShO5oCjRTSsmDktiSI8GYNocX-PznJQXCo_Rh0QGq3ZyhIao9wLkhzxVBIXR0JdlCnrZxMWA7Xp_M3LLSNTurAcQhTcSCRcX_A7YkLMyoqxLvzRJIAuxqPRxPiOi_4NxwUK-9Rs9hw1lntgiJdB5fCNUpHbicUKog6xpp5sm8NLpZA6g2YEGp-wMp20DD1BsouRICZqgv8iLxcdFsK6YKA"/>
+<span class="font-label-sm text-[11px] text-[#9ba3c4] uppercase pl-2 tracking-widest">+12 RSVP'd</span>
+</div>
+<span class="px-2.5 py-1 rounded-full text-pink-300 bg-pink-950/40 border border-pink-500/30 font-label-sm text-[11px] uppercase tracking-wider font-semibold">Awaiting RSVP</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<!-- Styled with Electric Blue -> Violet -> Pink gradient -->
+<button class="w-full py-2.5 rounded-full bg-gradient-to-r from-blue-600 via-violet-600 to-pink-600 text-white font-label-md text-xs tracking-[0.14em] uppercase font-semibold transition-all duration-200 hover:opacity-95 shadow-[0_0_20px_rgba(139,92,246,0.4)]" type="button">
+              Accept RSVP
+            </button>
+<button class="p-2.5 rounded-full bg-[#141A33] hover:bg-[#1E274E] text-[#9ba3c4] hover:text-white border border-white/10 transition-colors" title="Decline" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Party 3: Studio Ghibli -->
+<article class="relative flex flex-col justify-between rounded-2xl bg-[#0A0F28]/75 border border-white/10 hover:border-blue-400/30 hover:bg-[#0D1535]/85 transition-all duration-500 p-space-md overflow-hidden group shadow-xl">
+<div class="h-44 w-full rounded-xl overflow-hidden relative mb-space-md border border-white/5">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Lush hand-painted cinematic landscape reminiscent of vintage Japanese animation, towering emerald mossy ancient trees, glowing fireflies in twilight, serene river reflecting the violet evening sky, poetic hand-crafted anime aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBdUDgUTN7UFp2VC4yvEpv9zQn4-2hqm5dF9GKgjLJdsHwdi9pxBMg1ZEusHKECUNrmYJihkN7Ts1Ng_52lFE4Ba3c4Ka0U9aZ5FwKo8D05g00JVhcWh4sRoTHMfclP1v1rXyZc9kHMGFwd5PUxwgYZ8c8-F4sge_HIDxZUzO2tgv-n7_WXZgarY1W_7yKvSF03S76C-tRfsx2Zg1y7KnF3kkho3VZkXQYeFIXK_sKEh3RlA2D0RnZ_aw')">
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0A0F28] via-transparent to-transparent"></div>
+<div class="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#050712]/80 border border-white/10 backdrop-blur-md font-label-sm text-[11px] uppercase text-cyan-300 tracking-[0.14em] font-semibold">
+            SUN • JAN 19 • 17:00 JST
+          </div>
+</div>
+<div class="flex flex-col flex-grow">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="font-label-sm text-[11px] tracking-[0.18em] text-[#9ba3c4] uppercase">ARCHIVAL MASTERWORK</span>
+</div>
+<h3 class="font-headline-sm text-lg text-white font-medium tracking-tight mb-2">
+            Ghibli 4K Retrospective
+          </h3>
+<p class="font-body-md text-sm text-[#9ba3c4] line-clamp-2 mb-space-md">
+            Princess Mononoke 35mm film scan recreation. Spatial Joe Hisaishi orchestral track isolation.
+          </p>
+</div>
+<div class="pt-space-sm mt-auto">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center -space-x-1.5">
+<img class="w-6 h-6 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Portrait of an illustrator woman with glasses in a warm amber ambient studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBzDlwDmPifXgaV0fnGuPZ1oK_sSe3OSnRjZ6H5Ia7ESve6b2DLbkR72VpqoY7W0758OtvnMkZ8jP5SgH9DE0QtwLO0wlpQla8LcijIoeGpKYnziJ7UTRARQbLiyYrAOFy0CuaVW9RYbSLhgsTIRy-iRwmmVSSVcnOkhIBfiUCryEGhJtGKO7hq_dnimFR9MxPJBcs-O08mr3_L4fl5_bt3Hxxmh11KnInxglSc9MWxRBBHdP8dUdo3g"/>
+<img class="w-6 h-6 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Portrait of a music composer under purple neon ambient lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdy-Byrq3OyvmHBNgClmhreyKpGQq35igWrYaCjm9PMH2uC0LIKI9g9VgvL0Pzq5149a_01XuMcsRUaS-WKI_kkopojt0PRcautheP4KhcPYIBYhcEPWi361d-aolMUWzHay8yN9lpXjEtzE0YO0Qs5Qs2-Lc5tSFbRfKu0ySPYvfoTkibmEGJCCTX96W1LPbAODMFP-M_8Ad09UTyyWDOy1ea54fC1oDCgLSvMNffydUPiXuxD7Y3Sw"/>
+<img class="w-6 h-6 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Close up face of an animator looking at glowing canvas" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5n_rO6J6IvFU7vwDx1hNqgF0lLjhoaZ9jYUy8ZzicYzLfYsHob6vR0SbuwphcXv0sESHg79mMTtM4il_Tyh1vI4bVPmr4u8bmGnCybzR6DvUnaR8X7Vz9nPybuJNDzR8Q1HrOOaqvodmnQVYtkGRHQTZwUe_gAnHt2F2o10xSENuvUKegUXBYDhoMssqjPm2sQwhbdOKSiANxZ7cJCVQ1G_TqfDZ4lqkunSOqqFQ45HY5OqJMOzTUqw"/>
+<span class="font-label-sm text-[11px] text-[#9ba3c4] uppercase pl-2 tracking-widest">+4 RSVP'd</span>
+</div>
+<span class="px-2.5 py-1 rounded-full text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 font-label-sm text-[11px] uppercase tracking-wider font-semibold">RSVP Confirmed</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="w-full py-2.5 rounded-full bg-[#141A33] hover:bg-[#1E274E] text-white border border-white/10 font-label-md text-xs tracking-[0.14em] uppercase font-semibold transition-colors duration-200" type="button">
+              Room Details
+            </button>
+<button class="p-2.5 rounded-full bg-[#141A33] hover:bg-[#1E274E] text-[#9ba3c4] hover:text-white border border-white/10 transition-colors" title="Sync Calendar" type="button">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+</button>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- SECTION 3: CURATED WATCH CIRCLES & SESSION ARCHIVES -->
+<section class="w-full px-margin-mobile md:px-gutter lg:px-margin pt-[110px] pb-24">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+<!-- LEFT COLUMN: Your Watch Circles -->
+<div class="flex flex-col">
+<div class="flex items-center justify-between mb-space-md">
+<div>
+<span class="font-label-sm text-xs uppercase tracking-[0.2em] text-purple-300 font-semibold">AFFINITY SQUADS</span>
+<h2 class="font-headline-lg text-2xl md:text-3xl text-white font-semibold tracking-tight mt-1">
+              Your Watch Circles
+            </h2>
+</div>
+<button class="text-[#9ba3c4] hover:text-white font-label-sm text-xs tracking-[0.14em] uppercase transition-colors flex items-center gap-1" type="button">
+<span>Explore All</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<div class="flex flex-col gap-space-md">
+<!-- Circle 1: Sci-Fi Enthusiasts -->
+<div class="p-space-md rounded-2xl bg-[#0A0F28]/75 border border-white/10 hover:border-blue-400/30 hover:bg-[#0D1535]/85 transition-all duration-300 relative overflow-hidden group shadow-lg">
+<div class="flex items-start justify-between gap-space-md mb-space-sm">
+<div>
+<div class="flex items-center gap-space-xs mb-1">
+<span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
+<span class="font-label-sm text-[11px] uppercase tracking-[0.16em] text-cyan-300 font-semibold">Primary Collective</span>
+</div>
+<h3 class="font-title-md text-base md:text-lg text-white font-medium">Sci-Fi &amp; Speculative Futures</h3>
+<p class="font-body-md text-sm text-[#9ba3c4]">14 Curators • 86 Synchronized Screenings to date</p>
+</div>
+<!-- Taste Synergy Pill with Graphic Indicator -->
+<div class="flex flex-col items-end">
+<div class="px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 border border-purple-400/30 flex items-center gap-1.5 shadow-[0_0_12px_rgba(168,85,247,0.2)]">
+<span class="material-symbols-outlined text-pink-400 text-[14px]">insights</span>
+<span class="font-label-sm text-[11px] text-purple-200 tracking-wider font-bold">96% SYNERGY</span>
+</div>
+<span class="font-label-sm text-[10px] text-[#9ba3c4] uppercase tracking-widest mt-1">Algorithm Lock</span>
+</div>
+</div>
+<!-- Taste Affinity Sparkline SVG (Violet to Electric Blue) -->
+<div class="w-full bg-[#050712]/70 border border-white/5 rounded-xl p-3 my-2 flex items-center justify-between gap-4">
+<div class="flex flex-col">
+<span class="font-label-sm text-[10px] text-[#9ba3c4] uppercase tracking-wider">Top Common Genre</span>
+<span class="font-body-md text-sm text-white font-medium">Hard Sci-Fi • Dystopian Neo-Noir</span>
+</div>
+<div class="w-36 h-8 flex items-center">
+<svg class="w-full h-full" fill="none" viewbox="0 0 100 24">
+<defs>
+<lineargradient id="circle-spark-1" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#38BDF8"></stop>
+<stop offset="60%" stop-color="#A78BFA"></stop>
+<stop offset="100%" stop-color="#F472B6"></stop>
+</lineargradient>
+</defs>
+<path d="M0,18 Q15,4 30,12 T60,6 T85,16 T100,2" stroke="url(#circle-spark-1)" stroke-linecap="round" stroke-width="2.5"></path>
+</svg>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex -space-x-2">
+<img class="w-7 h-7 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Avatar portrait of an avid movie enthusiast in minimalist portrait lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7XfW4dx1fXEvJxAcDAD60Br572RS6wQsK80tavdb2trUQdPP7U9e5od_7qB4nJFKmFlqT3nwGh7GLQNAbXe0Q7xMDISTZ10X0PzqT8u8WG_wXLKyKXeN1AKj8N7dHLFUVugLvOzH0A-WioSICLTteQhNcjzwrtsUyhppkbBJ708i2N881oUkM2EOpebzLpA6EeA5C-JRrL2XMANA1gtB_G1s7dQ1LjoWCPeSM4OwCY1piwDIZuWq0cg"/>
+<img class="w-7 h-7 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Avatar portrait of a film critic woman with dramatic cinema backlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMxfT8jjVBSa26-8hdLnirH071wi9yA-_HZipAOPcjE18lz0y3qRBZeuHXZFAyBHnvKwI-bvgv4ik6oCCyHDXXY5xwQusNCk2pVvqQJPMYrBw14bDk5ipSoJkXjtEZZOuor1KFpn6h_ZN6CVDtspMlGv9LAYCfMuIRCwtB1t3LxEAlTWNsIt_qRx64a87havnkvd5WoXvbQZPduoG2H2kI38BvKz9lE8LVkDozmJDodJIQjDf6J5nkuQ"/>
+<img class="w-7 h-7 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Avatar portrait of a sound designer in cool studio glow" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSCA30oaY-x4LolZ25Nhb_la-SQdzqQfK1PoDt-kilGBYt0n9L2y89uIT9RsrINDODmXeeRN2YouIH9kW2hRFMPxhyqYFwTYESmbTetJtfBvU3uqAhg2HoAcKvX9i_irYVnlDH6JvMYje5-Qyet0SsdplnRxS_DyLlAmd_DU4rcHV3uR6zVKg08TZB8CNU5GAMw-MeMVbB-ZnMt2jeEspkIjrGyaAsFM4DjYpIJ0NFQqFiM__2EsDdaQ"/>
+<img class="w-7 h-7 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Avatar of an art collector in warm candlelight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOUhm7UxhuBO5qB3-pSOk0J5NbceJdIJZlBdT1zD1NpXPeB0t9iMNtQavkP28uoKWtPXUL9QTdMr8DpfeuHeLt1oMu6_wQDps-PnD4vX0yIvcPy_vnF_7VH1Hkl4h3PLRbUKtBAiBpzTz1iSEoHiQjMCFfm3iKY0GXrr8Hlrs6ulo2TMmFsXY58j2JzfguH8TRL_y3LDUAUOEydYodik-KiMLkR98fDNyA73dvX8ztiWNhNbj2U7kYXw"/>
+</div>
+<button class="font-label-sm text-xs uppercase tracking-[0.16em] text-white hover:text-cyan-300 transition-colors flex items-center gap-1 font-semibold" type="button">
+<span>Open Circle Lobby</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Circle 2: Cinema Classics & Noir -->
+<div class="p-space-md rounded-2xl bg-[#0A0F28]/75 border border-white/10 hover:border-purple-400/30 hover:bg-[#0D1535]/85 transition-all duration-300 relative overflow-hidden group shadow-lg">
+<div class="flex items-start justify-between gap-space-md mb-space-sm">
+<div>
+<div class="flex items-center gap-space-xs mb-1">
+<span class="w-2 h-2 rounded-full bg-pink-400 shadow-[0_0_8px_#f472b6]"></span>
+<span class="font-label-sm text-[11px] uppercase tracking-[0.16em] text-pink-300 font-semibold">Auteur Salon</span>
+</div>
+<h3 class="font-title-md text-base md:text-lg text-white font-medium">Cinema Classics &amp; Noir</h3>
+<p class="font-body-md text-sm text-[#9ba3c4]">8 Cinephiles • Focused on 1940-1979 4K Restorations</p>
+</div>
+<!-- Taste Synergy Pill -->
+<div class="flex flex-col items-end">
+<div class="px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 border border-purple-400/30 flex items-center gap-1.5 shadow-[0_0_12px_rgba(168,85,247,0.2)]">
+<span class="material-symbols-outlined text-pink-400 text-[14px]">insights</span>
+<span class="font-label-sm text-[11px] text-purple-200 tracking-wider font-bold">91% SYNERGY</span>
+</div>
+<span class="font-label-sm text-[10px] text-[#9ba3c4] uppercase tracking-widest mt-1">Algorithm Lock</span>
+</div>
+</div>
+<!-- Taste Affinity Sparkline SVG -->
+<div class="w-full bg-[#050712]/70 border border-white/5 rounded-xl p-3 my-2 flex items-center justify-between gap-4">
+<div class="flex flex-col">
+<span class="font-label-sm text-[10px] text-[#9ba3c4] uppercase tracking-wider">Top Common Genre</span>
+<span class="font-body-md text-sm text-white font-medium">French New Wave • Chiaroscuro Crime</span>
+</div>
+<div class="w-36 h-8 flex items-center">
+<svg class="w-full h-full" fill="none" viewbox="0 0 100 24">
+<defs>
+<lineargradient id="circle-spark-2" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#818CF8"></stop>
+<stop offset="50%" stop-color="#C084FC"></stop>
+<stop offset="100%" stop-color="#F472B6"></stop>
+</lineargradient>
+</defs>
+<path d="M0,12 Q20,20 40,8 T70,14 T100,4" stroke="url(#circle-spark-2)" stroke-linecap="round" stroke-width="2.5"></path>
+</svg>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex -space-x-2">
+<img class="w-7 h-7 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Portrait of vintage cinema professor man in black and white lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB01um7gUeL0d8GSCgYhfEq4CA_vao2hlSMuxdrZa55m2RqN00UkM2o8U-xrdTBrhn_tnPNanAnF8w-nU3uxYs8Mna_d79yzxIBBEvUEc9wQBBO3CkAzo2Yw_kTGLg1-3MtK8bpjraQzsAIb14VYYW_MPnVkvmrUFsO-HMQPiJhFusdRKFrnyJHEpj7cfEZbZQKONFfJaGWNmiyr-40bv9Y3WJHbZ6kZj6rJAHMB6Ol_8sUzchbwsDQHA"/>
+<img class="w-7 h-7 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Portrait of french cinema enthusiast woman with soft silhouette lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDN1k1JZ09FPe535cspyo6-boojwvV2HOZcTy-3Wan377jmeWz6Z-74et0oNf8rMK8TIYZm05_JWaReM8nqv5050eC8t4i_oUvpF5CC7LqYDteiy5YbLmDS3frrVzclr8jgv4I57ptpcj08YOs2cQ6lKT88F93a36k-SwQNm0hMBzSVyk8Bx4vlOvK_IVopY1KSDDPPgBWx4gchxZbQg2pdj59hhsr-WZQHxL9ZdVHKyTezq2r2qVWFcA"/>
+<img class="w-7 h-7 rounded-full object-cover ring-1 ring-[#0A0F28]" data-alt="Cinematic close-up portrait of film editor looking contemplative" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvmrwQ2NjIyqHFxW13EJyQdhMBA1T6kwKTD96xpF1vkVbfF3G2jrTbavxiOrFTDy1H7BaRLSfE5qJYM8GnGppkvUOQzF07f4X4dCDNpx62F41wnw9S3fDfS_DtvexkiWGR2GytTibbbxDKkZQYIRdAkjiRiCinLBbvwC9on9IbJAur32fJPjCwnTqIdTv1zrb1nUbUlmdQLLdb4opWmokhdP-Ito3SC2oSKAKfGbOKkn_5dgP2JCPNog"/>
+</div>
+<button class="font-label-sm text-xs uppercase tracking-[0.16em] text-white hover:text-pink-300 transition-colors flex items-center gap-1 font-semibold" type="button">
+<span>Open Circle Lobby</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Saved Session Recaps & Debriefs -->
+<div class="flex flex-col">
+<div class="flex items-center justify-between mb-space-md">
+<div>
+<span class="font-label-sm text-xs uppercase tracking-[0.2em] text-purple-300 font-semibold">POST-SCREENING INTELLIGENCE</span>
+<h2 class="font-headline-lg text-2xl md:text-3xl text-white font-semibold tracking-tight mt-1">
+              Session Debriefs
+            </h2>
+</div>
+<span class="font-label-sm text-xs uppercase tracking-[0.18em] px-3 py-1 rounded-full bg-purple-500/10 border border-purple-400/20 text-purple-300">AI-Synthesized</span>
+</div>
+<div class="flex flex-col gap-space-md">
+<!-- Recap 1: Oppenheimer -->
+<div class="p-space-md rounded-2xl bg-[#0A0F28]/75 border border-white/10 hover:border-purple-400/30 hover:bg-[#0D1535]/85 transition-all duration-300 relative overflow-hidden group shadow-lg flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-sm text-[11px] uppercase tracking-[0.18em] text-[#9ba3c4]">SCREENED YESTERDAY • 03:09:44 RUNTIME</span>
+<span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 font-label-sm text-[11px] uppercase tracking-wider font-semibold">Dolby Vision Master</span>
+</div>
+<h3 class="font-title-md text-base md:text-lg text-white font-medium mb-1">
+                Oppenheimer: Extended Architecture Session
+              </h3>
+<!-- AI Synthesis Quote Card -->
+<div class="p-space-sm rounded-xl bg-[#050712]/80 border-l-2 border-purple-500 my-space-xs">
+<div class="flex items-center gap-1.5 text-pink-300 font-label-sm text-xs uppercase tracking-wider mb-1 font-semibold">
+<span class="material-symbols-outlined text-[15px]">auto_awesome</span>
+<span>AI Collective Acoustic &amp; Chat Synthesis</span>
+</div>
+<p class="font-body-md text-sm text-[#e0e1f2] italic font-light">
+                  "Group dialogue peaked in intensity during the Trinity Test countdown sequence (01:54:10). Audience pulse metric sustained 114 bpm through the subsequent dead silence shockwave."
+                </p>
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-xs mt-space-xs">
+<span class="font-label-sm text-xs text-[#9ba3c4] uppercase tracking-wider">7 Participants • 34 Audio Clips Saved</span>
+<button class="px-3.5 py-1.5 rounded-full bg-[#141A33] hover:bg-[#1E274E] text-white border border-white/10 font-label-sm text-xs uppercase tracking-[0.14em] font-semibold transition-all flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[15px]">replay</span>
+<span>Restart Space</span>
+</button>
+</div>
+</div>
+<!-- Recap 2: Blade Runner 2049 -->
+<div class="p-space-md rounded-2xl bg-[#0A0F28]/75 border border-white/10 hover:border-pink-400/30 hover:bg-[#0D1535]/85 transition-all duration-300 relative overflow-hidden group shadow-lg flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-sm text-[11px] uppercase tracking-[0.18em] text-[#9ba3c4]">SCREENED 3 DAYS AGO • 02:44:12 RUNTIME</span>
+<span class="px-2.5 py-0.5 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-300 font-label-sm text-[11px] uppercase tracking-wider font-semibold">IMAX Laser 4K</span>
+</div>
+<h3 class="font-title-md text-base md:text-lg text-white font-medium mb-1">
+                Blade Runner 2049: Color Grading Analysis
+              </h3>
+<!-- AI Synthesis Quote Card -->
+<div class="p-space-sm rounded-xl bg-[#050712]/80 border-l-2 border-pink-500 my-space-xs">
+<div class="flex items-center gap-1.5 text-pink-300 font-label-sm text-xs uppercase tracking-wider mb-1 font-semibold">
+<span class="material-symbols-outlined text-[15px]">auto_awesome</span>
+<span>AI Collective Acoustic &amp; Chat Synthesis</span>
+</div>
+<p class="font-body-md text-sm text-[#e0e1f2] italic font-light">
+                  "Room agreed Roger Deakins' yellow-orange Las Vegas ruin sequence represents peak color timing. 18 bookmark markers created around Hans Zimmer's sub-bass resonance points."
+                </p>
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-xs mt-space-xs">
+<span class="font-label-sm text-xs text-[#9ba3c4] uppercase tracking-wider">5 Participants • 18 Bookmark Notes</span>
+<button class="px-3.5 py-1.5 rounded-full bg-[#141A33] hover:bg-[#1E274E] text-white border border-white/10 font-label-sm text-xs uppercase tracking-[0.14em] font-semibold transition-all flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[15px]">replay</span>
+<span>Restart Space</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div></main><footer class="w-full bg-[#050712] border-t border-white/5 pt-12 pb-10"><div class="w-full px-margin-mobile md:px-gutter lg:px-margin flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex items-center gap-space-md flex-wrap"><span class="font-label-sm text-[11px] uppercase tracking-[0.18em] text-[#9ba3c4]">© 2024 WATCH SPACES CINEMA ARCHITECTURE</span><div class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span><span class="font-label-sm text-[11px] tracking-[0.18em] text-[#9ba3c4] uppercase">Dolby Atmos • 4K UHD Master Sync</span></div></div><div class="flex items-center gap-space-md flex-wrap"><a class="font-label-sm text-[11px] tracking-[0.18em] text-[#9ba3c4] hover:text-white uppercase transition-colors duration-300" href="#">Architecture</a><a class="font-label-sm text-[11px] tracking-[0.18em] text-[#9ba3c4] hover:text-white uppercase transition-colors duration-300" href="#">Acoustics</a><a class="font-label-sm text-[11px] tracking-[0.18em] text-[#9ba3c4] hover:text-white uppercase transition-colors duration-300" href="#">Privacy Protocol</a><a class="font-label-sm text-[11px] tracking-[0.18em] text-[#9ba3c4] hover:text-white uppercase transition-colors duration-300" href="#">Membership Terms</a></div></div></footer></body></html>

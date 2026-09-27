@@ -145,3 +145,40 @@ This document tracks all features, architectural components, databases, APIs, an
 - [x] **End-to-End Build & Compilation**:
   - Backend: Maven compilation of 50 source files and tests with `BUILD SUCCESS`.
   - Frontend: Vite TypeScript production build passed cleanly in 3.33s.
+
+---
+
+## 5. Stitch UI/UX Permanent Source of Truth Integration (Nocturne Luminary Theme)
+
+- [x] **Complete Replacement of Legacy Red/Black Frontend**:
+  - Removed old red/black Stitch prototype screens (`cinema_platform.html`, `discover.html`, `home_cinema_exp.html`, `live_theater.html`, `my_spaces_hub.html`).
+  - Removed deprecated `Dashboard.tsx` component with hardcoded red gradients.
+  - Replaced all legacy crimson `#E50914` accents across all modals, timelines, controls, and views with the official Stitch **Nocturne Luminary** design system.
+- [x] **Design Tokens & System ("Nocturne Luminary")**:
+  - **Permanent Palette**: Midnight Blue (`#0D1535`, `#080D24`, `#050712`), Dark Blue (`#111936`), Electric Blue (`#2563EB`, `#3B82F6`), Violet (`#7C3AED`, `#8B5CF6`), Magenta (`#D946EF`), Soft Pink (`#EC4899`, `#F472B6`, `#FFB0CD`).
+  - **Primary Gradient**: Electric Blue → Violet → Pink (`bg-gradient-to-r from-[#2563EB] via-[#7C3AED] to-[#EC4899]`).
+  - **Glassmorphism**: `rgba(8, 13, 36, 0.75)` with `rgba(255, 255, 255, 0.10)` borders.
+  - **Typography & Icons**: `Geist` font family with negative letter-spacing on titles and uppercase tracking on labels; Google `Material Symbols Outlined`.
+  - **Scrollbar**: Custom midnight-blue and violet glassmorphic scrollbar with natural page scrolling preserved.
+- [x] **7 Finalized Stitch Screens Integrated & Wired to Real APIs**:
+  1. `landing_page.html` → `LandingPage.tsx`: Fullscreen immersive hero ("WATCH TOGETHER. FEEL EVERY MOMENT."), floating minimal glass header, features grid, how-it-works timeline, and demo launcher.
+  2. `sign_in.html` → `SignInView.tsx`: Midnight-blue glass card with electric blue and violet ambient glow blooms, connected directly to `api.login` with instant demo host trigger.
+  3. `get_started.html` → `SignUpView.tsx`: Registration portal with dual role selection (`VIEWER` vs `HOST`), connected to `api.register`.
+  4. `home_nocturne.html` → `HomeCinema.tsx`: 88vh hero banner, asymmetrical Continue Watching rail (`history`), live Your Watch Spaces (`activeSpaces`), Trending Cinema (`titles`), and AI Film Scholar recommendations (`recommendations`).
+  5. `discover_nocturne.html` → `Discover.tsx`: Curated Repertory Edition No. 44, floating translucent glass search console with ⌘K hotkey, mood/aura chips (Electric Blue, Violet, Pink), and responsive cinema grid.
+  6. `my_spaces_nocturne.html` → `MySpacesHub.tsx`: Personal Vault & Archive header, active live sync portals, scheduled watch parties calendar, and past watch history logs.
+  7. `live_theater_nocturne.html` → `WatchRoom.tsx`:
+     - 75% video viewport with real-time Cyan Frame-Lock drift telemetry (`±Xms lock`).
+     - Floating emoji reaction stream with soft pink, sky blue, and violet glow drop shadows.
+     - Narrative variation branch voting in dark navy glass with electric blue/violet/pink gradient vote progress bars.
+     - Master floating HUD controls with Electric Blue → Violet → Soft Pink scrubber playhead and glowing thumb.
+     - 25% dark navy frosted glass sidebar switching between Connected Viewers, Synchronized Chat, and Watch AI Film Scholar.
+- [x] **Modals & Administration Views Updated**:
+  - `CreateRoomModal.tsx`: Styled with Nocturne midnight blue glass, pink accents, and gradient launch CTA.
+  - `JoinRoomModal.tsx`: Styled with Nocturne dark navy glass and gradient access CTA.
+  - `LoginModal.tsx`: Styled with Nocturne tokens and role selector pills.
+  - `AdminTimelineView.tsx`: Upload button and timeline cards styled in Nocturne Luminary gradients.
+- [x] **Permanent Workspace Governance**:
+  - Updated `GEMINI.md` to permanently establish the Stitch Nocturne Luminary Design System and the 7 screens stored in `stitch_screens/` as the immutable source of truth.
+  - TypeScript build passes cleanly with 0 errors via `npm run build`.
+

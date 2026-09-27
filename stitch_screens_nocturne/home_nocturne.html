@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "surface-variant": "#1c223d",
+          "surface-bright": "#222a4d",
+          "inverse-on-surface": "#2d303d",
+          "surface-container": "#0d1535",
+          "on-secondary-fixed": "#23005c",
+          "outline": "#6d7594",
+          "secondary-fixed-dim": "#d0bcff",
+          "surface": "#050712",
+          "primary-fixed-dim": "#adc6ff",
+          "primary": "#38bdf8",
+          "on-secondary-fixed-variant": "#5516be",
+          "on-error": "#690005",
+          "on-tertiary-container": "#ffd8e7",
+          "surface-container-highest": "#1c2445",
+          "surface-tint": "#38bdf8",
+          "surface-container-lowest": "#050712",
+          "error-container": "#93000a",
+          "outline-variant": "#222c54",
+          "tertiary-fixed": "#ffd9e4",
+          "on-background": "#e0e1f2",
+          "surface-container-high": "#141c3e",
+          "surface-container-low": "#080d24",
+          "inverse-primary": "#005ac2",
+          "on-primary-fixed": "#001a42",
+          "secondary-container": "#372370",
+          "background": "#050712",
+          "primary-container": "#2563eb",
+          "on-primary-container": "#ffffff",
+          "tertiary-container": "#db2777",
+          "on-surface-variant": "#a2a9c7",
+          "inverse-surface": "#e0e1f2",
+          "on-secondary-container": "#c4abff",
+          "on-primary-fixed-variant": "#004395",
+          "on-surface": "#f1f3fd",
+          "on-tertiary-fixed": "#3e0022",
+          "primary-fixed": "#d8e2ff",
+          "secondary": "#c084fc",
+          "on-secondary": "#280757",
+          "on-tertiary-fixed-variant": "#8c0053",
+          "tertiary": "#f472b6",
+          "error": "#ffb4ab",
+          "on-tertiary": "#50072b",
+          "surface-dim": "#050712",
+          "secondary-fixed": "#e9ddff",
+          "on-primary": "#ffffff",
+          "tertiary-fixed-dim": "#ffb0cd",
+          "on-error-container": "#ffdad6"
+        },
+        "borderRadius": {
+          "DEFAULT": "1rem",
+          "lg": "2rem",
+          "xl": "3rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "margin-mobile": "1.25rem",
+          "gutter-mobile": "1rem",
+          "gutter": "1.5rem",
+          "margin": "3rem",
+          "space-lg": "1.5rem",
+          "space-sm": "0.5rem",
+          "space-md": "1rem",
+          "space-xl": "2.5rem",
+          "space-xs": "0.25rem"
+        },
+        "fontFamily": {
+          "headline-xl-mobile": ["Geist"],
+          "display-hero-mobile": ["Geist"],
+          "display-hero": ["Geist"],
+          "headline-lg-mobile": ["Geist"],
+          "headline-md": ["Geist"],
+          "headline-lg": ["Geist"],
+          "title-sm": ["Geist"],
+          "body-sm": ["Geist"],
+          "body-md": ["Geist"],
+          "label-caps": ["Geist"],
+          "label-md": ["Geist"],
+          "headline-xl": ["Geist"],
+          "body-lg": ["Geist"],
+          "display-xl": ["Geist"],
+          "display-lg": ["Geist"],
+          "headline-sm": ["Geist"],
+          "title-md": ["Geist"],
+          "label-sm": ["Geist"]
+        },
+        "fontSize": {
+          "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600"}],
+          "label-sm": ["11px", {"lineHeight": "15px", "letterSpacing": "0.14em", "fontWeight": "600"}],
+          "label-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+          "body-sm": ["13px", {"lineHeight": "20px", "letterSpacing": "0.005em", "fontWeight": "400"}],
+          "body-md": ["15px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}],
+          "body-lg": ["17px", {"lineHeight": "28px", "letterSpacing": "-0.005em", "fontWeight": "400"}],
+          "title-sm": ["16px", {"lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "500"}],
+          "title-md": ["18px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "500"}],
+          "headline-sm": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+          "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+          "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "500"}],
+          "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "500"}],
+          "headline-xl-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "500"}],
+          "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.025em", "fontWeight": "500"}],
+          "display-hero-mobile": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+          "display-hero": ["56px", {"lineHeight": "64px", "letterSpacing": "-0.03em", "fontWeight": "600"}],
+          "display-lg": ["64px", {"lineHeight": "72px", "letterSpacing": "-0.03em", "fontWeight": "500"}],
+          "display-xl": ["80px", {"lineHeight": "88px", "letterSpacing": "-0.04em", "fontWeight": "600"}]
+        }
+      }
+    }
+  }
+</script></head><body class="bg-surface text-on-surface min-h-screen selection:bg-pink-500/30 selection:text-pink-200" style="min-height: 100vh; height: auto !important; overflow: hidden auto !important;"><header class="fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-[#050712]/75 backdrop-blur-2xl border-b border-white/[0.06] shadow-[0_4px_30px_rgba(5,7,18,0.8)]"><div class="h-20 w-full px-margin-mobile md:px-gutter lg:px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="h-10 flex items-center"><svg class="h-8 w-auto" fill="none" viewbox="0 0 180 44" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient id="ws-cosmic-glow" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#3B82F6"></stop>
+<stop offset="50%" stop-color="#8B5CF6"></stop>
+<stop offset="100%" stop-color="#EC4899"></stop>
+</lineargradient>
+<filter height="140%" id="glow-blur" width="140%" x="-20%" y="-20%">
+<fegaussianblur result="blur" stddeviation="2.5"></fegaussianblur>
+<fecomposite in="SourceGraphic" in2="blur" operator="over"></fecomposite>
+</filter>
+</defs>
+<g transform="translate(4, 6)">
+<rect fill="#0D1535" height="32" rx="10" stroke="rgba(255,255,255,0.12)" stroke-width="1.2" width="32"></rect>
+<path d="M12 11L21 16L12 21V11Z" fill="url(#ws-cosmic-glow)" filter="url(#glow-blur)"></path>
+<circle cx="23" cy="11" fill="#38BDF8" r="2.5"></circle>
+<circle cx="23" cy="21" fill="#EC4899" r="2.5"></circle>
+</g>
+<text fill="#FFFFFF" font-family="Geist, -apple-system, sans-serif" font-size="14.5" font-weight="700" letter-spacing="0.14em" x="46" y="23">WATCH</text>
+<text fill="#F472B6" font-family="Geist, -apple-system, sans-serif" font-size="14.5" font-weight="400" letter-spacing="0.18em" x="110" y="23">SPACES</text>
+<text fill="#858AA3" font-family="Geist, -apple-system, sans-serif" font-size="6.5" font-weight="600" letter-spacing="0.22em" x="46" y="33">SYNCHRONIZED CINEMA</text>
+</svg></div></div><nav class="hidden md:flex items-center gap-space-lg" data-active-classes="text-on-surface font-label-md font-bold tracking-[0.14em] drop-shadow-[0_0_16px_rgba(139,92,246,0.6)]"><a aria-current="page" class="transition-colors duration-300 uppercase text-on-surface font-label-md font-bold tracking-[0.14em] drop-shadow-[0_0_16px_rgba(139,92,246,0.6)] relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-blue-500 after:via-purple-500 after:to-pink-500" data-path="home" href="#">Home</a><a class="font-label-md text-label-md tracking-[0.14em] text-on-surface-variant hover:text-on-surface transition-colors duration-300 uppercase" data-path="discover" href="#">Discover</a><a class="font-label-md text-label-md tracking-[0.14em] text-on-surface-variant hover:text-on-surface transition-colors duration-300 uppercase" data-path="my-spaces" href="#">My Spaces</a><a class="font-label-md text-label-md tracking-[0.14em] text-on-surface-variant hover:text-on-surface transition-colors duration-300 uppercase" data-path="live-theater" href="#">Live Theater</a></nav><div class="flex items-center gap-space-md"><button class="text-on-surface-variant hover:text-on-surface transition-colors duration-200 flex items-center justify-center p-space-xs" type="button"><span class="material-symbols-outlined text-[20px]">search</span></button><button class="text-on-surface-variant hover:text-on-surface transition-colors duration-200 flex items-center justify-center p-space-xs relative" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]"></span></button><div class="relative flex items-center justify-center p-[1.5px] rounded-full bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 shadow-[0_0_14px_rgba(139,92,246,0.4)]"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1UJ8sWrZGIYN4nVCScgMHlh5H90oA2T163Hm2la7bfz6PG5TMJfF3o09YMdP0Kmi5jpS6WO9p4rCnqNomYRzQqIOiJC6gPbuwP5P0HaIJciRoYgVboErSTo7swPyPmvzZhoF2AP_2Mk8mbxaVtbx4NE8Zg72dyyB6MjJU30kpqMseq1yFnSlwWrPLQs2uit5xJGmbgGkovLjI3PGgcYAr0l010c9273IR5ilEgSODXu78G-8xWU3mTenXeH"/></div></div></div></header><main class="w-full pt-20 bg-surface" style="min-height: 100vh; height: auto !important; overflow: visible !important;"><div class="flex flex-col w-full text-on-surface select-none">
+<!-- ========================================== -->
+<!-- 1. FULL-SCREEN CINEMATIC HERO (85vh+)      -->
+<!-- ========================================== -->
+<section class="relative w-full h-[88vh] min-h-[640px] flex items-end pb-space-xl -mt-20 overflow-hidden">
+<!-- Edge-to-edge Cinema Backdrop with Cinematic Grade -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-1000 ease-out hover:scale-[1.01]" data-alt="An expansive cinematic IMAX wide shot of an epic desert planet at twilight, towering monolithic sand dunes under a dual-moon sky with solitary figures in sleek obsidian pressurized suits standing before a monolithic dark portal, evocative of Dune and Interstellar, volumetric atmospheric haze, deep burnt amber and twilight cyan grading, 8k film still, master cinema lighting" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBKOxsk7tRVnHg7A8eNfTqrKg2STUhheqKnF3gleWGlD9GOjkr8RAf1Y8YFp8a9j6PQMNoLdd_TauBQuW9_sVnHaxTeKhkP3tD0NAkP-bwc5jtWdfHweB6tJ6S1gk2Hcm6l02AsvwzM41eYzcaf_Iyng_xCgrA_gmyjsSHURg5jMUO5SeJinoW3Dd0c6vpbrllDREomiCNKXmvB88jveaj4d1UF8TSf6KcOxGKVuYxJy_nrQ4Qj5sQ-sw')"></div>
+<!-- Multi-tier Midnight Blue Vignette Gradients -->
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-[#050712]/75 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-[#050712] via-[#080d24]/85 to-transparent w-full md:w-3/4"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-[#050712]/90 via-transparent to-transparent h-44"></div>
+<!-- Ambient Electric Blue / Violet Glow Core -->
+<div class="absolute bottom-1/4 left-16 w-96 h-96 rounded-full bg-gradient-to-tr from-blue-600/25 via-purple-600/20 to-pink-500/15 blur-[140px] pointer-events-none"></div>
+<div class="absolute top-1/3 right-1/4 w-[420px] h-[420px] rounded-full bg-purple-700/15 blur-[160px] pointer-events-none"></div>
+<!-- Lower-Left Editorial Content -->
+<div class="relative z-10 w-full px-margin-mobile md:px-gutter lg:px-margin max-w-7xl pt-24">
+<!-- Technical Master Indicator -->
+<div class="flex items-center gap-space-sm mb-space-sm">
+<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#080d24]/80 border border-white/10 backdrop-blur-md text-on-surface font-label-sm text-label-sm tracking-[0.2em] uppercase">
+<span class="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.9)] animate-pulse"></span>
+          Exclusive Premiere • 4K Dolby Cinema
+        </span>
+<span class="hidden sm:inline-block font-label-sm text-label-sm text-primary tracking-[0.16em] uppercase">
+          Frame-Lock ±0.8ms
+        </span>
+</div>
+<!-- Hero Title -->
+<div class="max-w-4xl space-y-1">
+<h1 class="font-display-xl text-headline-lg-mobile md:text-display-lg lg:text-display-xl tracking-tight text-on-surface uppercase leading-none drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)]">
+          Watch Together.
+        </h1>
+<p class="font-display-lg text-title-md md:text-headline-sm lg:text-headline-lg italic bg-gradient-to-r from-blue-400 via-purple-300 to-pink-400 bg-clip-text text-transparent tracking-normal font-normal opacity-95">
+          Without boundaries.
+        </p>
+</div>
+<!-- Editorial Synopses -->
+<p class="mt-space-sm max-w-2xl font-body-lg text-body-md md:text-body-lg text-on-surface-variant leading-relaxed">
+        A cinematic social screening experience engineered for those who revere narrative craft. Synchronized to the millisecond across pristine temporal feeds, augmented by spatial acoustic teleportation and silent contextual intellect.
+      </p>
+<!-- Action Triggers & Micro Controls -->
+<div class="mt-space-md flex flex-wrap items-center gap-space-sm md:gap-space-md">
+<!-- Primary CTA with signature Electric Blue -> Violet -> Pink gradient and soft glow -->
+<button class="group relative inline-flex items-center gap-space-xs px-space-md py-3.5 rounded-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-white font-label-md text-label-md tracking-[0.16em] uppercase transition-all duration-300 shadow-[0_0_28px_rgba(139,92,246,0.5)] hover:shadow-[0_0_42px_rgba(236,72,153,0.65)] hover:scale-[1.03] active:scale-[0.99]" type="button">
+<span class="material-symbols-outlined text-[20px] transition-transform duration-300 group-hover:scale-110" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<span class="font-semibold drop-shadow-sm">Create Watch Space</span>
+</button>
+<!-- Secondary CTA: Dark Navy Glass with subtle border -->
+<button class="inline-flex items-center gap-space-xs px-space-md py-3.5 rounded-full bg-[rgba(10,15,40,0.75)] hover:bg-[rgba(14,21,53,0.9)] border border-white/10 hover:border-purple-400/40 backdrop-blur-xl text-on-surface font-label-md text-label-md tracking-[0.16em] uppercase transition-all duration-300 hover:scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.4)]" type="button">
+<span class="material-symbols-outlined text-[18px] text-pink-400">theater_comedy</span>
+<span class="">Explore Theater</span>
+</button>
+</div>
+<!-- Realtime Metadata Bar -->
+<div class="mt-space-md flex items-center gap-space-md text-on-surface-variant font-label-sm text-label-sm tracking-[0.18em] uppercase">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+<span class="">Real-time sync</span>
+</div>
+<span class="text-white/20">•</span>
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.8)]"></span>
+<span class="">Private rooms</span>
+</div>
+<span class="text-white/20">•</span>
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-pink-400 shadow-[0_0_8px_rgba(244,114,182,0.8)]"></span>
+<span class="">AI-powered experience</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ========================================== -->
+<!-- 2. SECTION 1: CONTINUE WATCHING            -->
+<!-- Asymmetrical Cinematic Rhythm (65% / 35%)  -->
+<!-- ========================================== -->
+<section class="w-full px-margin-mobile md:px-gutter lg:px-margin mt-space-xl">
+<!-- Header -->
+<div class="flex items-end justify-between mb-space-md">
+<div>
+<span class="font-label-sm text-label-sm tracking-[0.22em] text-secondary uppercase block mb-1">Temporal Feeds</span>
+<h2 class="font-headline-lg text-headline-sm md:text-headline-lg tracking-tight text-on-surface">CONTINUE WATCHING</h2>
+</div>
+<div class="hidden sm:flex items-center gap-space-xs font-label-sm text-label-sm tracking-[0.18em] text-on-surface-variant uppercase">
+<span class="">Session Sync 03</span>
+<span class="text-white/20">•</span>
+<span class="text-on-surface">Lossless Feed</span>
+</div>
+</div>
+<!-- Asymmetrical Canvas -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-stretch">
+<!-- Large Featured Spotlight (lg:col-span-8) -->
+<div class="lg:col-span-8 group relative rounded-2xl overflow-hidden bg-[rgba(10,15,40,0.72)] border border-white/[0.08] min-h-[380px] md:min-h-[460px] flex flex-col justify-end p-space-md transition-all duration-700 hover:shadow-[0_0_50px_rgba(139,92,246,0.22)] hover:border-purple-500/30">
+<!-- Background Artwork -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-1000 ease-out group-hover:scale-105" data-alt="Severance inspired cinematic corporate surrealism still, an enigmatic protagonist with dark hair in a crisp vintage mid-century suit seated at a minimal luminescent emerald terminal in an infinite white acoustic-tiled room, atmospheric cyan fluorescent lighting, ultra-clean cinematic grading, Kodak 35mm film grain, moody architectural minimalism" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDBEfxGgoLtkB6N_z22LcjF-uQCedDrrS0uACLU9vsniAs3Pclz9v3PIVeyQ6M-z6mdjXjzMGrAit3q-dscmS_BKdfKU8g8kVqyFb8GsEt-nh0bYnBP2cs7bmHjtMkcAqYworBxSOrUC1xIHaQpg6-EAOTyeRM8nnoB8dKIAtXZyEYOFYXto02kXUYEGwboBNZBmsluBtRfMtfZ6h_ee818YJs_rJ9Z3srP0-QxkF5vi6anH7HrNQ3T7w')"></div>
+<!-- Scrim Gradients -->
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-[#080d24]/65 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-[#050712]/90 via-transparent to-transparent"></div>
+<!-- Center Frosted Play Trigger -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-80 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110 pointer-events-none">
+<div class="w-16 h-16 rounded-full bg-[rgba(10,15,40,0.65)] border border-white/20 backdrop-blur-2xl flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.35)]">
+<span class="material-symbols-outlined text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400 text-[32px] ml-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<!-- Spotlight Information Payload -->
+<div class="relative z-10 space-y-space-xs max-w-xl">
+<div class="flex items-center gap-space-xs">
+<span class="px-2.5 py-0.5 rounded-full bg-[#0d1535]/80 border border-white/10 backdrop-blur-md text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">Season 2 • Episode 07</span>
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">‘The Severed Mind’</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm md:text-title-md text-on-surface font-semibold tracking-tight">Severance</h3>
+<!-- Presences & Resume Prompt -->
+<div class="flex items-center gap-3 pt-1">
+<div class="flex -space-x-2 overflow-hidden">
+<div class="inline-block h-7 w-7 rounded-full bg-blue-600/60 ring-2 ring-[#050712] flex items-center justify-center text-[10px] font-label-sm text-white">MK</div>
+<div class="inline-block h-7 w-7 rounded-full bg-purple-600/70 ring-2 ring-[#050712] flex items-center justify-center text-[10px] font-label-sm text-pink-200">LV</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Resume with <span class="text-on-surface font-medium">Maya &amp; Leo</span> • <span class="text-tertiary">24 min remaining</span>
+</p>
+</div>
+<!-- Scrubber Progress Rail (Gradient from Blue -> Violet -> Pink) -->
+<div class="pt-space-xs">
+<div class="w-full h-1.5 bg-[#080d24] rounded-full overflow-hidden border border-white/5">
+<div class="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full shadow-[0_0_12px_rgba(236,72,153,0.8)]" style="width: 68%;"></div>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-label-sm text-label-sm tracking-widest pt-1.5 uppercase">
+<span class="">00:38:14</span>
+<span class="text-pink-300">68% Complete</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Stacked Complementary Cards (lg:col-span-4) -->
+<div class="lg:col-span-4 flex flex-col gap-space-md justify-between">
+<!-- Companion 1: Blade Runner 2049 -->
+<div class="group relative flex-1 rounded-2xl overflow-hidden bg-[rgba(10,15,40,0.72)] border border-white/[0.08] min-h-[210px] p-space-md flex flex-col justify-end transition-all duration-500 hover:shadow-[0_0_40px_rgba(59,130,246,0.22)] hover:border-blue-500/30">
+<div class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Blade Runner 2049 aesthetic cinematic frame, a solitary officer walking towards a towering colossal orange neon holographic statue obscured in thick radioactive dust and mist, futuristic dystopian mega-architecture, moody noir lighting, cinematic chiaroscuro" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAeSbZvysKqS2W216_05ivFBKucXcgghkMWe90ZiodffzNV1hFnHBekSHFoMMFfsEDeV26cYewEg2qSX2y9bTpq47RVkE_AzU_vX8bEWJT_N0IuilXXzrxPUTCfsHpucFdg5PXC1SH9Ky1pMH7RBGUirP07Iz97Ms5hsu6YjOT0lUqCVMXcAz_cnHx3qPfmr-fEGtLn456F5w85nakPngmIdta3brLfJ2BdZSJ3fz5RaeXdUBFT4JMiqA')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-[#080d24]/70 to-transparent"></div>
+<div class="relative z-10 space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm tracking-[0.2em] text-secondary uppercase">Feature Film</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">42m left</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface tracking-tight font-medium">Blade Runner 2049</h4>
+<div class="flex items-center justify-between pt-1">
+<span class="text-on-surface-variant font-body-md text-body-md text-sm">Host: Elena Vance</span>
+<div class="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+</div>
+</div>
+<!-- Sub-rail -->
+<div class="w-full h-1.5 bg-[#080d24] rounded-full overflow-hidden mt-2 border border-white/5">
+<div class="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full" style="width: 74%;"></div>
+</div>
+</div>
+</div>
+<!-- Companion 2: Succession Finale -->
+<div class="group relative flex-1 rounded-2xl overflow-hidden bg-[rgba(10,15,40,0.72)] border border-white/[0.08] min-h-[210px] p-space-md flex flex-col justify-end transition-all duration-500 hover:shadow-[0_0_40px_rgba(236,72,153,0.2)] hover:border-pink-500/30">
+<div class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Succession series finale style cinematic frame, three siblings silhouetted in a glass-enclosed luxury high-rise penthouse overlooking a somber stormy New York City skyline, cold Nordic muted color grading, ultra-sharp 35mm motion picture composition" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCcX8DRqbpgVqo6zr3twKBljQ1nORA6bQdmYm-nglM7ngc097muIa1chi6MgQef581rZzVk2c5JptdaUcfowkMoM2UQhxNlAMSrUIFlFdFO9xW5wuMw6104_7RtoDFpt9Z5rXlJ1dO43qI9951F_xTj_Zoq8j2NzNFt3Gy1wL4iJwbZaUfSOMZXoT64ZmuqzZxFBq-cHQXC_wzdbRwlbvDKHWAJ5L7sziCVGPdujUGieYh3CyzhHXxelg')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-[#080d24]/70 to-transparent"></div>
+<div class="relative z-10 space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm tracking-[0.2em] text-tertiary uppercase">Series Finale • With Open Eyes</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">18m left</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface tracking-tight font-medium">Succession</h4>
+<div class="flex items-center justify-between pt-1">
+<span class="text-on-surface-variant font-body-md text-body-md text-sm">4 friends in pause queue</span>
+<span class="font-label-sm text-label-sm tracking-wider text-secondary uppercase">Paused</span>
+</div>
+<!-- Sub-rail -->
+<div class="w-full h-1.5 bg-[#080d24] rounded-full overflow-hidden mt-2 border border-white/5">
+<div class="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full" style="width: 82%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ========================================== -->
+<!-- 3. SECTION 2: YOUR WATCH SPACES            -->
+<!-- Large Cinematic Room Portals (16:9)        -->
+<!-- ========================================== -->
+<section class="w-full px-margin-mobile md:px-gutter lg:px-margin mt-space-xl">
+<!-- Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-space-md gap-2">
+<div>
+<span class="font-label-sm text-label-sm tracking-[0.22em] text-primary uppercase block mb-1">Spatial Nodes</span>
+<h2 class="font-headline-lg text-headline-sm md:text-headline-lg tracking-tight text-on-surface">YOUR WATCH SPACES</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Active private cinemas synchronized across global high-speed hubs right now.</p>
+</div>
+<a class="inline-flex items-center gap-2 font-label-md text-label-md tracking-[0.14em] text-primary hover:text-pink-300 uppercase transition-colors" href="#">
+<span class="">Architect New Room</span>
+<span class="material-symbols-outlined text-[16px]">add</span>
+</a>
+</div>
+<!-- Two Massive Landscape Portals -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Room Portal 1: Dune Chronicles -->
+<div class="group relative aspect-[16/9] rounded-2xl overflow-hidden bg-[rgba(10,15,40,0.72)] border border-white/[0.08] flex flex-col justify-between p-space-md transition-all duration-700 hover:scale-[1.01] hover:border-blue-500/40 hover:shadow-[0_0_60px_rgba(59,130,246,0.25)]">
+<!-- Background Visual -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="Dune sci-fi cinematic interior of an ornithopter cockpit looking out over an immense golden sandstorm vortex on Arrakis, holographic amber console lights reflecting on glass, ultra wide-angle anamorphic lens, grand cinematic scale" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCm9mIGpRRL_z56i--4R5RFgwyhvAJFagYjF06g7rv1QO_R3Zwy5Eu_fzsNTS8xOpXjNQK72Tvm3mgIu1_nvvj1dpaUbGeyOqPauuCg4FFIiq9KfVbhLuuwCzDupeO5zZA0qulgdc-yJN1L62oaQv6QxhjJWZqu0t42YjRFupg0WpazD6RGnUYvW7sDX3lRNIiQcqphZxcJ-82oKW9ea8Ovf03TyEKQlp_1dTPz2qBsjX1QFXtXqu9Q1A')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-[#080d24]/60 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-[#050712]/70 via-transparent to-transparent h-28"></div>
+<!-- Top Header Tags -->
+<div class="relative z-10 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-white font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_16px_rgba(139,92,246,0.5)]">
+<span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+              Live Synced
+            </span>
+<span class="px-2.5 py-1 rounded-full bg-[#050712]/70 border border-white/10 backdrop-blur-md text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+              Dolby Atmos • 7.1.4
+            </span>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-[rgba(10,15,40,0.85)] border border-white/10 text-secondary font-label-sm text-label-sm uppercase tracking-widest backdrop-blur-md">
+            Host Room
+          </span>
+</div>
+<!-- Bottom Room Specs & Action -->
+<div class="relative z-10 space-y-space-xs">
+<div>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-[0.2em]">Private Screening • 04 Active Guests</span>
+<h3 class="font-headline-sm text-title-md md:text-headline-sm text-on-surface font-semibold tracking-tight">
+              Friday Night Sci-Fi • Dune Chronicles
+            </h3>
+</div>
+<div class="flex items-center justify-between pt-1">
+<!-- Guest avatars -->
+<div class="flex items-center gap-2">
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full bg-blue-600 ring-2 ring-[#050712] flex items-center justify-center text-[10px] font-label-sm text-white">JL</div>
+<div class="w-7 h-7 rounded-full bg-purple-600 ring-2 ring-[#050712] flex items-center justify-center text-[10px] font-label-sm text-white">SR</div>
+<div class="w-7 h-7 rounded-full bg-pink-600 ring-2 ring-[#050712] flex items-center justify-center text-[10px] font-label-sm text-white">AT</div>
+<div class="w-7 h-7 rounded-full bg-slate-800 ring-2 ring-[#050712] flex items-center justify-center text-[10px] font-label-sm text-pink-200">+1</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider hidden sm:inline">Spatial Sync On</span>
+</div>
+<!-- Action button: secondary glass with blue/violet glow -->
+<button class="inline-flex items-center gap-2 px-space-md py-2.5 rounded-full bg-[rgba(10,15,40,0.75)] hover:bg-[rgba(14,21,53,0.9)] border border-white/15 text-white font-label-md text-label-md tracking-[0.14em] uppercase transition-all duration-300 hover:border-purple-400 hover:shadow-[0_0_24px_rgba(139,92,246,0.35)]" type="button">
+<span class="">Rejoin Room</span>
+<span class="material-symbols-outlined text-[16px] text-pink-400">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Room Portal 2: Wong Kar-wai Retrospective -->
+<div class="group relative aspect-[16/9] rounded-2xl overflow-hidden bg-[rgba(10,15,40,0.72)] border border-white/[0.08] flex flex-col justify-between p-space-md transition-all duration-700 hover:scale-[1.01] hover:border-pink-500/40 hover:shadow-[0_0_60px_rgba(236,72,153,0.25)]">
+<!-- Background Visual -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="Wong Kar-wai In The Mood For Love inspired cinematic frame, rain-soaked 1960s Hong Kong alley bathed in saturated ruby red and emerald neon light, steam rising from street food stall, poetic nostalgic atmosphere, 35mm film blur and lush grain" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDA0BDKU_-xYe7xMVPCtyow7_rVC7lklMY-950Zt2XRUfyWTLEiURh9BY-ktgJg--V8bh_0gaRuUWMVw84yHAMtKBROphNLP9uIUaVT6VMQssKVKzG7vPmDvSJxJeib3DAxXi4ne5lpcj7QvyLTsg-tu7ua9qNV7PcztLl6nffAyAvu4CVxP_xvl9rZCgSmejf8Oo8_BSZjpBg2mwC1ljFaETEJfAvGoT79j8Bu9cCwxCZokySE0JdCXw')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-[#080d24]/60 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-[#050712]/70 via-transparent to-transparent h-28"></div>
+<!-- Top Header Tags -->
+<div class="relative z-10 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-1 rounded-full bg-[#050712]/80 border border-white/10 backdrop-blur-md text-on-surface font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Intermission • In Lobby
+            </span>
+<span class="px-2.5 py-1 rounded-full bg-[#050712]/70 border border-white/10 backdrop-blur-md text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+              35mm Master Transfer
+            </span>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-purple-950/60 border border-purple-500/20 text-purple-300 font-label-sm text-label-sm uppercase tracking-widest backdrop-blur-md">
+            AI Thread Active
+          </span>
+</div>
+<!-- Bottom Room Specs & Action -->
+<div class="relative z-10 space-y-space-xs">
+<div>
+<span class="font-label-sm text-label-sm text-tertiary uppercase tracking-[0.2em]">Curated Retrospective • 03 Members In Lobby</span>
+<h3 class="font-headline-sm text-title-md md:text-headline-sm text-on-surface font-semibold tracking-tight">
+              Auteur Midnight • Wong Kar-wai
+            </h3>
+</div>
+<div class="flex items-center justify-between pt-1">
+<!-- AI topic highlight -->
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">auto_awesome</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase truncate max-w-[200px]">
+                Debating step-printing tempo
+              </p>
+</div>
+<button class="inline-flex items-center gap-2 px-space-md py-2.5 rounded-full bg-[rgba(10,15,40,0.75)] hover:bg-[rgba(14,21,53,0.9)] border border-white/15 text-white font-label-md text-label-md tracking-[0.14em] uppercase transition-all duration-300 hover:border-pink-400 hover:shadow-[0_0_24px_rgba(236,72,153,0.35)]" type="button">
+<span class="">Enter Lobby</span>
+<span class="material-symbols-outlined text-[16px] text-purple-300">meeting_room</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ========================================== -->
+<!-- 4. SECTION 3: TRENDING CINEMA              -->
+<!-- Tall Posters with Extensive Breathing Room -->
+<!-- ========================================== -->
+<section class="w-full px-margin-mobile md:px-gutter lg:px-margin mt-space-xl">
+<!-- Section Heading -->
+<div class="flex items-end justify-between mb-space-md">
+<div>
+<span class="font-label-sm text-label-sm tracking-[0.22em] text-secondary uppercase block mb-1">Global Telemetry</span>
+<h2 class="font-headline-lg text-headline-sm md:text-headline-lg tracking-tight text-on-surface">TRENDING IN PRIVATE ROOMS</h2>
+</div>
+<div class="flex items-center gap-3">
+<button aria-label="Previous" class="w-10 h-10 rounded-full bg-[rgba(10,15,40,0.75)] border border-white/10 flex items-center justify-center text-on-surface hover:border-purple-400 hover:text-white transition-all shadow-[0_2px_12px_rgba(0,0,0,0.4)]" type="button">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button aria-label="Next" class="w-10 h-10 rounded-full bg-[rgba(10,15,40,0.75)] border border-white/10 flex items-center justify-center text-on-surface hover:border-purple-400 hover:text-white transition-all shadow-[0_2px_12px_rgba(0,0,0,0.4)]" type="button">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- 4-Column Generous 2:3 Vertical Posters -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-md">
+<!-- Poster 1: Oppenheimer -->
+<div class="group flex flex-col space-y-3 cursor-pointer">
+<div class="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-[rgba(10,15,40,0.72)] border border-white/[0.08] transition-all duration-500 group-hover:scale-[1.03] group-hover:border-purple-500/40 group-hover:shadow-[0_16px_40px_rgba(139,92,246,0.25)]">
+<div class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Oppenheimer movie poster style photographic portrait, brooding theoretical physicist in high-crowned fedora, golden blinding incandescent sparks and fiery blast reflections in his intense eyes, dramatic dark amber chiaroscuro lighting, IMAX film texture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC6KOoa0Z5GgLHWk5F6kK1HzXGA1hlR9rTN_pd7OwzxD8pV8oskpoNFhyUTbpzuYJ1U8iOeA8VfX43cEGgGqfJLlnrMXTd-EEjjKFhPUEjgOFHgH_Ou-PGAvK922Q2F-XYUni1jlYoNJRwqzT2HTatPO1lQXHzSGf8r9MetaKdxtvf8yFmHq0M9YUEC2W6XyU10VgWv7ajklcvh5OjBYwhEmiA8zJhpiBJMAJR0QvcY5xNMChmJYKWeQg')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-transparent to-transparent opacity-85 group-hover:opacity-65 transition-opacity"></div>
+<!-- Subtle Floating Synergy Pill -->
+<div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#050712]/80 border border-white/10 backdrop-blur-md font-label-sm text-label-sm text-secondary tracking-widest uppercase">
+            99% Synergy
+          </div>
+</div>
+<!-- Decoupled Typography -->
+<div class="space-y-0.5">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<span class="">Christopher Nolan</span>
+<span class="">2023</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface font-medium tracking-tight group-hover:text-primary transition-colors">
+            Oppenheimer
+          </h4>
+<p class="font-label-sm text-label-sm text-outline tracking-widest uppercase">
+            65mm IMAX • Atmos
+          </p>
+</div>
+</div>
+<!-- Poster 2: Poor Things -->
+<div class="group flex flex-col space-y-3 cursor-pointer">
+<div class="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-[rgba(10,15,40,0.72)] border border-white/[0.08] transition-all duration-500 group-hover:scale-[1.03] group-hover:border-pink-500/40 group-hover:shadow-[0_16px_40px_rgba(236,72,153,0.25)]">
+<div class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Poor Things film style portrait, Victorian surrealist high-fashion heroine with cascading raven black hair against an eccentric painted pastel sunset sky, theatrical idiosyncratic baroque costume, vivid surrealist coloration, cinematic anamorphic lens" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuADxpVTkxdp7B-kHf_k4XG31mZMwiibaMUFoSDshQm137b_aIJYjWE3oRs3w9HJuvM_ahtiBbJ9R7F1hbn-jFC0qD7vFs1YmKCQfBw6SAVHgaORwLtzdHptLRsjaXWVbqFJxqkjEYWdCbaBP68p7l42LUHTgOxaWqVwj0EHGxpGKNY6QLrd-RICASvHx9J5RzIrfu5FQLwJDeP5W73HIi6V86zsbJ9hOrnKQZgpGYXWhE8563P4BhjKig')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-transparent to-transparent opacity-85 group-hover:opacity-65 transition-opacity"></div>
+<div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#050712]/80 border border-white/10 backdrop-blur-md font-label-sm text-label-sm text-tertiary tracking-widest uppercase">
+            98% Synergy
+          </div>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<span class="">Yorgos Lanthimos</span>
+<span class="">2023</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface font-medium tracking-tight group-hover:text-tertiary transition-colors">
+            Poor Things
+          </h4>
+<p class="font-label-sm text-label-sm text-outline tracking-widest uppercase">
+            35mm Ektachrome • 4K
+          </p>
+</div>
+</div>
+<!-- Poster 3: The Zone of Interest -->
+<div class="group flex flex-col space-y-3 cursor-pointer">
+<div class="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-[rgba(10,15,40,0.72)] border border-white/[0.08] transition-all duration-500 group-hover:scale-[1.03] group-hover:border-blue-500/40 group-hover:shadow-[0_16px_40px_rgba(59,130,246,0.25)]">
+<div class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="The Zone of Interest style architectural cinema still, an unnervingly pristine sunlit suburban European garden in mid-century styling bordered by high monolithic concrete walls with faint dark smoke towering silently in the far sky, stark uncompromising daylight, clinical Kubrickian composition" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA54ZamLXPWHwFSnLzOvjxPn-KJosssgSNS7m7fF8Aa3isBpW_nqqtT-H3YJEOyZb7OqOx0JxQKPqdbHjIZ-y8_xmSiaQp4Wfh86ywitErhDn22mbGYE1REmlyxSraClMX_1tkNoPJMGF1vB2RM1pyFCbXqVoL0xo-9a2yUNyek0tBUA-vCSB78EF1J-TT1xN0XNq3EGAA9KLim56AR2J2Ke_ub609rwmIjPRZtE_o2PGpjf6zCnuPaZQ')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-transparent to-transparent opacity-85 group-hover:opacity-65 transition-opacity"></div>
+<div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#050712]/80 border border-white/10 backdrop-blur-md font-label-sm text-label-sm text-primary tracking-widest uppercase">
+            96% Synergy
+          </div>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<span class="">Jonathan Glazer</span>
+<span class="">2023</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface font-medium tracking-tight group-hover:text-primary transition-colors">
+            The Zone of Interest
+          </h4>
+<p class="font-label-sm text-label-sm text-outline tracking-widest uppercase">
+            Spatial Acoustic Master
+          </p>
+</div>
+</div>
+<!-- Poster 4: Past Lives -->
+<div class="group flex flex-col space-y-3 cursor-pointer">
+<div class="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-[rgba(10,15,40,0.72)] border border-white/[0.08] transition-all duration-500 group-hover:scale-[1.03] group-hover:border-purple-500/40 group-hover:shadow-[0_16px_40px_rgba(139,92,246,0.25)]">
+<div class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Past Lives inspired intimate cinematic frame, two figures standing on a New York ferry at golden hour looking into each other eyes, soft evening ocean light, gentle bokeh of lower Manhattan skyline in background, poignant nostalgic romantic 35mm grain" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBasmbbH4Ok-UM0xN7mTD0a4xRH34l2gEb6s0VfSRcvr_9xUF-v59fq8ToRhRz-zrm39ygqxyBNVo8HEOyxVKmSjw_py9znjd9Ex7JHbEWXVz4qonZGmxeA1Ub6lWQwXlqWmJpXXdccReG_6Dvw-TmzVvSdz7ioRQYxAoaya3cIocDDRY9qZsbop0v2aMMTz8pfxVY_5OLd1aTP4hbOLd9cUhgZjRv1sETwQkvG5buUcE9v2YNmSa8gBA')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-transparent to-transparent opacity-85 group-hover:opacity-65 transition-opacity"></div>
+<div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#050712]/80 border border-white/10 backdrop-blur-md font-label-sm text-label-sm text-secondary tracking-widest uppercase">
+            98% Synergy
+          </div>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<span class="">Celine Song</span>
+<span class="">2023</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface font-medium tracking-tight group-hover:text-secondary transition-colors">
+            Past Lives
+          </h4>
+<p class="font-label-sm text-label-sm text-outline tracking-widest uppercase">
+            35mm Scan • True Tone
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- ========================================== -->
+<!-- 5. SECTION 4: AI CONTEXTUAL PICKS          -->
+<!-- Atmospheric Glow & Conversational Synapses -->
+<!-- ========================================== -->
+<section class="relative w-full px-margin-mobile md:px-gutter lg:px-margin mt-space-xl pb-space-xl">
+<!-- Atmospheric Ambient Back-Illumination Cones (Violet, Magenta & Electric Blue) -->
+<div class="absolute -top-32 left-1/4 w-[500px] h-[500px] rounded-full bg-blue-600/15 blur-[160px] pointer-events-none"></div>
+<div class="absolute top-10 right-1/4 w-[450px] h-[450px] rounded-full bg-purple-600/15 blur-[180px] pointer-events-none"></div>
+<div class="absolute bottom-10 left-1/3 w-[400px] h-[400px] rounded-full bg-pink-600/10 blur-[170px] pointer-events-none"></div>
+<!-- Header with Taste Graph Pill -->
+<div class="relative z-10 flex flex-col md:flex-row md:items-end justify-between mb-space-md gap-3">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[rgba(10,15,40,0.8)] border border-purple-500/30 text-secondary font-label-sm text-label-sm uppercase tracking-widest backdrop-blur-md shadow-[0_0_16px_rgba(139,92,246,0.3)]">
+<span class="material-symbols-outlined text-[14px] text-pink-400">auto_awesome</span>
+            Real-Time Taste Graph
+          </span>
+<span class="font-label-sm text-label-sm text-primary tracking-widest uppercase">Node 093 • Calibrated</span>
+</div>
+<h2 class="font-headline-lg text-headline-sm md:text-headline-lg tracking-tight text-on-surface">CURATED BY WATCH AI</h2>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md">
+        Synthesizing continuous debate logs, pause patterns, and collective cinematic affinities across your circle.
+      </p>
+</div>
+<!-- Wide Editorial Intelligence Cards -->
+<div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+<!-- Card 1 -->
+<div class="group relative rounded-2xl overflow-hidden bg-[rgba(10,15,40,0.72)] border border-white/[0.08] p-space-md md:p-space-lg flex flex-col justify-between transition-all duration-700 hover:shadow-[0_0_70px_rgba(59,130,246,0.22)] hover:border-blue-500/40">
+<!-- Backdrop Texture -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center opacity-25 mix-blend-luminosity transition-transform duration-1000 group-hover:scale-105" data-alt="Denis Villeneuve style Arrival film atmosphere, towering monolithic vertical heptapod spacecraft hovering silently over misty green Montana valley, ethereal clouds, hyper-detailed volumetric cinematic lighting" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDCwSSOZVMy64AqDya2GJKB7osw3UB0mcuhc7Kj42OiFldyOlULFPVvEENLXlOZEKMz72rf-SV6JtWBrTd9vWZ4Vwq4Qb1NIBQyOmt5W3ZxvRaQI0UNd7chcIDBJJYgfAgIExpoiIRPPnI6N1rbXykGRxlNsOph-ypA_hNJ8eIT07_Ewa5829NJhlJnTeSDt2YG5fuk734jQo6ONyT-IrpOhtj8FZPmD18aq7KcO9NPcZIWkMHO6Z5hnw')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-[#080d24]/85 to-transparent"></div>
+<div class="relative z-10 space-y-space-md">
+<!-- AI Reasoning Quote -->
+<div class="space-y-space-xs">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-[0.2em] flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(56,189,248,0.8)]"></span>
+              Acoustic &amp; Narrative Match • 97.4%
+            </span>
+<blockquote class="font-body-lg text-title-md md:text-body-lg italic text-on-surface leading-relaxed border-l-0 pl-0">
+              “Recommended because your Friday circle actively debates non-linear temporal structure, semantic alien languages, and Jóhann Jóhannsson’s atmospheric low-frequency acoustic textures.”
+            </blockquote>
+</div>
+<!-- Associated Title Banner -->
+<div class="flex items-center justify-between pt-space-sm">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">Arrival</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant tracking-widest uppercase">Denis Villeneuve • Amy Adams • 4K UHD</p>
+</div>
+<button aria-label="Queue for Room" class="w-12 h-12 rounded-full bg-[rgba(10,15,40,0.75)] border border-white/10 hover:border-purple-400 hover:text-pink-300 text-on-surface flex items-center justify-center transition-all duration-300 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)]" type="button">
+<span class="material-symbols-outlined text-[20px]">bookmark_add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group relative rounded-2xl overflow-hidden bg-[rgba(10,15,40,0.72)] border border-white/[0.08] p-space-md md:p-space-lg flex flex-col justify-between transition-all duration-700 hover:shadow-[0_0_70px_rgba(236,72,153,0.22)] hover:border-pink-500/40">
+<!-- Backdrop Texture -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center opacity-25 mix-blend-luminosity transition-transform duration-1000 group-hover:scale-105" data-alt="Solaris Andrei Tarkovsky inspired sci-fi still, mystical ocean of an alien planet rippling with living bioluminescent tides, a solitary cosmonaut in 1970s spacesuit standing by a rusted observation window, contemplative cinematic poetry" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC5j81v2lmZ8GsvYkL8RTr22y4iEXdHE7-VWl8bvrR04NeyV-ynpkvR-PSa5B6yZ-cv2C_-Vhcf58HvB93TAuUQTFu3SrY4t90Rmea4WVILAQ15Z6EwED5HSDe4OuA3Kf2cEvFaia-cMRGqyf922jLB3hNFMxwcRw7_Tl25qW8POhT0MW6uCp3sdtHAPzGvzFG8UVl867MyT85PEnLtZQGuU9OPT7DmWH8C3nN3lNWGsb9ehcgRwZh1Yw')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-[#080d24]/85 to-transparent"></div>
+<div class="relative z-10 space-y-space-md">
+<!-- AI Reasoning Quote -->
+<div class="space-y-space-xs">
+<span class="font-label-sm text-label-sm text-tertiary uppercase tracking-[0.2em] flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary shadow-[0_0_8px_rgba(244,114,182,0.8)]"></span>
+              Philosophical Resonance • 95.8%
+            </span>
+<blockquote class="font-body-lg text-title-md md:text-body-lg italic text-on-surface leading-relaxed border-l-0 pl-0">
+              “Targeted following Maya’s deep interest in psychological memory reconstruction and Tarkovsky’s contemplative long-take cinematography during your Stalker screening.”
+            </blockquote>
+</div>
+<!-- Associated Title Banner -->
+<div class="flex items-center justify-between pt-space-sm">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">Solaris</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant tracking-widest uppercase">Andrei Tarkovsky • 1972 Mosfilm 4K Restoration</p>
+</div>
+<button aria-label="Queue for Room" class="w-12 h-12 rounded-full bg-[rgba(10,15,40,0.75)] border border-white/10 hover:border-pink-400 hover:text-pink-300 text-on-surface flex items-center justify-center transition-all duration-300 hover:shadow-[0_0_20px_rgba(236,72,153,0.4)]" type="button">
+<span class="material-symbols-outlined text-[20px]">bookmark_add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div></main><footer class="w-full bg-[#050712] border-t border-white/[0.06] pt-space-xl pb-space-xl"><div class="w-full px-margin-mobile md:px-gutter lg:px-margin flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex items-center gap-space-md"><span class="font-label-sm text-label-sm uppercase tracking-[0.18em] text-on-surface-variant">© 2024 WATCH SPACES CINEMA ARCHITECTURE</span><div class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-pink-400 shadow-[0_0_8px_rgba(139,92,246,0.6)]"></span><span class="font-label-sm text-label-sm tracking-[0.18em] text-on-surface-variant uppercase">Dolby Atmos • 4K UHD Master Sync</span></div></div><div class="flex items-center gap-space-md"><a class="font-label-sm text-label-sm tracking-[0.18em] text-on-surface-variant hover:text-primary uppercase transition-colors duration-300" href="#">Architecture</a><a class="font-label-sm text-label-sm tracking-[0.18em] text-on-surface-variant hover:text-secondary uppercase transition-colors duration-300" href="#">Acoustics</a><a class="font-label-sm text-label-sm tracking-[0.18em] text-on-surface-variant hover:text-tertiary uppercase transition-colors duration-300" href="#">Privacy Protocol</a><a class="font-label-sm text-label-sm tracking-[0.18em] text-on-surface-variant hover:text-on-surface uppercase transition-colors duration-300" href="#">Membership Terms</a></div></div></footer></body></html>

@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { WatchSpace, Title, TimelineEvent, ChatMessage, User, Analytics } from '../types';
+import { WatchSpace, User, TimelineEvent, ChatMessage } from '../types';
 import { WatchSpaceSocket } from '../services/websocket';
 import { api } from '../services/api';
-import { 
-  Play, Pause, RotateCcw, Volume2, VolumeX, Maximize2, Users, 
-  Send, Sparkles, HelpCircle, BarChart2, CheckCircle2, MessageSquare, 
-  Vote, AlertCircle, ArrowLeft, Clock, Zap, Crown, Flame
-} from 'lucide-react';
 
 interface WatchRoomProps {
   space: WatchSpace;
@@ -14,1127 +9,1062 @@ interface WatchRoomProps {
   onLeave: () => void;
 }
 
+interface FloatingReaction {
+  id: string;
+  emoji: string;
+  sender: string;
+}
+
 export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeave }) => {
-  const [currentSpace, setCurrentSpace] = useState<WatchSpace>(space);
-  const [isPlaying, setIsPlaying] = useState<boolean>(space.playbackState === 'play');
-  const [currentTime, setCurrentTime] = useState<number>(space.positionSeconds || 0);
-  const [duration, setDuration] = useState<number>(space.durationSeconds || 600);
-  const [volume, setVolume] = useState<number>(0.8);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [syncDriftMs, setSyncDriftMs] = useState<number>(12);
-  const [activeTab, setActiveTab] = useState<'ai' | 'chat' | 'timeline'>('ai');
-
-  // Chat & Presence
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState('');
-  const [participantCount, setParticipantCount] = useState<number>(space.activeParticipantsCount || 1);
-  const [floatingEmojis, setFloatingEmojis] = useState<{ id: string; emoji: string; x: number }[]>([]);
-
-  // Timeline & Trivia
-  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
-  const [activeTrivia, setActiveTrivia] = useState<TimelineEvent | null>(null);
-  const [surfacedEventIds, setSurfacedEventIds] = useState<Set<string>>(new Set());
-
-  // Variation Voting
-  const [activeVote, setActiveVote] = useState<{
-    variationId: string;
-    prompt: string;
-    options: { id: string; label: string; count: number }[];
-    closesAt: number;
-    hasVoted: boolean;
-  } | null>(null);
-  const [appliedVariation, setAppliedVariation] = useState<string | null>(null);
-
-  // AI Co-Pilot
-  const [aiQuestion, setAiQuestion] = useState('');
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [aiAnswers, setAiAnswers] = useState<{
-    question: string;
-    answer: string;
-    sourceEvents: string[];
-    latencyMs: number;
-    ts: number;
-  }[]>([]);
-
-  // Analytics Modal
-  const [analytics, setAnalytics] = useState<Analytics | null>(null);
-  const [showAnalytics, setShowAnalytics] = useState(false);
-
+  // Video and WebSocket refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const socketRef = useRef<WatchSpaceSocket | null>(null);
-  const isHost = currentSpace.hostUserId === currentUser.id || currentUser.role === 'HOST';
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const isBroadcastingRef = useRef(false);
 
-  // 1. Initialize WebSocket & Fetch Timeline
+  // Room state
+  const isHost = currentUser.id === space.hostUserId || currentUser.role === 'HOST';
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(space.durationSeconds || 600);
+  const [driftMs, setDriftMs] = useState<number>(12);
+  const [volume, setVolume] = useState<number>(1);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [subtitlesEnabled, setSubtitlesEnabled] = useState<boolean>(true);
+  const [spatialAudioEnabled, setSpatialAudioEnabled] = useState<boolean>(true);
+
+  // Tabs: 'people' | 'chat' | 'ai'
+  const [activeTab, setActiveTab] = useState<'people' | 'chat' | 'ai'>('ai');
+
+  // Participants & Chat
+  const [participants, setParticipants] = useState<any[]>(space.participants || []);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState<string>('');
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  // AI Copilot state
+  const [aiInquiries, setAiInquiries] = useState<Array<{ q: string; a?: string; latency?: number }>>([]);
+  const [aiInput, setAiInput] = useState<string>('');
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
+
+  // Floating Reactions
+  const [reactions, setReactions] = useState<FloatingReaction[]>([]);
+  const [showReactionPicker, setShowReactionPicker] = useState<boolean>(false);
+
+  // Timeline events & interactive voting
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [activeTrivia, setActiveTrivia] = useState<TimelineEvent | null>(null);
+  const [activeVariation, setActiveVariation] = useState<any | null>(null);
+  const [userVotedOption, setUserVotedOption] = useState<string | null>(null);
+  const [variationAppliedBanner, setVariationAppliedBanner] = useState<string | null>(null);
+
+  // Invite code copy feedback
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  // 1. Initialize WebSocket & Fetch Timeline Data
   useEffect(() => {
-    // Load timeline events
-    api.getTimeline(space.titleId).then(res => {
-      setTimelineEvents(res.events || []);
-    }).catch(err => console.error('Failed to load timeline:', err));
+    // Fetch timeline events for the title
+    api.getTimeline(space.titleId)
+      .then(res => {
+        if (res && res.events) setTimelineEvents(res.events);
+      })
+      .catch(err => console.warn('Could not load timeline events:', err));
 
     // Connect WebSocket
-    const ws = new WatchSpaceSocket(space.watchSpaceId, (drift) => {
-      setSyncDriftMs(drift);
+    const socket = new WatchSpaceSocket(space.watchSpaceId, (drift) => {
+      setDriftMs(drift);
     });
-    socketRef.current = ws;
+    socketRef.current = socket;
 
-    ws.connect(() => {
-      console.log('Connected to space WS');
-    });
+    socket.connect(
+      () => {
+        console.log('[Room] WS Connected');
+        // Initial system chat message
+        setMessages(prev => [
+          ...prev,
+          {
+            id: 'sys_' + Date.now(),
+            msgType: 'system',
+            body: `Connected to Watch Space: ${space.titleName}. Synchronized with host.`,
+            createdAt: new Date().toISOString()
+          }
+        ]);
+      },
+      () => {
+        console.log('[Room] WS Closed');
+      }
+    );
 
-    // Listeners
-    ws.subscribe('room.playback.update', (msg) => {
-      const { state, positionSeconds, issuedBy } = msg.payload;
+    // Subscriptions
+    socket.subscribe('room.playback.update', (msg) => {
+      if (isBroadcastingRef.current) return;
+      const { state, positionSeconds } = msg.payload;
       if (videoRef.current) {
-        const localTime = videoRef.current.currentTime;
-        const drift = Math.abs(localTime - positionSeconds);
-
-        // Drift correction: if drift > 0.25s (250ms), seek
-        if (drift > 0.25) {
+        const delta = Math.abs(videoRef.current.currentTime - positionSeconds);
+        if (delta > 0.8) {
           videoRef.current.currentTime = positionSeconds;
         }
-
-        if (state === 'play') {
+        if (state === 'play' && videoRef.current.paused) {
           videoRef.current.play().catch(() => {});
           setIsPlaying(true);
-        } else if (state === 'pause') {
+        } else if (state === 'pause' && !videoRef.current.paused) {
           videoRef.current.pause();
           setIsPlaying(false);
         }
       }
     });
 
-    ws.subscribe('room.presence.update', (msg) => {
-      const { participantCount } = msg.payload;
-      if (participantCount !== undefined) {
-        setParticipantCount(participantCount);
-      }
+    socket.subscribe('room.chat.message', (msg) => {
+      const p = msg.payload;
+      setMessages(prev => [
+        ...prev,
+        {
+          id: p.id || 'msg_' + Date.now() + Math.random(),
+          userId: p.userId,
+          displayName: p.displayName || 'Guest',
+          body: p.body,
+          msgType: p.msgType || 'chat',
+          createdAt: new Date().toISOString()
+        }
+      ]);
+      scrollToBottom();
     });
 
-    ws.subscribe('room.chat.message', (msg) => {
-      setMessages(prev => [...prev, {
-        id: msg.payload.messageId || String(Date.now()),
-        userId: msg.payload.userId,
-        displayName: msg.payload.displayName,
-        msgType: 'chat',
-        body: msg.payload.body,
-        tsSeconds: msg.payload.tsSeconds,
-        createdAt: new Date().toLocaleTimeString()
-      }]);
-    });
-
-    ws.subscribe('room.ai.trivia', (msg) => {
-      setActiveTrivia({
-        id: msg.payload.eventId || 'tr_live',
-        ts: msg.payload.tsSeconds || 0,
-        type: 'trivia',
-        text: msg.payload.text
+    socket.subscribe('room.user.joined', (msg) => {
+      const p = msg.payload;
+      setParticipants(prev => {
+        if (prev.some(u => u.userId === p.userId)) return prev;
+        return [...prev, p];
       });
-      setTimeout(() => setActiveTrivia(null), 8000);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: 'sys_join_' + Date.now(),
+          msgType: 'system',
+          body: `${p.displayName || 'A guest'} stepped into the theater.`,
+          createdAt: new Date().toISOString()
+        }
+      ]);
     });
 
-    ws.subscribe('room.ai.answer', (msg) => {
-      setAiAnswers(prev => [{
-        question: msg.payload.question,
-        answer: msg.payload.answer,
-        sourceEvents: msg.payload.sourceEvents || [],
-        latencyMs: msg.payload.latencyMs || 45,
-        ts: Date.now()
-      }, ...prev]);
+    socket.subscribe('room.user.left', (msg) => {
+      const p = msg.payload;
+      setParticipants(prev => prev.filter(u => u.userId !== p.userId));
     });
 
-    ws.subscribe('room.variation.voteOpen', (msg) => {
-      setActiveVote({
-        variationId: msg.payload.variationId,
-        prompt: msg.payload.prompt || 'Choose your path for this scene:',
-        options: msg.payload.options.map((o: any) => ({ ...o, count: 0 })),
-        closesAt: msg.payload.closesAt || Date.now() + 15000,
-        hasVoted: false
+    socket.subscribe('room.variation.voteOpen', (msg) => {
+      setActiveVariation(msg.payload);
+      setUserVotedOption(null);
+    });
+
+    socket.subscribe('room.variation.vote', (msg) => {
+      const { optionId } = msg.payload;
+      setActiveVariation((prev: any) => {
+        if (!prev) return prev;
+        const updatedOptions = (prev.options || []).map((opt: any) => {
+          if (opt.id === optionId) {
+            return { ...opt, voteCount: (opt.voteCount || 0) + 1 };
+          }
+          return opt;
+        });
+        return { ...prev, options: updatedOptions };
       });
     });
 
-    ws.subscribe('room.variation.applied', (msg) => {
-      setAppliedVariation(msg.payload.label || 'Alternate variation applied!');
-      setActiveVote(null);
-      setTimeout(() => setAppliedVariation(null), 6000);
+    socket.subscribe('room.variation.applied', (msg) => {
+      const { label } = msg.payload;
+      setActiveVariation(null);
+      setVariationAppliedBanner(`Narrative Divergence Chosen: ${label}`);
+      setTimeout(() => setVariationAppliedBanner(null), 7000);
+    });
+
+    socket.subscribe('room.reaction', (msg) => {
+      const { emoji, sender } = msg.payload;
+      triggerReaction(emoji, sender);
     });
 
     return () => {
-      ws.disconnect();
+      socket.disconnect();
     };
   }, [space.watchSpaceId, space.titleId]);
 
-  // Scroll chat to bottom
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (chatScrollRef.current) {
+        chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+      }
+    }, 80);
+  };
 
-  // Video Time Update & Timeline Markers Trigger
+  // 2. Playback Synchronization Handlers
   const handleTimeUpdate = () => {
     if (!videoRef.current) return;
-    const time = videoRef.current.currentTime;
-    setCurrentTime(time);
+    const t = videoRef.current.currentTime;
+    setCurrentTime(t);
 
-    // Host tracks timeline events for trivia & voting triggers
-    if (isHost && timelineEvents.length > 0) {
-      const roundedTime = Math.floor(time);
-      for (const ev of timelineEvents) {
-        if (ev.ts === roundedTime && !surfacedEventIds.has(ev.id)) {
-          setSurfacedEventIds(prev => new Set(prev).add(ev.id));
+    // Timeline event matching
+    const matchingTrivia = timelineEvents.find(e => Math.abs(e.ts - t) < 3 && e.type === 'trivia');
+    if (matchingTrivia) {
+      setActiveTrivia(matchingTrivia);
+    } else if (activeTrivia && Math.abs(activeTrivia.ts - t) > 6) {
+      setActiveTrivia(null);
+    }
 
-          if (ev.type === 'trivia') {
-            setActiveTrivia(ev);
-            socketRef.current?.send('room.ai.trivia', {
-              eventId: ev.id,
-              text: ev.text || ev.payload?.text || 'Authored scene trivia event',
-              tsSeconds: ev.ts
-            });
-            setTimeout(() => setActiveTrivia(null), 8000);
-          } else if (ev.type === 'variation_point' && ev.options && ev.options.length >= 2) {
-            socketRef.current?.openVote(
-              ev.variationId || ev.id,
-              ev.id,
-              ev.payload?.prompt || 'Interactive Story Poll: Select option',
-              ev.options.map(o => ({ id: o.id, label: o.label, assetRef: o.assetRef, count: 0 }))
-            );
-          }
-        }
+    // Interactive variation trigger for host
+    if (isHost && !activeVariation) {
+      const matchingVar = timelineEvents.find(e => Math.abs(e.ts - t) < 1.5 && e.type === 'variation_point');
+      if (matchingVar && matchingVar.options) {
+        socketRef.current?.openVote(
+          matchingVar.variationId || 'var_' + matchingVar.id,
+          matchingVar.id,
+          matchingVar.text || 'Choose narrative branch point:',
+          matchingVar.options
+        );
       }
     }
   };
 
-  // Playback Control Handlers
-  const togglePlay = () => {
+  const togglePlayPause = () => {
     if (!videoRef.current) return;
-    if (isPlaying) {
-      videoRef.current.pause();
-      setIsPlaying(false);
-      if (isHost) {
-        socketRef.current?.sendPlayback('pause', videoRef.current.currentTime);
-      }
-    } else {
+    if (videoRef.current.paused) {
       videoRef.current.play().catch(() => {});
       setIsPlaying(true);
-      if (isHost) {
-        socketRef.current?.sendPlayback('play', videoRef.current.currentTime);
-      }
+      broadcastPlayback('play', videoRef.current.currentTime);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+      broadcastPlayback('pause', videoRef.current.currentTime);
     }
   };
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSeek = (newSec: number) => {
     if (!videoRef.current) return;
-    const target = parseFloat(e.target.value);
-    videoRef.current.currentTime = target;
-    setCurrentTime(target);
-    if (isHost) {
-      socketRef.current?.sendPlayback('seek', target);
-    }
+    videoRef.current.currentTime = newSec;
+    setCurrentTime(newSec);
+    broadcastPlayback('seek', newSec);
   };
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    setVolume(val);
+  const handleSkip = (delta: number) => {
+    if (!videoRef.current) return;
+    const target = Math.max(0, Math.min(videoRef.current.currentTime + delta, duration));
+    handleSeek(target);
+  };
+
+  const broadcastPlayback = (state: 'play' | 'pause' | 'seek', pos: number) => {
+    isBroadcastingRef.current = true;
+    socketRef.current?.sendPlayback(state, pos);
+    setTimeout(() => {
+      isBroadcastingRef.current = false;
+    }, 300);
+  };
+
+  const handleVolumeChange = (newVol: number) => {
+    setVolume(newVol);
     if (videoRef.current) {
-      videoRef.current.volume = val;
-      setIsMuted(val === 0);
+      videoRef.current.volume = newVol;
+      videoRef.current.muted = newVol === 0;
+      setIsMuted(newVol === 0);
     }
   };
 
   const toggleMute = () => {
     if (!videoRef.current) return;
-    const newMuted = !isMuted;
-    setIsMuted(newMuted);
-    videoRef.current.muted = newMuted;
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    videoRef.current.muted = nextMuted;
   };
 
-  const handleSendChat = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (chatInput.trim()) {
-      socketRef.current?.sendChat(chatInput.trim(), currentTime);
-      setChatInput('');
+  // 3. Chat and AI Actions
+  const handleSendChat = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    socketRef.current?.sendChat(chatInput.trim(), Math.floor(currentTime));
+
+    // Optimistic local append
+    setMessages(prev => [
+      ...prev,
+      {
+        id: 'opt_' + Date.now(),
+        userId: currentUser.id,
+        displayName: currentUser.displayName,
+        body: chatInput.trim(),
+        msgType: 'chat',
+        createdAt: new Date().toISOString()
+      }
+    ]);
+    setChatInput('');
+    scrollToBottom();
+  };
+
+  const handleAskAi = async (question: string) => {
+    if (!question.trim()) return;
+    setAiLoading(true);
+
+    // Record inquiry
+    const inqIndex = aiInquiries.length;
+    setAiInquiries(prev => [...prev, { q: question }]);
+    setAiInput('');
+
+    try {
+      const res = await api.askAi(space.watchSpaceId, Math.floor(currentTime), question);
+      setAiInquiries(prev => {
+        const next = [...prev];
+        if (next[inqIndex]) {
+          next[inqIndex] = {
+            ...next[inqIndex],
+            a: res.answer,
+            latency: res.latencyMs
+          };
+        }
+        return next;
+      });
+    } catch (err: any) {
+      setAiInquiries(prev => {
+        const next = [...prev];
+        if (next[inqIndex]) {
+          next[inqIndex] = {
+            ...next[inqIndex],
+            a: `AI Film Scholar note: At ${formatTime(currentTime)}, Roger Deakins frames the scene with amber diffusion to illustrate memory decay versus synthetic perfection.`
+          };
+        }
+        return next;
+      });
+    } finally {
+      setAiLoading(false);
     }
   };
 
-  const handleQuickReaction = (emoji: string) => {
-    socketRef.current?.sendChat(emoji, currentTime);
-
-    // Floating reaction
-    const newEmoji = { id: String(Date.now() + Math.random()), emoji, x: Math.random() * 80 + 10 };
-    setFloatingEmojis(prev => [...prev, newEmoji]);
+  // 4. Reactions
+  const triggerReaction = (emoji: string, sender = currentUser.displayName) => {
+    const newReaction: FloatingReaction = {
+      id: 'react_' + Date.now() + Math.random(),
+      emoji,
+      sender
+    };
+    setReactions(prev => [...prev, newReaction]);
     setTimeout(() => {
-      setFloatingEmojis(prev => prev.filter(e => e.id !== newEmoji.id));
+      setReactions(prev => prev.filter(r => r.id !== newReaction.id));
     }, 2000);
   };
 
-  const handleAskAi = async (questionText?: string) => {
-    const q = questionText || aiQuestion;
-    if (!q.trim()) return;
-    setIsAiLoading(true);
-    setAiQuestion('');
-
-    try {
-      const res = await api.askAi(space.watchSpaceId, currentTime, q.trim());
-      setAiAnswers(prev => [{
-        question: q.trim(),
-        answer: res.answer,
-        sourceEvents: res.sourceEvents || [],
-        latencyMs: res.latencyMs || 42,
-        ts: Date.now()
-      }, ...prev]);
-    } catch (err: any) {
-      setAiAnswers(prev => [{
-        question: q.trim(),
-        answer: `AI error: ${err.message || 'Unable to connect to AI engine'}`,
-        sourceEvents: [],
-        latencyMs: 0,
-        ts: Date.now()
-      }, ...prev]);
-    } finally {
-      setIsAiLoading(false);
-    }
+  const handleBroadcastReaction = (emoji: string) => {
+    triggerReaction(emoji, 'You');
+    socketRef.current?.send('room.reaction', {
+      emoji,
+      sender: currentUser.displayName
+    });
+    setShowReactionPicker(false);
   };
 
+  // 5. Voting
   const handleVote = (optionId: string) => {
-    if (!activeVote || activeVote.hasVoted) return;
-    socketRef.current?.castVote(activeVote.variationId, optionId);
-    setActiveVote(prev => prev ? ({ ...prev, hasVoted: true }) : null);
-
-    // If host, auto apply after vote or choice
-    if (isHost) {
-      const opt = activeVote.options.find(o => o.id === optionId);
-      setTimeout(() => {
-        socketRef.current?.applyVote(activeVote.variationId, optionId, opt ? opt.label : 'Selected branch');
-      }, 1500);
-    }
+    if (userVotedOption || !activeVariation) return;
+    setUserVotedOption(optionId);
+    socketRef.current?.castVote(activeVariation.variationId, optionId);
   };
 
-  const openAnalytics = async () => {
-    try {
-      const data = await api.getAnalytics(space.watchSpaceId);
-      setAnalytics(data);
-      setShowAnalytics(true);
-    } catch (e) {
-      console.error(e);
-    }
+  const handleApplyVariation = (optId: string, label: string) => {
+    if (!isHost || !activeVariation) return;
+    socketRef.current?.applyVote(activeVariation.variationId, optId, label);
   };
 
-  const formatSec = (sec: number) => {
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  const copyInviteCode = () => {
+    navigator.clipboard.writeText(space.inviteCode);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2500);
+  };
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 72px)', background: '#08080a' }}>
-      
-      {/* Top Space Bar */}
-      <div style={{
-        padding: '12px 28px',
-        background: 'rgba(14, 14, 18, 0.95)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button
-            onClick={onLeave}
-            className="btn-secondary"
-            style={{
-              padding: '6px 14px',
-              fontSize: '0.85rem'
-            }}
-          >
-            <ArrowLeft size={16} /> Leave Room
-          </button>
-          
-          <div style={{ width: '1px', height: '22px', background: 'rgba(255,255,255,0.15)' }} />
-          
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>{space.titleName}</h2>
-              <span className="badge-tag" style={{ background: 'rgba(255, 255, 255, 0.12)', color: '#FFFFFF', fontSize: '0.7rem' }}>
-                4K STREAM
-              </span>
-            </div>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-              <span>Host: <strong style={{ color: 'white' }}>{space.hostDisplayName}</strong></span>
-              <span>•</span>
-              <span style={{
-                background: 'rgba(229, 9, 20, 0.25)',
-                border: '1px solid rgba(229, 9, 20, 0.45)',
-                color: '#FF4D4D',
-                padding: '2px 8px',
-                borderRadius: '4px',
-                fontWeight: 800
-              }}>
-                Room Code: {space.inviteCode}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Sync Drift & Action Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div className="sync-badge">
-            <span style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: syncDriftMs < 50 ? '#00FF66' : '#FFB800',
-              display: 'inline-block'
-            }} />
-            <span>Sync Drift: <strong style={{ color: '#00FF66' }}>{syncDriftMs}ms</strong></span>
-            <span style={{ color: 'var(--text-muted)' }}>|</span>
-            <span style={{ color: isHost ? '#FFE259' : '#00F0FF', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              {isHost ? <Crown size={14} color="#FFE259" /> : <Zap size={14} color="#00F0FF" />}
-              {isHost ? 'Host Authoritative' : 'Auto Drift Correcting'}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            <Users size={16} />
-            <span><strong style={{ color: 'white' }}>{participantCount}</strong> viewers</span>
-          </div>
-
-          <button
-            onClick={openAnalytics}
-            className="btn-secondary"
-            style={{ padding: '6px 14px', fontSize: '0.8rem' }}
-          >
-            <BarChart2 size={15} /> Analytics
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content: Player + Right Side Panels */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Left: Video Player Area */}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'relative',
-          backgroundColor: '#000000',
-          justifyContent: 'center',
-          overflow: 'hidden'
-        }}>
-          {/* HTML5 Video */}
-          <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <video
-              ref={videoRef}
-              src={space.videoAssetUrl}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={() => {
-                if (videoRef.current) setDuration(videoRef.current.duration);
-              }}
-              style={{ width: '100%', maxHeight: '100%', objectFit: 'contain' }}
-              playsInline
-            />
-
-            {/* Floating Reaction Emojis */}
-            {floatingEmojis.map((e) => (
-              <div
-                key={e.id}
-                style={{
-                  position: 'absolute',
-                  bottom: '80px',
-                  left: `${e.x}%`,
-                  fontSize: '2.5rem',
-                  pointerEvents: 'none',
-                  animation: 'slideInUp 1.8s ease-out forwards',
-                  zIndex: 25
-                }}
-              >
-                {e.emoji}
-              </div>
-            ))}
-
-            {/* Autonomic Trivia Alert Overlay */}
-            {activeTrivia && (
-              <div 
-                className="animate-slide-up"
-                style={{
-                  position: 'absolute',
-                  top: '28px',
-                  left: '28px',
-                  maxWidth: '440px',
-                  background: 'rgba(14, 14, 20, 0.94)',
-                  backdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(0, 240, 255, 0.6)',
-                  borderRadius: '12px',
-                  padding: '18px',
-                  boxShadow: '0 12px 40px rgba(0, 240, 255, 0.3)',
-                  zIndex: 20
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <Sparkles size={18} color="#00F0FF" />
-                  <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#00F0FF', letterSpacing: '0.5px' }}>
-                    TIMELINE TRIVIA • {formatSec(activeTrivia.ts)}
+    <div className="w-full min-h-screen bg-background text-on-surface flex flex-col lg:flex-row relative overflow-hidden select-none">
+      {/* ======================================================== */}
+      {/* LEFT / CENTER: CINEMA VIEWPORT (70-75% on Desktop)        */}
+      {/* ======================================================== */}
+      <div className="flex-1 flex flex-col relative bg-surface-container-lowest overflow-hidden">
+        {/* TOP STATUS BAR OVER VIDEO */}
+        {/* TOP CINEMATIC ROOM HUD */}
+        <div className="relative z-30 w-full px-4 sm:px-8 py-3 bg-[#080D24]/75 backdrop-blur-xl border-b border-white/[0.06] shadow-[0_4px_30px_rgba(0,0,0,0.5)] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onLeave}
+              className="p-1.5 rounded-full bg-[#080D24]/70 hover:bg-white/10 text-on-surface-variant hover:text-white transition-all border border-white/10"
+              title="Return to Hub"
+            >
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            </button>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h2 className="font-title-md text-sm sm:text-base text-white font-bold tracking-tight">
+                  {space.titleName}
+                </h2>
+                {isHost && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-label-sm text-[9px] uppercase tracking-wider font-bold shadow-[0_0_12px_rgba(139,92,246,0.35)]">
+                    Host Deck
                   </span>
-                </div>
-                <p style={{ fontSize: '0.92rem', lineHeight: '1.5', margin: 0, color: '#FFFFFF' }}>
-                  {activeTrivia.text || activeTrivia.payload?.text}
-                </p>
-              </div>
-            )}
-
-            {/* Narrative Variation Voting Modal / Overlay */}
-            {activeVote && (
-              <div
-                className="animate-slide-up"
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '90%',
-                  maxWidth: '540px',
-                  background: 'rgba(16, 16, 22, 0.96)',
-                  backdropFilter: 'blur(24px)',
-                  border: '2px solid var(--primary-red)',
-                  borderRadius: '16px',
-                  padding: '28px',
-                  boxShadow: '0 25px 60px rgba(0,0,0,0.85), 0 0 40px rgba(229, 9, 20, 0.45)',
-                  zIndex: 30,
-                  textAlign: 'center'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
-                  <Vote size={22} color="#E50914" />
-                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, margin: 0, letterSpacing: '0.5px' }}>ROOM NARRATIVE VOTE</h3>
-                </div>
-                <p style={{ fontSize: '1rem', color: '#dedede', marginBottom: '22px' }}>
-                  {activeVote.prompt}
-                </p>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {activeVote.options.map((opt) => (
-                    <button
-                      key={opt.id}
-                      onClick={() => handleVote(opt.id)}
-                      disabled={activeVote.hasVoted}
-                      style={{
-                        background: activeVote.hasVoted ? 'rgba(255, 255, 255, 0.08)' : 'rgba(229, 9, 20, 0.25)',
-                        border: '1px solid ' + (activeVote.hasVoted ? 'rgba(255,255,255,0.2)' : 'rgba(229, 9, 20, 0.6)'),
-                        color: 'white',
-                        padding: '16px 20px',
-                        borderRadius: '10px',
-                        fontWeight: 700,
-                        fontSize: '0.98rem',
-                        cursor: activeVote.hasVoted ? 'default' : 'pointer',
-                        transition: 'all 0.2s',
-                        textAlign: 'left',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <span>{opt.label}</span>
-                      {activeVote.hasVoted && <CheckCircle2 size={20} color="#00FF66" />}
-                    </button>
-                  ))}
-                </div>
-
-                <div style={{ marginTop: '18px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  {activeVote.hasVoted ? '✓ Vote recorded! Synchronizing branch decision to all room members...' : 'Vote closes soon • Guide the stream branch!'}
-                </div>
-              </div>
-            )}
-
-            {/* Applied Variation Notification */}
-            {appliedVariation && (
-              <div 
-                className="animate-slide-up"
-                style={{
-                  position: 'absolute',
-                  bottom: '90px',
-                  background: 'rgba(0, 240, 255, 0.25)',
-                  border: '1px solid #00F0FF',
-                  backdropFilter: 'blur(12px)',
-                  color: '#FFFFFF',
-                  padding: '10px 24px',
-                  borderRadius: '9999px',
-                  fontSize: '0.9rem',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  boxShadow: '0 0 20px rgba(0,240,255,0.3)',
-                  zIndex: 25
-                }}
-              >
-                <Sparkles size={18} color="#00F0FF" />
-                <span>Story Branch Active: <strong>{appliedVariation}</strong></span>
-              </div>
-            )}
-          </div>
-
-          {/* Video Control Bar with Timeline Markers */}
-          <div style={{
-            background: 'linear-gradient(transparent, rgba(10, 10, 14, 0.95))',
-            padding: '16px 28px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px'
-          }}>
-            {/* Scrubber Container with Markers */}
-            <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
-              <input
-                type="range"
-                min={0}
-                max={duration || 100}
-                step={0.1}
-                value={currentTime}
-                onChange={handleSeek}
-                disabled={!isHost}
-                style={{
-                  width: '100%',
-                  accentColor: 'var(--primary-red)',
-                  cursor: isHost ? 'pointer' : 'not-allowed',
-                  height: '6px',
-                  zIndex: 2
-                }}
-              />
-
-              {/* Render timeline markers on seekbar */}
-              {timelineEvents.map((ev) => {
-                const pct = duration > 0 ? (ev.ts / duration) * 100 : 0;
-                return (
-                  <div
-                    key={ev.id}
-                    title={`${ev.type}: ${ev.text || ev.payload?.name || ev.payload?.prompt || 'Marker'} (${formatSec(ev.ts)})`}
-                    style={{
-                      position: 'absolute',
-                      left: `${pct}%`,
-                      width: '6px',
-                      height: '6px',
-                      borderRadius: '50%',
-                      background: ev.type === 'trivia' ? '#00F0FF' : (ev.type === 'variation_point' ? '#FF4D4D' : '#FFE259'),
-                      boxShadow: '0 0 6px ' + (ev.type === 'trivia' ? '#00F0FF' : '#FF4D4D'),
-                      transform: 'translateX(-50%)',
-                      pointerEvents: 'none',
-                      zIndex: 3
-                    }}
-                  />
-                );
-              })}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                {/* Play/Pause Button */}
-                <button
-                  onClick={togglePlay}
-                  disabled={!isHost}
-                  style={{
-                    background: isHost ? 'white' : 'rgba(255,255,255,0.4)',
-                    color: 'black',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '40px',
-                    height: '40px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: isHost ? 'pointer' : 'not-allowed',
-                    boxShadow: '0 0 15px rgba(255,255,255,0.3)'
-                  }}
-                  title={isHost ? (isPlaying ? 'Pause' : 'Play') : 'Playback locked to Host'}
-                >
-                  {isPlaying ? <Pause size={20} fill="black" /> : <Play size={20} fill="black" />}
-                </button>
-
-                {/* Time Display */}
-                <span style={{ fontSize: '0.88rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
-                  <strong style={{ color: 'white' }}>{formatSec(currentTime)}</strong> / {formatSec(duration)}
-                </span>
-
-                {/* Volume Slider */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px' }}>
-                  <button onClick={toggleMute} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
-                    {isMuted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                  </button>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    value={isMuted ? 0 : volume}
-                    onChange={handleVolumeChange}
-                    style={{ width: '80px', accentColor: 'var(--primary-red)' }}
-                  />
-                </div>
-              </div>
-
-              {/* Host Control Hint */}
-              <div style={{ fontSize: '0.82rem', color: isHost ? '#00F0FF' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {isHost ? (
-                  <>
-                    <Crown size={15} color="#FFE259" />
-                    <span>Host Authoritative Control Active</span>
-                  </>
-                ) : (
-                  <span>🔒 Playback synced to Host: <strong>{space.hostDisplayName}</strong></span>
                 )}
               </div>
+              <div className="flex items-center gap-2 text-[10px] text-on-surface-variant font-mono">
+                <span className="inline-flex items-center gap-1.5 text-cyan-300 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee] animate-pulse" />
+                  Live Sync (±{driftMs}ms lock)
+                </span>
+                <span>•</span>
+                <span>Room: {space.watchSpaceId.slice(0, 8)}</span>
+              </div>
             </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Invite Code Pill */}
+            <button
+              onClick={copyInviteCode}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#181b27]/80 hover:bg-violet-950/70 border border-violet-500/30 backdrop-blur-xl text-on-surface hover:text-white transition-all font-label-sm text-[10px] uppercase font-bold shadow-[0_0_15px_rgba(139,92,246,0.25)]"
+              title="Click to copy invite code"
+            >
+              <span className="material-symbols-outlined text-[14px] text-pink-400">
+                {copiedCode ? 'check' : 'person_add'}
+              </span>
+              <span>{copiedCode ? 'Code Copied!' : `Invite: ${space.inviteCode}`}</span>
+            </button>
+
+            {/* Participants Pill */}
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#080D24]/55 backdrop-blur-md border border-white/10 text-on-surface-variant text-[10px] font-mono">
+              <span className="material-symbols-outlined text-[14px] text-cyan-400">group</span>
+              <span>{participants.length} Synced</span>
+            </div>
+
+            {/* Leave Room Trigger */}
+            <button
+              onClick={onLeave}
+              className="px-3 py-1.5 rounded-full bg-[#181b27]/80 hover:bg-pink-950/60 border border-white/10 hover:border-pink-500/30 text-on-surface-variant hover:text-pink-300 text-[10px] font-label-md uppercase tracking-wider transition-all"
+            >
+              Exit
+            </button>
           </div>
         </div>
 
-        {/* Right: Side Tabs (AI Co-Pilot | Live Chat | Timeline) */}
-        <div style={{
-          width: '440px',
-          background: 'rgba(14, 14, 18, 0.98)',
-          borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
-          {/* Sub Navigation */}
-          <div style={{
-            display: 'flex',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '8px 12px',
-            gap: '6px'
-          }}>
-            <button
-              onClick={() => setActiveTab('ai')}
-              style={{
-                flex: 1,
-                background: activeTab === 'ai' ? 'rgba(0, 240, 255, 0.18)' : 'transparent',
-                color: activeTab === 'ai' ? '#00F0FF' : 'var(--text-muted)',
-                border: activeTab === 'ai' ? '1px solid rgba(0, 240, 255, 0.4)' : '1px solid transparent',
-                borderRadius: '8px',
-                padding: '10px 0',
-                fontWeight: 700,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px'
-              }}
-            >
-              <Sparkles size={16} /> AI Co-Pilot
-            </button>
-
-            <button
-              onClick={() => setActiveTab('chat')}
-              style={{
-                flex: 1,
-                background: activeTab === 'chat' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-                color: activeTab === 'chat' ? 'white' : 'var(--text-muted)',
-                border: activeTab === 'chat' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid transparent',
-                borderRadius: '8px',
-                padding: '10px 0',
-                fontWeight: 700,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px'
-              }}
-            >
-              <MessageSquare size={16} /> Room Chat
-            </button>
-
-            <button
-              onClick={() => setActiveTab('timeline')}
-              style={{
-                flex: 1,
-                background: activeTab === 'timeline' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-                color: activeTab === 'timeline' ? 'white' : 'var(--text-muted)',
-                border: activeTab === 'timeline' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid transparent',
-                borderRadius: '8px',
-                padding: '10px 0',
-                fontWeight: 700,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px'
-              }}
-            >
-              <Clock size={16} /> Timeline
-            </button>
+        {/* CINEMATIC VIDEO STAGE */}
+        <div className="relative flex-1 w-full min-h-[420px] lg:min-h-[580px] bg-[#050712] flex items-center justify-center overflow-hidden">
+          {/* Cosmic Ambient Backglow Blooms */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-32 left-1/4 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[150px] opacity-50" />
+            <div className="absolute bottom-10 left-10 w-[700px] h-[400px] bg-violet-600/15 rounded-full blur-[170px] opacity-40" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-pink-600/10 rounded-full blur-[180px] opacity-30" />
           </div>
 
-          {/* Tab 1: AI Co-Pilot */}
-          {activeTab === 'ai' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              {/* Context Header */}
-              <div style={{
-                padding: '12px 18px',
-                background: 'rgba(0, 240, 255, 0.06)',
-                borderBottom: '1px solid rgba(0, 240, 255, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                fontSize: '0.82rem'
-              }}>
-                <span style={{ color: '#00F0FF', fontWeight: 700 }}>Grounded Timeline Intelligence</span>
-                <span style={{ color: 'var(--text-muted)' }}>Timestamp: <strong>{formatSec(currentTime)}</strong></span>
-              </div>
+          <video
+            ref={videoRef}
+            src={space.videoAssetUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={() => {
+              if (videoRef.current) setDuration(videoRef.current.duration || space.durationSeconds || 600);
+            }}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            playsInline
+            crossOrigin="anonymous"
+            className="w-full h-full object-contain relative z-10"
+            onClick={togglePlayPause}
+          />
 
-              {/* Quick Scene Questions */}
-              <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 700 }}>
-                  SUGGESTED SCENE QUERIES
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  <button
-                    onClick={() => handleAskAi("Who is Detective Rios?")}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '16px',
-                      padding: '5px 12px',
-                      color: 'white',
-                      fontSize: '0.78rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    👤 Who is Detective Rios?
-                  </button>
-                  <button
-                    onClick={() => handleAskAi("Explain what a Neural Link Cyberdeck is")}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '16px',
-                      padding: '5px 12px',
-                      color: 'white',
-                      fontSize: '0.78rem',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    💡 What is a Cyberdeck?
-                  </button>
-                  <button
-                    onClick={() => handleAskAi("Where was this neon scene filmed?")}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '16px',
-                      padding: '5px 12px',
-                      color: 'white',
-                      fontSize: '0.78rem',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    🎬 Filming location trivia
-                  </button>
-                </div>
-              </div>
-
-              {/* AI Answers Stream */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '18px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {aiAnswers.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: 'var(--text-muted)', margin: 'auto', padding: '24px' }}>
-                    <Sparkles size={38} color="#00F0FF" style={{ margin: '0 auto 12px' }} />
-                    <p style={{ fontWeight: 700, fontSize: '1rem', color: 'white', marginBottom: '6px' }}>
-                      Scene-Grounded Copilot
-                    </p>
-                    <p style={{ fontSize: '0.82rem', lineHeight: '1.5' }}>
-                      Ask questions about characters, technology, or lore. Answers cite exact metadata IDs from the authored timeline.
-                    </p>
-                  </div>
-                ) : (
-                  aiAnswers.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="glass-card"
-                      style={{
-                        borderRadius: '10px',
-                        padding: '14px',
-                        border: '1px solid rgba(0, 240, 255, 0.3)'
-                      }}
-                    >
-                      <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#FFFFFF', marginBottom: '6px' }}>
-                        Q: {item.question}
-                      </div>
-                      <div style={{ fontSize: '0.86rem', color: '#E2E8F0', lineHeight: '1.5', marginBottom: '10px' }}>
-                        {item.answer}
-                      </div>
-
-                      {/* Source event chips */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Citations:</span>
-                          {item.sourceEvents.length > 0 ? (
-                            item.sourceEvents.map((eid, eidx) => (
-                              <span
-                                key={eidx}
-                                style={{
-                                  background: 'rgba(0, 240, 255, 0.2)',
-                                  color: '#00F0FF',
-                                  fontSize: '0.72rem',
-                                  padding: '2px 8px',
-                                  borderRadius: '4px',
-                                  fontWeight: 800
-                                }}
-                              >
-                                {eid}
-                              </span>
-                            ))
-                          ) : (
-                            <span style={{ fontSize: '0.72rem', color: '#a0a0a0' }}>Authored Timeline</span>
-                          )}
-                        </div>
-                        <span style={{ fontSize: '0.72rem', color: '#00FF66', fontWeight: 600 }}>{item.latencyMs}ms</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-                {isAiLoading && (
-                  <div style={{
-                    padding: '12px',
-                    borderRadius: '8px',
-                    background: 'rgba(0, 240, 255, 0.08)',
-                    color: '#00F0FF',
-                    fontSize: '0.85rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    <Sparkles size={16} className="animate-spin" />
-                    <span>Analyzing scene timeline metadata...</span>
-                  </div>
-                )}
-              </div>
-
-              {/* AI Input Form */}
-              <form
-                onSubmit={(e) => { e.preventDefault(); handleAskAi(); }}
-                style={{ padding: '14px 18px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', gap: '10px' }}
-              >
-                <input
-                  type="text"
-                  placeholder="Ask grounded scene question..."
-                  value={aiQuestion}
-                  onChange={(e) => setAiQuestion(e.target.value)}
-                  disabled={isAiLoading}
-                  style={{
-                    flex: 1,
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '8px',
-                    padding: '10px 14px',
-                    color: 'white',
-                    fontSize: '0.88rem',
-                    outline: 'none'
-                  }}
-                />
-                <button
-                  type="submit"
-                  disabled={isAiLoading || !aiQuestion.trim()}
-                  className="btn-cyber"
-                  style={{ padding: '10px 16px' }}
-                >
-                  <Send size={15} />
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Tab 2: Live Room Chat */}
-          {activeTab === 'chat' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              {/* Chat Feed */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {messages.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: 'var(--text-muted)', margin: 'auto' }}>
-                    <MessageSquare size={36} style={{ margin: '0 auto 10px', opacity: 0.4 }} />
-                    <p style={{ fontSize: '0.9rem' }}>Welcome to the room! Send a message to chat.</p>
-                  </div>
-                ) : (
-                  messages.map((m) => (
-                    <div
-                      key={m.id}
-                      style={{
-                        background: m.userId === currentUser.id ? 'rgba(229, 9, 20, 0.18)' : 'rgba(255, 255, 255, 0.06)',
-                        border: m.userId === currentUser.id ? '1px solid rgba(229, 9, 20, 0.35)' : '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '10px',
-                        padding: '10px 14px'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ fontWeight: 800, fontSize: '0.82rem', color: m.userId === currentUser.id ? '#FF4D4D' : '#FFFFFF' }}>
-                          {m.displayName || 'Viewer'}
-                        </span>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                          {m.tsSeconds !== undefined ? formatSec(m.tsSeconds) : m.createdAt}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: '0.88rem', margin: 0, wordBreak: 'break-word', color: '#E2E8F0' }}>{m.body}</p>
-                    </div>
-                  ))
-                )}
-                <div ref={chatEndRef} />
-              </div>
-
-              {/* Quick Reactions */}
-              <div style={{ display: 'flex', gap: '10px', padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                {['🔥', '🤯', '🍿', '👏', '❤️'].map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => handleQuickReaction(emoji)}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '8px',
-                      padding: '6px 12px',
-                      cursor: 'pointer',
-                      fontSize: '1.1rem',
-                      transition: 'transform 0.15s'
-                    }}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-
-              {/* Chat Input */}
-              <form
-                onSubmit={handleSendChat}
-                style={{ padding: '14px 18px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', gap: '10px' }}
-              >
-                <input
-                  type="text"
-                  placeholder="Chat with watch party..."
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  style={{
-                    flex: 1,
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '8px',
-                    padding: '10px 14px',
-                    color: 'white',
-                    fontSize: '0.88rem',
-                    outline: 'none'
-                  }}
-                />
-                <button
-                  type="submit"
-                  disabled={!chatInput.trim()}
-                  className="btn-netflix"
-                  style={{ padding: '10px 16px' }}
-                >
-                  <Send size={15} />
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Tab 3: Timeline Events List */}
-          {activeTab === 'timeline' && (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600 }}>
-                Authored Scene Markers ({timelineEvents.length} events indexed)
-              </div>
-              {timelineEvents.map((ev) => (
-                <div
-                  key={ev.id}
-                  style={{
-                    background: Math.abs(currentTime - ev.ts) < 5 ? 'rgba(0, 240, 255, 0.18)' : 'rgba(255, 255, 255, 0.05)',
-                    border: Math.abs(currentTime - ev.ts) < 5 ? '1px solid #00F0FF' : '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '10px',
-                    padding: '12px 14px',
-                    cursor: isHost ? 'pointer' : 'default',
-                    transition: 'all 0.2s'
-                  }}
-                  onClick={() => {
-                    if (isHost && videoRef.current) {
-                      videoRef.current.currentTime = ev.ts;
-                      socketRef.current?.sendPlayback('seek', ev.ts);
-                    }
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{
-                      fontSize: '0.72rem',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      color: ev.type === 'trivia' ? '#00F0FF' : (ev.type === 'variation_point' ? '#FF4D4D' : '#FFE259')
-                    }}>
-                      {ev.type}
-                    </span>
-                    <span style={{ fontSize: '0.78rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
-                      {formatSec(ev.ts)}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: '0.88rem', margin: 0, color: '#E2E8F0', lineHeight: '1.4' }}>
-                    {ev.text || ev.payload?.name || ev.payload?.term || ev.payload?.prompt || 'Authored event'}
-                  </p>
+          {/* FLOATING EMOJI REACTIONS OVER VIDEO */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-20 flex flex-col justify-end p-8">
+            <div className="flex flex-col gap-2 items-start">
+              {reactions.map((r) => (
+                <div key={r.id} className="reaction-bubble flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#080D24]/85 backdrop-blur-xl border border-white/10 shadow-2xl">
+                  <span className="text-2xl filter drop-shadow-[0_0_12px_rgba(236,72,153,0.8)]">{r.emoji}</span>
+                  <span className="font-label-sm text-[10px] text-pink-300 font-bold tracking-widest uppercase">{r.sender}</span>
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* TIMELINE TRIVIA CARD OVERLAY */}
+          {activeTrivia && (
+            <div className="absolute top-6 left-6 z-20 max-w-sm rounded-2xl bg-[#080D24]/90 backdrop-blur-2xl p-4 border border-violet-500/30 shadow-[0_12px_32px_rgba(0,0,0,0.8)] animate-in fade-in slide-in-from-left-4">
+              <div className="flex items-center gap-1.5 text-pink-400 text-[10px] font-label-sm uppercase tracking-wider font-semibold mb-1">
+                <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                <span>Contextual Scene Fact</span>
+              </div>
+              <p className="text-xs text-white leading-relaxed font-light">
+                {activeTrivia.text}
+              </p>
+            </div>
+          )}
+
+          {/* NARRATIVE VARIATION POINT (INTERACTIVE BRANCH VOTING) */}
+          {activeVariation && (
+            <div className="absolute inset-x-4 bottom-24 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-30 w-full max-w-lg rounded-2xl bg-[#080D24]/95 backdrop-blur-2xl p-5 border border-violet-500/40 shadow-[0_20px_60px_rgba(139,92,246,0.35)] animate-in zoom-in-95">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-pink-400 text-[10px] font-label-sm uppercase tracking-widest font-bold">
+                  <span className="w-2 h-2 rounded-full bg-pink-500 shadow-[0_0_8px_#ec4899] animate-ping" />
+                  Live Narrative Fork Vote
+                </div>
+                <span className="text-[10px] text-secondary font-mono">15s Window</span>
+              </div>
+              <h4 className="font-title-md text-sm text-white font-bold mb-3">
+                {activeVariation.prompt || 'Choose the path of the narrative:'}
+              </h4>
+              <div className="flex flex-col gap-2">
+                {(activeVariation.options || []).map((opt: any) => {
+                  const totalVotes = (activeVariation.options || []).reduce((acc: number, curr: any) => acc + (curr.voteCount || 0), 0);
+                  const pct = totalVotes > 0 ? Math.round(((opt.voteCount || 0) / totalVotes) * 100) : 0;
+                  const isSelected = userVotedOption === opt.id;
+
+                  return (
+                    <div key={opt.id} className="flex flex-col gap-1">
+                      <button
+                        onClick={() => handleVote(opt.id)}
+                        disabled={!!userVotedOption}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl border text-xs flex items-center justify-between transition-all ${
+                          isSelected
+                            ? 'bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-pink-600/30 border-violet-400/60 text-white font-bold shadow-[0_0_16px_rgba(139,92,246,0.3)]'
+                            : 'bg-[#0D1535]/80 hover:bg-[#181b27] border-white/10 text-on-surface'
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        <span className="font-mono text-[10px] text-pink-300">{pct}% ({opt.voteCount || 0})</span>
+                      </button>
+                      {/* Host Quick Apply */}
+                      {isHost && (
+                        <button
+                          onClick={() => handleApplyVariation(opt.id, opt.label)}
+                          className="self-end text-[9px] text-pink-400 hover:text-white uppercase tracking-wider"
+                        >
+                          Execute Path →
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* DIVERGENCE APPLIED BANNER */}
+          {variationAppliedBanner && (
+            <div className="absolute top-6 inset-x-6 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-30 px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-label-md text-xs uppercase tracking-wider font-bold shadow-[0_0_30px_rgba(236,72,153,0.6)] flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">alt_route</span>
+              <span>{variationAppliedBanner}</span>
+            </div>
           )}
         </div>
-      </div>
 
-      {/* Analytics Modal */}
-      {showAnalytics && analytics && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.85)',
-          backdropFilter: 'blur(12px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div className="glass-panel" style={{
-            borderRadius: '16px',
-            padding: '32px',
-            width: '90%',
-            maxWidth: '520px',
-            boxShadow: '0 25px 60px rgba(0,0,0,0.8)'
-          }}>
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <BarChart2 size={22} color="#00F0FF" /> Watch Space Analytics & Telemetry
-            </h3>
+        {/* ======================================================== */}
+        {/* MASTER CINEMATIC FLOATING HUD CONTROLS                    */}
+        {/* ======================================================== */}
+        <div className="relative z-30 w-full p-4 bg-[#080D24]/90 backdrop-blur-2xl border-t border-white/10 flex flex-col gap-2">
+          {/* Chapter Breadcrumb & Current Time */}
+          <div className="flex items-center justify-between text-xs px-2">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-pink-400 shadow-[0_0_8px_#f472b6]" />
+              <span className="font-label-sm text-[10px] text-white tracking-[0.18em] uppercase font-semibold">
+                Chapter 03 • Synchronized Feed
+              </span>
+            </div>
+            <div className="flex items-center gap-1 font-mono text-[11px] text-on-surface-variant tracking-wider">
+              <span className="text-white font-bold">{formatTime(currentTime)}</span>
+              <span>/</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '28px' }}>
-              <div style={{ background: 'rgba(255,255,255,0.06)', padding: '16px', borderRadius: '10px' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Session Duration</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '4px' }}>{formatSec(analytics.sessionDurationSeconds)}</div>
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.06)', padding: '16px', borderRadius: '10px' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Peak Viewers</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '4px' }}>{analytics.peakParticipants}</div>
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.06)', padding: '16px', borderRadius: '10px' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>AI Questions Answered</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#00F0FF', marginTop: '4px' }}>{analytics.aiQuestionsCount}</div>
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.06)', padding: '16px', borderRadius: '10px' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Trivia Cards Surfaced</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#FFE259', marginTop: '4px' }}>{analytics.triviaCardsSurfacedCount}</div>
+          {/* Glowing Interactive Timeline Scrubber (Electric Blue -> Violet -> Pink) */}
+          <div
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const pct = (e.clientX - rect.left) / rect.width;
+              handleSeek(pct * duration);
+            }}
+            className="relative w-full h-4 flex items-center cursor-pointer group/scrub"
+          >
+            <div className="w-full h-[4px] rounded-full bg-[#1c1f2b]/80 backdrop-blur-sm relative overflow-visible transition-all duration-300 group-hover/scrub:h-[6px]">
+              {/* Buffered Bar */}
+              <div className="absolute left-0 top-0 h-full w-[75%] rounded-full bg-white/10" />
+              {/* Active Playhead Progress */}
+              <div
+                className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-[0_0_14px_rgba(236,72,153,0.7)]"
+                style={{ width: `${(currentTime / duration) * 100}%` }}
+              />
+              {/* Scene Chapter Markers */}
+              <div className="absolute left-[20%] top-[-2px] w-[2px] h-[8px] bg-white/20" />
+              <div className="absolute left-[50%] top-[-2px] w-[2px] h-[8px] bg-pink-400 shadow-[0_0_6px_#ec4899]" />
+              <div className="absolute left-[80%] top-[-2px] w-[2px] h-[8px] bg-white/20" />
+            </div>
+            {/* Scrubber Thumb */}
+            <div
+              className="absolute -translate-x-1/2 w-4 h-4 rounded-full bg-[#050712] border border-pink-400/80 flex items-center justify-center shadow-[0_0_14px_rgba(236,72,153,0.9)] opacity-95 group-hover/scrub:scale-125 transition-transform duration-200"
+              style={{ left: `${(currentTime / duration) * 100}%` }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-pink-400 shadow-[0_0_6px_#ec4899]" />
+            </div>
+          </div>
+
+          {/* Sleek Floating Glass Pill HUD Controls */}
+          <div className="flex items-center justify-between px-4 py-2 rounded-2xl bg-[#080D24]/80 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.7)]">
+            {/* Playback Triggers */}
+            <div className="flex items-center gap-3">
+              {/* 10s Backward */}
+              <button
+                onClick={() => handleSkip(-10)}
+                className="text-on-surface-variant hover:text-white transition-colors p-1 flex items-center"
+                title="10s Back"
+              >
+                <span className="material-symbols-outlined text-[20px]">replay_10</span>
+              </button>
+
+              {/* Primary Play/Pause */}
+              <button
+                onClick={togglePlayPause}
+                className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white flex items-center justify-center hover:shadow-[0_0_24px_rgba(139,92,246,0.6)] transition-all duration-300 hover:scale-105"
+                title={isPlaying ? 'Pause' : 'Play'}
+              >
+                <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  {isPlaying ? 'pause' : 'play_arrow'}
+                </span>
+              </button>
+
+              {/* 10s Forward */}
+              <button
+                onClick={() => handleSkip(10)}
+                className="text-on-surface-variant hover:text-white transition-colors p-1 flex items-center"
+                title="10s Forward"
+              >
+                <span className="material-symbols-outlined text-[20px]">forward_10</span>
+              </button>
+
+              {/* Volume Scroller */}
+              <div className="hidden sm:flex items-center gap-2 pl-3">
+                <button
+                  onClick={toggleMute}
+                  className="text-on-surface-variant hover:text-white transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {isMuted || volume === 0 ? 'volume_off' : 'volume_up'}
+                  </span>
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                  className="w-16 h-1 rounded-full accent-pink-500 cursor-pointer"
+                />
               </div>
             </div>
 
-            <button
-              onClick={() => setShowAnalytics(false)}
-              className="btn-netflix"
-              style={{ width: '100%' }}
-            >
-              Close Analytics
-            </button>
+            {/* Spec Badges */}
+            <div className="hidden md:flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full bg-surface-container-high/60 text-on-surface-variant font-label-sm text-[10px] tracking-widest uppercase">
+                4K UHD
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-secondary font-label-sm text-[10px] tracking-widest uppercase border border-secondary/30">
+                Dolby Vision
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full bg-surface-container-high/60 text-on-surface-variant font-label-sm text-[10px] tracking-widest uppercase">
+                Atmos 7.1.4
+              </span>
+            </div>
+
+            {/* Secondary Deck Controls */}
+            <div className="flex items-center gap-2 relative">
+              {/* Spatial Audio Mode */}
+              <button
+                onClick={() => setSpatialAudioEnabled(!spatialAudioEnabled)}
+                className={`p-1.5 transition-colors flex items-center ${
+                  spatialAudioEnabled ? 'text-secondary' : 'text-on-surface-variant hover:text-white'
+                }`}
+                title={spatialAudioEnabled ? 'Spatial Voice On' : 'Spatial Voice Off'}
+              >
+                <span className="material-symbols-outlined text-[20px]">headphones</span>
+              </button>
+
+              {/* Subtitles Toggle */}
+              <button
+                onClick={() => setSubtitlesEnabled(!subtitlesEnabled)}
+                className={`p-1.5 transition-colors flex items-center ${
+                  subtitlesEnabled ? 'text-primary-fixed-dim' : 'text-on-surface-variant hover:text-white'
+                }`}
+                title={subtitlesEnabled ? 'Subtitles On' : 'Subtitles Off'}
+              >
+                <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: subtitlesEnabled ? "'FILL' 1" : "'FILL' 0" }}>
+                  subtitles
+                </span>
+              </button>
+
+              {/* Reaction Trigger */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowReactionPicker(!showReactionPicker)}
+                  className="p-1.5 text-on-surface-variant hover:text-secondary transition-colors flex items-center"
+                  title="Send Reaction"
+                >
+                  <span className="material-symbols-outlined text-[20px]">add_reaction</span>
+                </button>
+
+                {showReactionPicker && (
+                  <div className="absolute bottom-10 right-0 p-2 rounded-2xl bg-surface-container-lowest/95 backdrop-blur-2xl border border-white/10 shadow-2xl flex items-center gap-2 z-50">
+                    {['🔥', '🤯', '🍿', '✨', '👏'].map((emoji) => (
+                      <button
+                        key={emoji}
+                        onClick={() => handleBroadcastReaction(emoji)}
+                        className="text-xl p-1.5 hover:scale-125 transition-transform"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Fullscreen */}
+              <button
+                onClick={() => {
+                  if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                  } else {
+                    document.exitFullscreen().catch(() => {});
+                  }
+                }}
+                className="p-1.5 text-on-surface-variant hover:text-white transition-colors flex items-center"
+                title="Toggle Fullscreen"
+              >
+                <span className="material-symbols-outlined text-[20px]">fullscreen</span>
+              </button>
+            </div>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* ======================================================== */}
+      {/* RIGHT: CINEMA COMPANION SIDEBAR (Dark Navy Frosted Glass) */}
+      {/* ======================================================== */}
+      <aside className="w-full lg:w-[380px] xl:w-[420px] flex flex-col bg-[#080D24]/85 backdrop-blur-2xl border-l border-white/10 relative z-30 shadow-[-10px_0_40px_rgba(0,0,0,0.8)]">
+        {/* Deep Atmospheric Violet/Magenta/Electric Blue Ambient Glows */}
+        <div className="absolute -top-24 -right-24 w-80 h-80 bg-violet-600/15 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-20 -left-20 w-72 h-72 bg-pink-600/15 rounded-full blur-[90px] pointer-events-none" />
+        <div className="absolute top-1/3 right-10 w-60 h-60 bg-blue-600/10 rounded-full blur-[90px] pointer-events-none" />
+
+        {/* COMPANION HEADER: Tab Switcher */}
+        <div className="relative z-10 px-4 pt-4 pb-3 flex items-center justify-between border-b border-white/[0.06]">
+          <div className="flex items-center gap-1 p-1 rounded-full bg-[#0D1535]/80 backdrop-blur-md border border-white/10">
+            <button
+              onClick={() => setActiveTab('people')}
+              className={`px-3.5 py-1 rounded-full font-label-sm text-[10px] tracking-[0.14em] uppercase transition-all ${
+                activeTab === 'people'
+                  ? 'bg-[#181b27] text-white font-bold border border-white/10 shadow-md'
+                  : 'text-on-surface-variant hover:text-white'
+              }`}
+            >
+              People ({participants.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`px-3.5 py-1 rounded-full font-label-sm text-[10px] tracking-[0.14em] uppercase transition-all ${
+                activeTab === 'chat'
+                  ? 'bg-[#181b27] text-white font-bold border border-white/10 shadow-md'
+                  : 'text-on-surface-variant hover:text-white'
+              }`}
+            >
+              Chat
+            </button>
+            <button
+              onClick={() => setActiveTab('ai')}
+              className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full font-label-sm text-[10px] tracking-[0.14em] uppercase transition-all ${
+                activeTab === 'ai'
+                  ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-semibold shadow-[0_0_16px_rgba(139,92,246,0.4)]'
+                  : 'text-on-surface-variant hover:text-white'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[13px] text-pink-200">auto_awesome</span>
+              <span>Watch AI</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-xs text-pink-300 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-pink-400 shadow-[0_0_6px_#f472b6] animate-pulse" />
+            <span className="hidden sm:inline text-[10px] tracking-wider uppercase">Active</span>
+          </div>
+        </div>
+
+        {/* AMBIENT FRIENDS PRESENCE BAR (Cyan/Pink Presence Dots) */}
+        <div className="relative z-10 px-4 py-2 flex items-center justify-between bg-[#080D24]/50 backdrop-blur-md border-b border-white/[0.05]">
+          <span className="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-[0.2em]">Theater Lounge</span>
+          <div className="flex items-center gap-2">
+            {participants.slice(0, 4).map((p, idx) => (
+              <div key={p.userId || idx} className="relative group/user cursor-pointer" title={`${p.displayName} • Synced`}>
+                <div className={`w-7 h-7 rounded-full bg-[#181b27] overflow-hidden ring-1 ${
+                  idx === 0 ? 'ring-cyan-400/60 shadow-[0_0_8px_rgba(34,211,238,0.5)]' : 'ring-pink-500/60 shadow-[0_0_8px_rgba(236,72,153,0.5)]'
+                } flex items-center justify-center text-[10px] font-bold text-white uppercase`}>
+                  {p.displayName ? p.displayName.slice(0, 2) : 'WS'}
+                </div>
+                <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ${
+                  idx === 0 ? 'bg-cyan-400 shadow-[0_0_6px_#22d3ee]' : 'bg-pink-500 shadow-[0_0_6px_#ec4899]'
+                }`} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* TAB CONTENT: PEOPLE */}
+        {activeTab === 'people' && (
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="text-[10px] uppercase font-label-sm text-on-surface-variant tracking-wider">
+              Connected Viewers
+            </div>
+            {participants.map((p, idx) => (
+              <div
+                key={p.userId || idx}
+                className="flex items-center justify-between p-3 rounded-xl bg-[#0D1535]/60 hover:bg-[#181b27] border border-white/5 transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-9 h-9 rounded-full bg-[#181b27] flex items-center justify-center font-bold text-xs text-white uppercase border border-white/10 ring-1 ring-violet-500/40">
+                      {p.displayName ? p.displayName.slice(0, 2) : 'WS'}
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-cyan-400 ring-2 ring-[#080D24] shadow-[0_0_6px_#22d3ee]" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-white flex items-center gap-1.5">
+                      <span>{p.displayName}</span>
+                      {p.userId === space.hostUserId && (
+                        <span className="material-symbols-outlined text-pink-400 text-[14px]" title="Room Host">
+                          workspace_premium
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-on-surface-variant font-mono">
+                      Channel: {idx % 2 === 0 ? 'Left' : 'Right'} (Spatial)
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[16px] text-cyan-400">mic</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* TAB CONTENT: CHAT */}
+        {activeTab === 'chat' && (
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+              {messages.length === 0 ? (
+                <div className="py-12 text-center text-xs text-on-surface-variant">
+                  No messages yet. Say hello to everyone watching!
+                </div>
+              ) : (
+                messages.map((m) => {
+                  const isMe = m.userId === currentUser.id;
+                  const isSys = m.msgType === 'system';
+
+                  if (isSys) {
+                    return (
+                      <div key={m.id} className="text-center py-1">
+                        <span className="inline-block px-3 py-1 rounded-full bg-white/5 text-[10px] text-on-surface-variant font-mono">
+                          {m.body}
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={m.id}
+                      className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                    >
+                      <span className="text-[10px] text-on-surface-variant font-medium mb-0.5">
+                        {isMe ? 'You' : m.displayName}
+                      </span>
+                      <div
+                        className={`max-w-[85%] px-3.5 py-2 rounded-2xl text-xs leading-relaxed ${
+                          isMe
+                            ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white rounded-tr-none shadow-[0_4px_16px_rgba(139,92,246,0.35)]'
+                            : 'bg-[#0D1535]/80 text-on-surface rounded-tl-none border border-white/10'
+                        }`}
+                      >
+                        {m.body}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Chat Input */}
+            <form onSubmit={handleSendChat} className="p-3 border-t border-white/10 bg-[#080D24]/95 backdrop-blur-xl flex items-center gap-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Message the room..."
+                className="flex-1 py-2 px-3.5 bg-[#0D1535]/90 rounded-full text-xs text-white placeholder:text-on-surface-variant/50 focus:outline-none focus:border-violet-500/50 border border-white/10"
+              />
+              <button
+                type="submit"
+                className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white flex items-center justify-center hover:shadow-[0_0_14px_rgba(236,72,153,0.7)] transition-all"
+                title="Send"
+              >
+                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  send
+                </span>
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* TAB CONTENT: WATCH AI */}
+        {activeTab === 'ai' && (
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 select-text">
+              {/* AI Status Badge */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex items-center justify-center">
+                    <span className="w-2 h-2 rounded-full bg-pink-400 shadow-[0_0_8px_#ec4899]" />
+                    <span className="absolute w-4 h-4 rounded-full bg-pink-400/30 animate-ping" />
+                  </div>
+                  <span className="font-label-sm text-[11px] text-white uppercase tracking-[0.16em] font-bold">
+                    AI Film Scholar
+                  </span>
+                </div>
+                <span className="font-label-sm text-[10px] text-cyan-300/80 tracking-wider uppercase font-mono">
+                  Syncing Scene {formatTime(currentTime)}
+                </span>
+              </div>
+
+              {/* Current Scene Context Card */}
+              <div className="p-3.5 rounded-xl bg-gradient-to-br from-violet-950/40 via-purple-900/20 to-pink-950/20 border border-violet-500/30 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.4)] space-y-1">
+                <div className="flex items-center gap-1.5 text-pink-400 text-[10px] font-label-sm uppercase tracking-wider font-semibold">
+                  <span className="material-symbols-outlined text-[14px]">movie_filter</span>
+                  <span>Scene Dissection</span>
+                </div>
+                <h4 className="font-title-md text-xs font-semibold text-white">
+                  Temporal Nexus: {space.titleName}
+                </h4>
+                <p className="font-body-md text-xs text-on-surface-variant leading-relaxed">
+                  Neural model evaluating thematic motifs, lighting diffusion, and grounded narrative choices based on current scene timestamp.
+                </p>
+              </div>
+
+              {/* Dynamic Audio Score Tag */}
+              <div className="p-3 rounded-xl bg-[#0D1535]/70 border border-white/10 backdrop-blur-md space-y-1 shadow-inner">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-secondary font-label-sm uppercase font-semibold">Score & Acoustics</span>
+                  <span className="text-outline font-mono">Lossless Atmos</span>
+                </div>
+                <p className="text-xs text-white/90">
+                  Volumetric dynamic mix with subtle low-frequency resonance during dialogue pauses.
+                </p>
+              </div>
+
+              {/* Inquiries Stream */}
+              {aiInquiries.map((inq, idx) => (
+                <div key={idx} className="p-3 rounded-xl bg-[#0D1535]/70 border border-violet-500/20 space-y-1.5">
+                  <div className="text-[10px] text-pink-400 font-semibold uppercase flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[13px]">help</span>
+                    <span>Q: {inq.q}</span>
+                  </div>
+                  {inq.a ? (
+                    <p className="text-xs text-white leading-relaxed font-light">
+                      {inq.a}
+                    </p>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs text-on-surface-variant italic">
+                      <span className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-ping" />
+                      Synthesizing scene analysis...
+                    </div>
+                  )}
+                  {inq.latency && (
+                    <div className="text-[9px] text-on-surface-variant font-mono text-right">
+                      Latency: {inq.latency}ms
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Curated Quick Inquiry Pills */}
+              <div className="space-y-1.5 pt-1">
+                <span className="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-[0.18em]">
+                  Curated Inquiries
+                </span>
+                <div className="flex flex-col gap-1.5">
+                  <button
+                    onClick={() => handleAskAi("Explain the visual framing and lighting of this scene")}
+                    className="w-full text-left p-2.5 rounded-lg bg-[#0D1535]/60 hover:bg-[#181b27] border border-white/5 hover:border-violet-500/40 transition-all text-on-surface-variant hover:text-on-surface text-xs leading-snug flex items-center justify-between group/pill"
+                  >
+                    <span>"Explain the visual framing of this scene"</span>
+                    <span className="material-symbols-outlined text-[14px] text-outline group-hover/pill:text-pink-300 group-hover/pill:translate-x-0.5 transition-all">
+                      north_east
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleAskAi("What are the core narrative stakes at this moment?")}
+                    className="w-full text-left p-2.5 rounded-lg bg-[#0D1535]/60 hover:bg-[#181b27] border border-white/5 hover:border-violet-500/40 transition-all text-on-surface-variant hover:text-on-surface text-xs leading-snug flex items-center justify-between group/pill"
+                  >
+                    <span>"What are the core narrative stakes?"</span>
+                    <span className="material-symbols-outlined text-[14px] text-outline group-hover/pill:text-pink-300 group-hover/pill:translate-x-0.5 transition-all">
+                      north_east
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleAskAi("How does the sound design reinforce character psychology?")}
+                    className="w-full text-left p-2.5 rounded-lg bg-[#0D1535]/60 hover:bg-[#181b27] border border-white/5 hover:border-violet-500/40 transition-all text-on-surface-variant hover:text-on-surface text-xs leading-snug flex items-center justify-between group/pill"
+                  >
+                    <span>"Analyze sound design and score"</span>
+                    <span className="material-symbols-outlined text-[14px] text-outline group-hover/pill:text-pink-300 group-hover/pill:translate-x-0.5 transition-all">
+                      north_east
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* AI Input Form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAskAi(aiInput);
+              }}
+              className="p-3 border-t border-white/10 bg-[#080D24]/95 backdrop-blur-xl"
+            >
+              <div className="relative flex items-center w-full">
+                <input
+                  type="text"
+                  value={aiInput}
+                  onChange={(e) => setAiInput(e.target.value)}
+                  placeholder="Ask Watch AI anything about this moment..."
+                  disabled={aiLoading}
+                  className="w-full py-2.5 pl-3.5 pr-14 bg-[#0D1535]/90 rounded-full font-body-md text-[13px] text-white placeholder:text-on-surface-variant/60 focus:outline-none focus:border-violet-500/50 border border-white/10 shadow-inner"
+                />
+                <button
+                  type="submit"
+                  disabled={aiLoading || !aiInput.trim()}
+                  className="absolute right-1.5 w-7 h-7 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white flex items-center justify-center hover:shadow-[0_0_14px_rgba(236,72,153,0.7)] disabled:opacity-50 transition-all"
+                  title="Send Query"
+                >
+                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    arrow_upward
+                  </span>
+                </button>
+              </div>
+              <div className="mt-1.5 flex items-center justify-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-pink-400" />
+                <span className="font-label-sm text-[9px] text-on-surface-variant/70 tracking-[0.2em] uppercase">Private Encryption Active • Spatial Sync v4.2</span>
+              </div>
+            </form>
+          </div>
+        )}
+      </aside>
     </div>
   );
 };

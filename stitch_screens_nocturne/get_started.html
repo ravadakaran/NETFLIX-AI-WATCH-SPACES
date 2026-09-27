@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_blank" name="shell-type"/><title>Watch Spaces - Authentication</title><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"surface-container":"#1c1f2b","on-primary-fixed-variant":"#004395","error":"#ffb4ab","surface-bright":"#363846","primary-container":"#4d8eff","primary-fixed":"#d8e2ff","tertiary-fixed":"#ffd9e4","on-tertiary-fixed":"#3e0022","on-secondary-fixed-variant":"#5516be","on-primary":"#002e6a","surface-container-high":"#272936","inverse-on-surface":"#2d303d","on-tertiary-fixed-variant":"#8c0053","on-surface-variant":"#c2c6d6","tertiary":"#ffb0cd","tertiary-container":"#f751a1","on-primary-fixed":"#001a42","tertiary-fixed-dim":"#ffb0cd","surface-tint":"#adc6ff","surface-container-low":"#181b27","on-primary-container":"#00285d","secondary":"#d0bcff","background":"#10131e","primary-fixed-dim":"#adc6ff","surface-variant":"#323441","outline-variant":"#424754","error-container":"#93000a","on-background":"#e0e1f2","on-error":"#690005","inverse-surface":"#e0e1f2","secondary-fixed-dim":"#d0bcff","on-tertiary-container":"#570032","on-secondary":"#3c0091","inverse-primary":"#005ac2","surface":"#10131e","on-tertiary":"#640039","primary":"#adc6ff","on-error-container":"#ffdad6","on-surface":"#e0e1f2","outline":"#8c909f","on-secondary-container":"#c4abff","secondary-container":"#571bc1","surface-dim":"#10131e","surface-container-lowest":"#0b0e19","on-secondary-fixed":"#23005c","surface-container-highest":"#323441","secondary-fixed":"#e9ddff"},"borderRadius":{"DEFAULT":"1rem","lg":"2rem","xl":"3rem","full":"9999px"},"spacing":{"space-lg":"1.5rem","space-md":"1rem","gutter-mobile":"1rem","margin-mobile":"1.25rem","space-sm":"0.5rem","margin":"3rem","gutter":"1.5rem","space-xs":"0.25rem","space-xl":"2.5rem"},"fontFamily":{"body-sm":["Geist"],"title-sm":["Geist"],"label-md":["Geist"],"headline-xl-mobile":["Geist"],"headline-md":["Geist"],"display-hero-mobile":["Geist"],"headline-lg":["Geist"],"body-md":["Geist"],"display-hero":["Geist"],"label-caps":["Geist"],"body-lg":["Geist"],"headline-lg-mobile":["Geist"],"headline-xl":["Geist"]},"fontSize":{"body-sm":["13px",{"lineHeight":"20px","letterSpacing":"0.005em","fontWeight":"400"}],"title-sm":["16px",{"lineHeight":"24px","letterSpacing":"-0.005em","fontWeight":"500"}],"label-md":["13px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"500"}],"headline-xl-mobile":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"500"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"500"}],"display-hero-mobile":["36px",{"lineHeight":"44px","letterSpacing":"-0.025em","fontWeight":"600"}],"headline-lg":["30px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"500"}],"body-md":["15px",{"lineHeight":"24px","letterSpacing":"0em","fontWeight":"400"}],"display-hero":["56px",{"lineHeight":"64px","letterSpacing":"-0.03em","fontWeight":"600"}],"label-caps":["11px",{"lineHeight":"16px","letterSpacing":"0.08em","fontWeight":"600"}],"body-lg":["17px",{"lineHeight":"28px","letterSpacing":"-0.005em","fontWeight":"400"}],"headline-lg-mobile":["22px",{"lineHeight":"30px","letterSpacing":"-0.015em","fontWeight":"500"}],"headline-xl":["40px",{"lineHeight":"48px","letterSpacing":"-0.025em","fontWeight":"500"}]}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet"/></head><body class="bg-surface font-body-md text-body-md text-on-surface min-h-screen antialiased flex flex-col justify-center items-center"><main class="w-full flex-1 flex flex-col items-center justify-center bg-surface"><div class="flex flex-col w-full relative min-h-screen text-on-surface selection:bg-secondary selection:text-on-secondary">
+<!-- Cinematic Ambient Backdrop -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center scale-105 filter blur-[2px] opacity-40 mix-blend-luminosity transform duration-1000 ease-out" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD_-j_IyHJPtOMhKlMf4ju87Bvq2R4YpdAmCmS5QJxIJ2JMgOJS43K2ixXhV69vZmxeMjp4lHdmuDYxjnvPfhi5t-nM0m4bm1ExMHWHb9qHqpdMciz6MWRIADAt9cOfpgqotlfldBJzuVqPZVVG9v1F1z8FlXRniPCTcNV7xb05qjss5Mn2On_xxvZkux36cAeDZN3cHiRRkv6kZZkuUpJPx1kvW2rrjfKqRxOeCWS68Wd8nAi1magPKw');"></div>
+<!-- Midnight & Halation Color Washes -->
+<div class="absolute inset-0 bg-gradient-to-b from-surface-container-lowest/80 via-surface/90 to-surface"></div>
+<div class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/20 rounded-full blur-[140px] pointer-events-none"></div>
+<div class="absolute top-1/3 right-0 w-[30rem] h-[30rem] bg-secondary-container/25 rounded-full blur-[160px] pointer-events-none"></div>
+<div class="absolute bottom-10 left-1/3 w-80 h-80 bg-tertiary-container/15 rounded-full blur-[130px] pointer-events-none"></div>
+</div>
+<!-- Top Minimal Navigation -->
+<header class="relative z-20 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+<a class="flex items-center gap-3 group focus:outline-none" href="/">
+<img alt="Watch Spaces Wordmark" class="w-8 h-8 rounded-lg object-contain shadow-lg shadow-primary-container/20 group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida/AEtjO1XxOFaMaTlg5hPbkWyZh-B4iSaf33CiqTLMBMFnRIT9YOjvqY68Cp6aGVpf6GGR_OrpqxWzAOIAXihVazgy16O2qsw4G82w3ZCf67o50ccL9p7hNfp0ZdGKh7hCAg72PPQevGEs40V4bgiZfYv3fSK5qBrvOSIJoHxLTlUmkQN2U22_LvGqqcdrdv_qU4KDl779Snvu2EcrCWclCMz7TyYcZolHQ2Mfev0jmhLGlBsivRUPQloFZffhPOY"/>
+<span class="font-headline-md text-title-sm tracking-wider uppercase text-on-surface font-semibold group-hover:text-primary transition-colors">
+        Watch Spaces
+      </span>
+</a>
+<div class="flex items-center gap-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant hidden sm:inline">Already registered?</span>
+<a class="inline-flex items-center justify-center px-4 py-2 rounded-full font-label-md text-label-md uppercase tracking-wider text-on-surface bg-surface-container/60 hover:bg-surface-container-high transition-all duration-300 hover:shadow-lg shadow-black/40 hover:text-primary" href="/login">
+        Sign In
+      </a>
+</div>
+</header>
+<!-- Central Authentication Canvas -->
+<div class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-10 sm:py-16">
+<!-- Auth Card Panel (~460px) with Ambient Glow -->
+<div class="relative w-full max-w-[460px]">
+<!-- Colored halation rim glow -->
+<div class="absolute -inset-0.5 bg-gradient-to-r from-primary/30 via-secondary/30 to-tertiary/30 rounded-3xl blur-xl opacity-75"></div>
+<!-- Frosted Midnight Glass Vessel -->
+<div class="relative rounded-3xl bg-surface-container-lowest/85 backdrop-blur-2xl shadow-2xl p-7 sm:p-9 flex flex-col">
+<!-- Brand Emblem & Eyebrow -->
+<div class="flex flex-col items-center text-center">
+<div class="relative mb-4 group cursor-pointer">
+<div class="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-primary to-tertiary opacity-40 blur-md group-hover:opacity-75 transition duration-500"></div>
+<img alt="Watch Spaces Logo" class="relative w-12 h-12 rounded-2xl object-cover shadow-md" src="https://lh3.googleusercontent.com/aida/AEtjO1XxOFaMaTlg5hPbkWyZh-B4iSaf33CiqTLMBMFnRIT9YOjvqY68Cp6aGVpf6GGR_OrpqxWzAOIAXihVazgy16O2qsw4G82w3ZCf67o50ccL9p7hNfp0ZdGKh7hCAg72PPQevGEs40V4bgiZfYv3fSK5qBrvOSIJoHxLTlUmkQN2U22_LvGqqcdrdv_qU4KDl779Snvu2EcrCWclCMz7TyYcZolHQ2Mfev0jmhLGlBsivRUPQloFZffhPOY"/>
+</div>
+<h1 class="font-headline-lg text-headline-md sm:text-headline-lg uppercase font-bold tracking-tight text-on-surface">
+            Create Your Account
+          </h1>
+<p class="font-body-md text-body-sm sm:text-body-md text-on-surface-variant mt-1.5">
+            Your next movie night starts here.
+          </p>
+</div>
+<!-- Registration Form -->
+<form class="mt-8 space-y-4" onsubmit="event.preventDefault();">
+<!-- Full Name Field -->
+<div class="flex flex-col space-y-1.5">
+<label class="font-label-md text-label-caps uppercase text-on-surface-variant flex items-center justify-between" for="name">
+<span>Full Name</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">
+                person
+              </span>
+<input class="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-container-low text-on-surface placeholder:text-outline/60 font-body-md text-body-sm focus:outline-none focus:bg-surface-container focus:ring-2 focus:ring-primary/40 transition-all duration-200" id="name" name="name" placeholder="Elena Rostova" required="" type="text"/>
+</div>
+</div>
+<!-- Email Address Field -->
+<div class="flex flex-col space-y-1.5">
+<label class="font-label-md text-label-caps uppercase text-on-surface-variant flex items-center justify-between" for="email">
+<span>Email Address</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">
+                mail
+              </span>
+<input class="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-container-low text-on-surface placeholder:text-outline/60 font-body-md text-body-sm focus:outline-none focus:bg-surface-container focus:ring-2 focus:ring-primary/40 transition-all duration-200" id="email" name="email" placeholder="elena@screeningroom.org" required="" type="email"/>
+</div>
+</div>
+<!-- Create Password Field with Dynamic Strength Indicator -->
+<div class="flex flex-col space-y-1.5">
+<label class="font-label-md text-label-caps uppercase text-on-surface-variant flex items-center justify-between" for="password">
+<span>Create Password</span>
+<span class="text-tertiary font-medium lowercase tracking-normal" id="strength-text">minimum 8 characters</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">
+                lock
+              </span>
+<input class="w-full pl-10 pr-11 py-3 rounded-xl bg-surface-container-low text-on-surface placeholder:text-outline/60 font-body-md text-body-sm focus:outline-none focus:bg-surface-container focus:ring-2 focus:ring-primary/40 transition-all duration-200" id="password" name="password" placeholder="••••••••••••" required="" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute right-3 text-outline hover:text-on-surface focus:outline-none flex items-center justify-center p-1 transition-colors" id="toggle-password" type="button">
+<span class="material-symbols-outlined text-[18px]" id="eye-icon">visibility</span>
+</button>
+</div>
+<!-- Password Strength Indicator Bar -->
+<div class="w-full bg-surface-container-high rounded-full h-1 mt-1.5 overflow-hidden flex">
+<div class="h-full w-2/3 bg-gradient-to-r from-primary via-secondary to-tertiary transition-all duration-500 rounded-full" id="strength-meter"></div>
+</div>
+</div>
+<!-- Confirm Password Field -->
+<div class="flex flex-col space-y-1.5">
+<label class="font-label-md text-label-caps uppercase text-on-surface-variant flex items-center justify-between" for="confirm-password">
+<span>Confirm Password</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">
+                lock_reset
+              </span>
+<input class="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-container-low text-on-surface placeholder:text-outline/60 font-body-md text-body-sm focus:outline-none focus:bg-surface-container focus:ring-2 focus:ring-primary/40 transition-all duration-200" id="confirm-password" name="confirm-password" placeholder="••••••••••••" required="" type="password"/>
+</div>
+</div>
+<!-- Terms & Conditions Checkbox -->
+<div class="pt-2 flex items-start space-x-3 cursor-pointer select-none">
+<div class="relative flex items-center mt-0.5">
+<input class="peer sr-only" id="terms" name="terms" required="" type="checkbox"/>
+<label class="w-5 h-5 rounded-md bg-surface-container-low peer-checked:bg-primary transition-all duration-200 cursor-pointer flex items-center justify-center peer-checked:shadow-[0_0_12px_rgba(77,142,255,0.4)]" for="terms">
+<span class="material-symbols-outlined text-on-primary text-[15px] opacity-0 peer-checked:opacity-100 transition-opacity select-none font-bold">
+                  check
+                </span>
+</label>
+</div>
+<label class="font-body-sm text-body-sm text-on-surface-variant leading-tight cursor-pointer" for="terms">
+              I agree to Watch Spaces <a class="text-primary hover:underline hover:text-primary-fixed" href="#terms">Terms</a> and <a class="text-primary hover:underline hover:text-primary-fixed" href="#privacy">Privacy Policy</a>
+</label>
+</div>
+<!-- Primary Submit Action -->
+<div class="pt-3">
+<button class="w-full group relative inline-flex items-center justify-center py-3.5 px-6 rounded-xl font-label-md text-label-md font-semibold tracking-wider uppercase text-white bg-gradient-to-r from-[#2563EB] via-[#7C3AED] to-[#EC4899] shadow-lg shadow-primary-container/25 hover:shadow-[0_0_28px_rgba(77,142,255,0.45)] hover:scale-[1.01] active:scale-[0.98] transition-all duration-300 overflow-hidden" type="submit">
+<span class="relative z-10 flex items-center gap-2">
+<span>Create Account</span>
+<span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
+                  arrow_forward
+                </span>
+</span>
+<div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+</button>
+</div>
+</form>
+<!-- Aesthetic Partition Divider -->
+<div class="relative my-6 flex items-center justify-center">
+<div class="w-full h-px bg-gradient-to-r from-transparent via-outline-variant/40 to-transparent"></div>
+<span class="absolute px-3 bg-surface-container-lowest font-label-caps text-label-caps uppercase tracking-widest text-outline">
+            OR
+          </span>
+</div>
+<!-- Google Single Sign-On Provider -->
+<button class="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface transition-all duration-300 hover:shadow-md hover:shadow-black/50 group active:scale-[0.99]" type="button">
+<!-- Inline Google Emblem SVG -->
+<svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewbox="0 0 24 24">
+<path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.14z" fill="#4285F4"></path>
+<path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
+<path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z" fill="#FBBC05"></path>
+<path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335"></path>
+</svg>
+<span class="font-label-md text-label-md font-medium text-on-surface group-hover:text-primary-fixed transition-colors">
+            Continue with Google
+          </span>
+</button>
+<!-- Footer inside Panel -->
+<div class="mt-6 text-center">
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Already have an account? 
+            <a class="text-primary font-semibold hover:underline hover:text-primary-fixed transition-colors ml-1" href="/login">
+              Sign In
+            </a>
+</p>
+</div>
+</div>
+</div>
+<!-- Ambient Micro Features Bar -->
+<div class="mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-on-surface-variant font-label-caps uppercase tracking-widest text-label-caps">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+<span>Ultra-low Latency Sync</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Lossless Spatial Audio</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span>Private Screening Rooms</span>
+</div>
+</div>
+</div>
+<!-- Interactive Password Reveal & Dynamic Strength Script -->
+<script>
+    const passwordInput = document.getElementById('password');
+    const toggleBtn = document.getElementById('toggle-password');
+    const eyeIcon = document.getElementById('eye-icon');
+    const meter = document.getElementById('strength-meter');
+    const strengthText = document.getElementById('strength-text');
+
+    if (toggleBtn && passwordInput && eyeIcon) {
+      toggleBtn.addEventListener('click', () => {
+        const isPassword = passwordInput.getAttribute('type') === 'password';
+        passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+        eyeIcon.textContent = isPassword ? 'visibility_off' : 'visibility';
+      });
+    }
+
+    if (passwordInput && meter && strengthText) {
+      passwordInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (val.length === 0) {
+          meter.style.width = '10%';
+          meter.className = 'h-full bg-outline-variant transition-all duration-300 rounded-full';
+          strengthText.textContent = 'minimum 8 characters';
+          strengthText.className = 'text-outline font-medium lowercase tracking-normal';
+        } else if (val.length < 6) {
+          meter.style.width = '30%';
+          meter.className = 'h-full bg-error transition-all duration-300 rounded-full';
+          strengthText.textContent = 'weak password';
+          strengthText.className = 'text-error font-medium lowercase tracking-normal';
+        } else if (val.length < 10) {
+          meter.style.width = '65%';
+          meter.className = 'h-full bg-gradient-to-r from-primary to-secondary transition-all duration-300 rounded-full';
+          strengthText.textContent = 'good security';
+          strengthText.className = 'text-primary font-medium lowercase tracking-normal';
+        } else {
+          meter.style.width = '100%';
+          meter.className = 'h-full bg-gradient-to-r from-primary via-secondary to-tertiary transition-all duration-300 rounded-full';
+          strengthText.textContent = 'cinematic cipher active';
+          strengthText.className = 'text-tertiary font-medium lowercase tracking-normal';
+        }
+      });
+    }
+  </script>
+</div></main></body></html>

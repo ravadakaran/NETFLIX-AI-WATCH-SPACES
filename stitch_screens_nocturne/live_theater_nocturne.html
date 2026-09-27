@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "surface-variant": "#323441",
+          "surface-bright": "#363846",
+          "inverse-on-surface": "#2d303d",
+          "surface-container": "#1c1f2b",
+          "on-secondary-fixed": "#23005c",
+          "outline": "#8c909f",
+          "secondary-fixed-dim": "#d0bcff",
+          "surface": "#10131e",
+          "primary-fixed-dim": "#adc6ff",
+          "primary": "#adc6ff",
+          "on-secondary-fixed-variant": "#5516be",
+          "on-error": "#690005",
+          "on-tertiary-container": "#570032",
+          "surface-container-highest": "#323441",
+          "surface-tint": "#adc6ff",
+          "surface-container-lowest": "#0b0e19",
+          "error-container": "#93000a",
+          "outline-variant": "#424754",
+          "tertiary-fixed": "#ffd9e4",
+          "on-background": "#e0e1f2",
+          "surface-container-high": "#272936",
+          "surface-container-low": "#181b27",
+          "inverse-primary": "#005ac2",
+          "on-primary-fixed": "#001a42",
+          "secondary-container": "#571bc1",
+          "background": "#050712",
+          "primary-container": "#4d8eff",
+          "on-primary-container": "#00285d",
+          "tertiary-container": "#f751a1",
+          "on-surface-variant": "#c2c6d6",
+          "inverse-surface": "#e0e1f2",
+          "on-secondary-container": "#c4abff",
+          "on-primary-fixed-variant": "#004395",
+          "on-surface": "#e0e1f2",
+          "on-tertiary-fixed": "#3e0022",
+          "primary-fixed": "#d8e2ff",
+          "secondary": "#d0bcff",
+          "on-secondary": "#3c0091",
+          "on-tertiary-fixed-variant": "#8c0053",
+          "tertiary": "#ffb0cd",
+          "error": "#ffb4ab",
+          "on-tertiary": "#640039",
+          "surface-dim": "#10131e",
+          "secondary-fixed": "#e9ddff",
+          "on-primary": "#002e6a",
+          "tertiary-fixed-dim": "#ffb0cd",
+          "on-error-container": "#ffdad6"
+        },
+        "borderRadius": {
+          "DEFAULT": "1rem",
+          "lg": "2rem",
+          "xl": "3rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "margin-mobile": "1.25rem",
+          "gutter-mobile": "1rem",
+          "gutter": "1.5rem",
+          "margin": "3rem",
+          "space-lg": "1.5rem",
+          "space-sm": "0.5rem",
+          "space-md": "1rem",
+          "space-xl": "2.5rem",
+          "space-xs": "0.25rem"
+        },
+        "fontFamily": {
+          "headline-xl-mobile": ["Geist"],
+          "display-hero-mobile": ["Geist"],
+          "display-hero": ["Geist"],
+          "headline-lg-mobile": ["Geist"],
+          "headline-md": ["Geist"],
+          "headline-lg": ["Geist"],
+          "title-sm": ["Geist"],
+          "body-sm": ["Geist"],
+          "body-md": ["Geist"],
+          "label-caps": ["Geist"],
+          "label-md": ["Geist"],
+          "headline-xl": ["Geist"],
+          "body-lg": ["Geist"],
+          "label-sm": ["Geist"],
+          "title-md": ["Geist"]
+        },
+        "fontSize": {
+          "label-sm": ["11px", {"lineHeight": "16px", "letterSpacing": "0.14em", "fontWeight": "600"}],
+          "label-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0.14em", "fontWeight": "600"}],
+          "body-sm": ["13px", {"lineHeight": "20px", "letterSpacing": "0.005em", "fontWeight": "400"}],
+          "body-md": ["15px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}],
+          "body-lg": ["17px", {"lineHeight": "28px", "letterSpacing": "-0.005em", "fontWeight": "400"}],
+          "title-sm": ["16px", {"lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "500"}],
+          "title-md": ["18px", {"lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "500"}],
+          "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+          "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "500"}],
+          "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.025em", "fontWeight": "500"}]
+        }
+      }
+    }
+  }
+</script></head><body class="bg-[#050712] font-body-md text-on-surface min-h-screen selection:bg-primary selection:text-on-primary"><header class="fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-[#080D24]/75 backdrop-blur-xl border-b border-white/[0.06] shadow-[0_4px_30px_rgba(0,0,0,0.5)]"><div class="h-20 w-full px-margin-mobile md:px-gutter lg:px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="h-9 flex items-center"><svg class="h-8 w-auto" fill="none" viewbox="0 0 180 44" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient id="ws-cosmic-glow-hdr" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#3B82F6"></stop>
+<stop offset="50%" stop-color="#8B5CF6"></stop>
+<stop offset="100%" stop-color="#EC4899"></stop>
+</lineargradient>
+<filter height="140%" id="glow-blur-hdr" width="140%" x="-20%" y="-20%">
+<fegaussianblur result="blur" stddeviation="3"></fegaussianblur>
+<fecomposite in="SourceGraphic" in2="blur" operator="over"></fecomposite>
+</filter>
+</defs>
+<g transform="translate(4, 6)">
+<rect fill="#0D1535" height="32" rx="10" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" width="32"></rect>
+<path d="M12 11L21 16L12 21V11Z" fill="url(#ws-cosmic-glow-hdr)" filter="url(#glow-blur-hdr)"></path>
+<circle cx="23" cy="11" fill="#38BDF8" r="2.5"></circle>
+<circle cx="23" cy="21" fill="#EC4899" r="2.5"></circle>
+</g>
+<text fill="#FFFFFF" font-family="Geist, -apple-system, sans-serif" font-size="15" font-weight="800" letter-spacing="0.14em" x="48" y="24">WATCH</text>
+<text fill="#F472B6" font-family="Geist, -apple-system, sans-serif" font-size="15" font-weight="300" letter-spacing="0.18em" x="114" y="24">SPACES</text>
+<text fill="#8C909F" font-family="Geist, -apple-system, sans-serif" font-size="6.5" font-weight="600" letter-spacing="0.22em" x="48" y="34">SYNCHRONIZED CINEMA</text>
+</svg></div></div><nav class="hidden md:flex items-center gap-space-lg"><a class="font-label-md text-label-md tracking-[0.14em] text-on-surface-variant hover:text-on-surface transition-colors duration-300 uppercase" data-path="home" href="#">Home</a><a class="font-label-md text-label-md tracking-[0.14em] text-on-surface-variant hover:text-on-surface transition-colors duration-300 uppercase" data-path="discover" href="#">Discover</a><a class="font-label-md text-label-md tracking-[0.14em] text-on-surface-variant hover:text-on-surface transition-colors duration-300 uppercase" data-path="my-spaces" href="#">My Spaces</a><a aria-current="page" class="relative px-4 py-1.5 rounded-full font-label-md text-label-md tracking-[0.14em] uppercase font-bold text-white bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-pink-600/30 border border-violet-400/40 shadow-[0_0_16px_rgba(139,92,246,0.35)]" data-path="live-theater" href="#">Live Theater</a></nav><div class="flex items-center gap-space-md"><button class="text-on-surface-variant hover:text-on-surface transition-colors duration-200 flex items-center justify-center p-space-xs" type="button"><span class="material-symbols-outlined text-[20px]">search</span></button><button class="text-on-surface-variant hover:text-on-surface transition-colors duration-200 flex items-center justify-center p-space-xs relative" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]"></span></button><div class="relative flex items-center justify-center p-[2px] rounded-full ring-1 ring-violet-500/40 shadow-[0_0_12px_rgba(139,92,246,0.25)]"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1UJ8sWrZGIYN4nVCScgMHlh5H90oA2T163Hm2la7bfz6PG5TMJfF3o09YMdP0Kmi5jpS6WO9p4rCnqNomYRzQqIOiJC6gPbuwP5P0HaIJciRoYgVboErSTo7swPyPmvzZhoF2AP_2Mk8mbxaVtbx4NE8Zg72dyyB6MjJU30kpqMseq1yFnSlwWrPLQs2uit5xJGmbgGkovLjI3PGgcYAr0l010c9273IR5ilEgSODXu78G-8xWU3mTenXeH"/></div></div></div></header><main class="w-full pt-20 bg-[#050712]"><div class="flex flex-col w-full">
+<section class="relative w-full h-[calc(100vh-5rem)] min-h-[780px] flex overflow-hidden bg-[#050712]">
+<!-- LEFT & CENTER: IMMERSIVE CINEMATIC STAGE -->
+<div class="relative flex-1 h-full flex flex-col justify-between p-space-md lg:p-space-lg select-none overflow-hidden group" id="cinema-stage">
+<!-- Master Cosmic Midnight Ambient Backglow -->
+<div class="absolute inset-0 pointer-events-none">
+<div class="absolute -top-32 left-1/4 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[150px] opacity-50"></div>
+<div class="absolute bottom-10 left-10 w-[700px] h-[400px] bg-violet-600/15 rounded-full blur-[170px] opacity-40"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-pink-600/10 rounded-full blur-[180px] opacity-30"></div>
+</div>
+<!-- MASTER CINEMATIC SCREEN (Blade Runner 2049 Frame) -->
+<div class="absolute inset-0 z-0">
+<div class="w-full h-full bg-cover bg-center transform scale-100 transition-transform duration-1000 group-hover:scale-[1.008]" data-alt="A breathtaking widescreen cinematic still from Blade Runner 2049 with intense warm amber atmospheric dust storms, towering brutalist neo-Egyptian Wallace Corporation architecture, monumental minimalist statues enveloped in golden haze, deep silhouettes, subtle cyan neon atmospheric particle bleeds, anamorphic cinematic lens flare, 8k mastery." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCtKGAsYYW--qeEWN1auiVdQy5B7J24uWKcsLDO3uoj2cyyy9XA3Z1emWbSd0atws1GHpcCCAgvYw5NqCxSeNBOwrvh9rSVeszi_nlIzg9cxK-oTMG2O-WIYsL-xOv3v03IkxItxZ3gW8xOviZialRlujPG5yIzpZ28o0Bdi_tUgREAM7QVAzU837pvKKs2JGw8vABUhkNXj-ciJ8EYpDjjLi8_-01LfeWLAH27TGQDIemHmKK2iPNbfA')">
+</div>
+<!-- Borderless Cosmic Vignettes -->
+<div class="absolute inset-0 bg-gradient-to-t from-[#050712] via-[#050712]/30 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-[#050712]/90 via-transparent to-[#050712]/80"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-[#050712]/80 via-transparent to-[#080D24]"></div>
+</div>
+<!-- DISCREET TOP OVERLAY HUD -->
+<div class="relative z-20 flex items-center justify-between w-full transition-opacity duration-500 opacity-90 group-hover:opacity-100">
+<!-- Room Identity & Navigation -->
+<div class="flex items-center gap-space-md">
+<a class="flex items-center gap-space-xs px-3.5 py-1.5 rounded-full bg-[#080D24]/70 backdrop-blur-xl border border-white/10 text-on-surface-variant hover:text-on-surface hover:border-violet-500/40 transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+<span class="font-label-sm text-label-sm uppercase tracking-[0.16em]">Lobby</span>
+</a>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-md text-label-md tracking-[0.18em] text-on-surface uppercase font-medium">Blade Runner 2049</span>
+<span class="text-outline-variant font-label-sm">•</span>
+<span class="font-label-sm text-label-sm text-secondary tracking-[0.14em] uppercase font-semibold">Final Cut Master</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant/80 tracking-[0.12em]">Private Theater • Friday Night Watch</span>
+</div>
+</div>
+<!-- Sync Lock Telemetry & Quick Invites -->
+<div class="flex items-center gap-space-sm">
+<!-- Real-Time Cyan / Emerald Sync Lock -->
+<div class="flex items-center gap-space-xs px-3.5 py-1.5 rounded-full bg-[#080D24]/75 backdrop-blur-xl border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.25)]">
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee] animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-cyan-200 tracking-[0.16em] uppercase font-semibold">4 In Sync</span>
+<span class="text-cyan-500/50 font-label-sm">•</span>
+<span class="font-label-sm text-label-sm text-cyan-300 tracking-[0.16em]">0.008s Lock</span>
+</div>
+<!-- Room Code Chip -->
+<div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#080D24]/55 backdrop-blur-md border border-white/10">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">key</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant tracking-[0.2em] font-mono">BR-4902</span>
+</div>
+<!-- Cosmic Invite Action -->
+<button class="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#181b27]/80 hover:bg-violet-950/70 border border-violet-500/30 backdrop-blur-xl text-on-surface transition-all duration-300 shadow-[0_0_15px_rgba(139,92,246,0.25)]">
+<span class="material-symbols-outlined text-[16px] text-pink-400">person_add</span>
+<span class="font-label-sm text-label-sm uppercase tracking-[0.16em]">Invite</span>
+</button>
+</div>
+</div>
+<!-- FLOATING EMOJI REACTION STREAM -->
+<div class="relative z-10 w-full h-28 pointer-events-none flex items-end justify-start pl-8 gap-4 overflow-hidden" id="reactions-container">
+<div class="flex flex-col items-center animate-bounce duration-1000 opacity-90">
+<span class="text-2xl filter drop-shadow-[0_0_12px_rgba(236,72,153,0.8)]">🔥</span>
+<span class="font-label-sm text-[9px] text-pink-300 tracking-widest uppercase">Alex</span>
+</div>
+<div class="flex flex-col items-center translate-y-3 opacity-75">
+<span class="text-xl filter drop-shadow-[0_0_10px_rgba(167,139,250,0.8)]">🤯</span>
+<span class="font-label-sm text-[9px] text-violet-300 tracking-widest uppercase">Maya</span>
+</div>
+<div class="flex flex-col items-center -translate-y-2 opacity-80">
+<span class="text-2xl filter drop-shadow-[0_0_14px_rgba(56,189,248,0.8)]">🍿</span>
+<span class="font-label-sm text-[9px] text-sky-300 tracking-widest uppercase">Raka</span>
+</div>
+</div>
+<!-- MASTER CINEMATIC FLOATING HUD CONTROLS -->
+<div class="relative z-20 flex flex-col gap-space-sm w-full max-w-5xl mx-auto px-space-xs transition-all duration-500 transform translate-y-0 group-hover:translate-y-0">
+<!-- Chapter Breadcrumb & Current Time -->
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-pink-400 shadow-[0_0_8px_#f472b6]"></span>
+<span class="font-label-sm text-label-sm text-on-surface tracking-[0.18em] uppercase">Chapter 4: Memory Fabrication Suite</span>
+</div>
+<div class="flex items-center gap-2 font-mono font-label-sm text-label-sm text-on-surface-variant tracking-widest">
+<span class="text-on-surface font-semibold">01:14:28</span>
+<span>/</span>
+<span>02:44:02</span>
+</div>
+</div>
+<!-- Glowing Interactive Timeline Scrubber (Electric Blue -> Violet -> Pink Gradient) -->
+<div class="relative w-full h-4 flex items-center cursor-pointer group/scrub">
+<!-- Rail Background -->
+<div class="w-full h-[3px] rounded-full bg-[#1c1f2b]/80 backdrop-blur-sm relative overflow-visible transition-all duration-300 group-hover/scrub:h-[5px]">
+<!-- Buffered Stream -->
+<div class="absolute left-0 top-0 h-full w-[65%] rounded-full bg-white/10"></div>
+<!-- Active Playhead Progress (Electric Blue -> Violet -> Pink Gradient) -->
+<div class="absolute left-0 top-0 h-full w-[45.4%] rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-[0_0_14px_rgba(236,72,153,0.7)]"></div>
+<!-- Scene Chapter Markers -->
+<div class="absolute left-[18%] top-[-3px] w-[2px] h-[9px] bg-on-surface/30 hover:bg-secondary"></div>
+<div class="absolute left-[45.4%] top-[-3px] w-[2px] h-[9px] bg-pink-400 shadow-[0_0_8px_#ec4899]"></div>
+<div class="absolute left-[72%] top-[-3px] w-[2px] h-[9px] bg-on-surface/30 hover:bg-secondary"></div>
+<div class="absolute left-[88%] top-[-3px] w-[2px] h-[9px] bg-on-surface/30 hover:bg-secondary"></div>
+</div>
+<!-- Scrubber Thumb (Electric Blue -> Pink Ring with Violet Core) -->
+<div class="absolute left-[45.4%] -translate-x-1/2 w-4 h-4 rounded-full bg-[#050712] border border-pink-400/80 flex items-center justify-center shadow-[0_0_14px_rgba(236,72,153,0.9)] opacity-95 group-hover/scrub:scale-125 transition-transform duration-200">
+<span class="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-pink-400 shadow-[0_0_6px_#ec4899]"></span>
+</div>
+</div>
+<!-- Sleek Floating Glass Pill HUD Controls -->
+<div class="flex items-center justify-between px-space-md py-space-xs rounded-full bg-[#080D24]/80 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.7)]">
+<!-- Playback Triggers -->
+<div class="flex items-center gap-space-sm">
+<!-- 10s Backward -->
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1 flex items-center">
+<span class="material-symbols-outlined text-[20px]">replay_10</span>
+</button>
+<!-- Primary Play/Pause -->
+<button class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white flex items-center justify-center hover:shadow-[0_0_24px_rgba(139,92,246,0.6)] transition-all duration-300">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<!-- 10s Forward -->
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1 flex items-center">
+<span class="material-symbols-outlined text-[20px]">forward_10</span>
+</button>
+<!-- Volume Scroller -->
+<div class="hidden sm:flex items-center gap-2 pl-2">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">volume_up</span>
+</button>
+<div class="w-16 h-1 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="w-[82%] h-full bg-gradient-to-r from-blue-400 to-pink-400"></div>
+</div>
+</div>
+</div>
+<!-- Master Spec Badges (Floating Pills) -->
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-0.5 rounded-full bg-[#181b27]/70 border border-white/10 text-on-surface-variant font-label-sm text-[10px] tracking-widest uppercase">4K UHD</span>
+<span class="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-950/60 to-pink-950/60 border border-pink-500/30 text-pink-300 font-label-sm text-[10px] tracking-widest uppercase shadow-[0_0_10px_rgba(236,72,153,0.25)]">Dolby Vision</span>
+<span class="hidden md:inline-block px-2.5 py-0.5 rounded-full bg-[#181b27]/70 border border-white/10 text-on-surface-variant font-label-sm text-[10px] tracking-widest uppercase">Atmos 7.1.4</span>
+</div>
+<!-- Secondary Deck Controls -->
+<div class="flex items-center gap-space-xs">
+<!-- Spatial Audio Mode Trigger -->
+<button class="p-1.5 text-secondary hover:text-pink-300 transition-colors flex items-center" title="Spatial Head Tracking On">
+<span class="material-symbols-outlined text-[20px]">headphones</span>
+</button>
+<!-- Subtitles Toggle Active -->
+<button class="p-1.5 text-primary hover:text-white transition-colors flex items-center">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">subtitles</span>
+</button>
+<!-- Room Reactions Trigger -->
+<button class="p-1.5 text-on-surface-variant hover:text-pink-400 transition-colors flex items-center" id="send-reaction-btn">
+<span class="material-symbols-outlined text-[20px]">add_reaction</span>
+</button>
+<!-- Fullscreen -->
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
+<span class="material-symbols-outlined text-[20px]">fullscreen</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT: 25% CINEMA COMPANION SIDEBAR (Dark Navy Glass) -->
+<aside class="relative w-[380px] xl:w-[420px] h-full flex flex-col bg-[#080D24]/85 backdrop-blur-2xl z-30 border-l border-white/10 shadow-[-10px_0_40px_rgba(0,0,0,0.8)]">
+<!-- Deep Atmospheric Violet/Magenta/Electric Blue Glow -->
+<div class="absolute -top-24 -right-24 w-80 h-80 bg-violet-600/15 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="absolute bottom-20 -left-20 w-72 h-72 bg-pink-600/15 rounded-full blur-[90px] pointer-events-none"></div>
+<div class="absolute top-1/3 right-10 w-60 h-60 bg-blue-600/10 rounded-full blur-[90px] pointer-events-none"></div>
+<!-- COMPANION HEADER: Tab Switcher -->
+<div class="relative z-10 px-space-md pt-space-md pb-space-sm flex items-center justify-between">
+<div class="flex items-center gap-1 p-1 rounded-full bg-[#0D1535]/80 backdrop-blur-md border border-white/10">
+<button class="px-3.5 py-1 rounded-full font-label-sm text-label-sm tracking-[0.14em] uppercase text-on-surface-variant hover:text-on-surface transition-all">
+            People (4)
+          </button>
+<button class="px-3.5 py-1 rounded-full font-label-sm text-label-sm tracking-[0.14em] uppercase text-on-surface-variant hover:text-on-surface transition-all">
+            Chat
+          </button>
+<!-- Active Tab: Watch AI (Electric Blue -> Violet -> Pink Gradient Pill) -->
+<button class="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-label-sm text-label-sm tracking-[0.14em] uppercase font-semibold shadow-[0_0_16px_rgba(139,92,246,0.4)]">
+<span class="material-symbols-outlined text-[14px] text-pink-200">auto_awesome</span>
+<span>Watch AI</span>
+</button>
+</div>
+<!-- Theater Mic State -->
+<button class="w-8 h-8 rounded-full bg-[#181b27]/80 border border-white/10 flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" title="Spatial Voice: Connected">
+<span class="material-symbols-outlined text-[16px] text-cyan-400">mic</span>
+</button>
+</div>
+<!-- AMBIENT FRIENDS PRESENCE BAR (Cyan/Pink Presence Dots) -->
+<div class="relative z-10 px-space-md py-space-xs flex items-center justify-between bg-[#080D24]/50 backdrop-blur-md border-y border-white/[0.05]">
+<span class="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-[0.2em]">Theater Lounge</span>
+<div class="flex items-center gap-space-xs">
+<!-- User 1: Speaking (Cyan glow) -->
+<div class="relative group/user cursor-pointer" title="Raka • Left Channel">
+<div class="w-7 h-7 rounded-full bg-[#181b27] overflow-hidden ring-1 ring-cyan-400/60 shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+<img class="w-full h-full object-cover" data-alt="Portrait photo of a young man with stylish dark hair enjoying cinema in a dimly lit room, warm amber cinematic key light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCU4OVgUWIBqOF1omJPmEDzEd076yc09yUULN1eQM5L6rj8xcue2jbRx8nYXe2G1MXehTo-kTlY47ConJ4iuylgJPoqSU1Pd9ZUnKEqu0OJH3vGpc0V-Ji8mjNxSniwLtWa3YBJwMLj8t2y_DlAohOmc5TaIvU79yK4jXiiEiQuG1yN8MWxp3qaUh5_u8LdOFjjWNXX5BVOC1XoGigiTM23h4Zn2GhvOxGhrYfLItJYMWsFf26k41HoyA"/>
+</div>
+<span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]"></span>
+</div>
+<!-- User 2: Alex -->
+<div class="relative group/user cursor-pointer" title="Alex • Center">
+<div class="w-7 h-7 rounded-full bg-[#181b27] overflow-hidden ring-1 ring-white/10">
+<img class="w-full h-full object-cover" data-alt="Portrait of a young creative woman smiling gently in a private theater setting, cool indigo backlight, cinematic mood" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5lqKLDUncOurBcMgIA053Tyxm9Easep1yEdB25wivfr2at3rZ91IzSjifbqUvnINQvxsLwFqG5ySd3pgAt9s0pjkr-GCZGlQBAuVeMmIwGC7ztdThDnOGY8SBCLy1a7y6PWR3OHRo9QqAj712wmWowlA1gKOoVSyCExZPr4XzYbVvlZysPXbeUU4Y2Rd3s1Yvkn13Y4XdH0gzBUrKFguO3XjzabXZmxo5IDoLpvanqXkd38plUJLQzA"/>
+</div>
+<span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-slate-500"></span>
+</div>
+<!-- User 3: Maya (Speaking, Pink indicator) -->
+<div class="relative group/user cursor-pointer" title="Maya • Right Channel">
+<div class="w-7 h-7 rounded-full bg-[#181b27] overflow-hidden ring-1 ring-pink-500/60 shadow-[0_0_8px_rgba(236,72,153,0.5)]">
+<img class="w-full h-full object-cover" data-alt="Close up face of an Asian woman bathed in vivid crimson theater projector reflection, cinematic art photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeGRcbbQ9OnRHCJdp8C54S9pPGUTv1eGnyd-qUSnSPbHvxeqW8q25Vz1gqGh8Qxwl7dqoM2iRGJZz5rXIe9kRYpLgLzb6KLkIkpAq4LuWyKc2fTWKim_J4gAxfXapYaRqARYl-jiOVIMdx9JntAHrTkg-KpwH_RSwKpkk5o7KtpkXnnPRxR9oOfWXwbyZqCTkO-1xLKQiZY6YkXku-aP6JBGgAnUSGnMRq5Z-k-tzeHs8GrvchtnkW_w"/>
+</div>
+<span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-pink-500 shadow-[0_0_6px_#ec4899] animate-ping"></span>
+</div>
+<!-- User 4: John -->
+<div class="relative group/user cursor-pointer" title="John • Surround">
+<div class="w-7 h-7 rounded-full bg-[#181b27] overflow-hidden ring-1 ring-white/10">
+<img class="w-full h-full object-cover" data-alt="Portrait of an older man with glasses looking intently at a movie screen, subtle amber ambient rim lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgfJCacA7WYinrhInNCttdNeMblGrQtEwROf9MiYpafrvmU-2NTaPh6zbRovvfxOyA5wVxIFGqmmmERl1cjPTdtoTDPC4kfoKdQpkTwFIfj5I85dbDtJ0axVRRxVILbDzU1HQOPQViuKg3lBn54q334qY9_3RvbvdrVu5qa-w3gj1oZd5xY-JB4S8b0ECC7l7gWFL9YjMJpA9ls3HytIbVYzrC4MjdVQKiBjZfqbFxmAW7xP_jQIK1Dw"/>
+</div>
+<span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-slate-500"></span>
+</div>
+</div>
+</div>
+<!-- SCROLLABLE WATCH AI CURATOR STREAM -->
+<div class="relative z-10 flex-1 overflow-y-auto px-space-md py-space-sm space-y-space-md select-text">
+<!-- AI Status Badge -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<div class="relative flex items-center justify-center">
+<span class="w-2 h-2 rounded-full bg-pink-400 shadow-[0_0_8px_#ec4899]"></span>
+<span class="absolute w-4 h-4 rounded-full bg-pink-400/30 animate-ping"></span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface uppercase tracking-[0.16em] font-semibold">AI Film Scholar</span>
+</div>
+<span class="font-label-sm text-[10px] text-cyan-300/80 tracking-wider uppercase font-medium">Syncing Scene 04</span>
+</div>
+<!-- Current Scene Context Card (Atmospheric Violet / Pink Glow Panel) -->
+<div class="p-space-sm rounded-xl bg-gradient-to-br from-violet-950/40 via-purple-900/20 to-pink-950/20 border border-violet-500/30 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
+<div class="flex items-center gap-1.5 mb-1.5">
+<span class="material-symbols-outlined text-[14px] text-pink-400">movie_filter</span>
+<span class="font-label-sm text-[10px] text-pink-300 uppercase tracking-[0.18em] font-semibold">Scene Dissection</span>
+</div>
+<h4 class="font-title-md text-[14px] leading-5 text-on-surface font-medium mb-1">
+            Memory Fabrication Lab (Dr. Ana Stelline)
+          </h4>
+<p class="font-body-md text-[13px] leading-5 text-on-surface-variant">
+            Dr. Stelline constructs synthetic memories for replicant baseline calibration inside an isolated glass containment cylinder, illustrating the fragility of authentic human longing.
+          </p>
+</div>
+<!-- Scholarly Visual Deep Dive -->
+<div class="p-space-sm rounded-xl bg-[#0D1535]/70 border border-white/10 backdrop-blur-md space-y-space-xs shadow-inner">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-[10px] text-secondary tracking-[0.2em] uppercase font-semibold">Cinematography Note</span>
+<span class="font-mono font-label-sm text-[10px] text-outline">Deakins • 35mm Equiv</span>
+</div>
+<p class="font-body-md text-[13px] leading-5 text-on-surface/90">
+            Notice how Roger Deakins utilizes monochromatic amber-ochre diffusion to mirror the contaminated Las Vegas ruins, stripping digital sharpness to signify decayed recollection versus synthetic precision.
+          </p>
+<!-- Dynamic Audio Score Tag -->
+<div class="pt-2 flex items-center gap-2">
+<div class="w-6 h-6 rounded-md bg-gradient-to-br from-blue-900/60 to-violet-900/60 border border-violet-500/30 flex items-center justify-center text-pink-300">
+<span class="material-symbols-outlined text-[14px]">graphic_eq</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-[11px] text-on-surface leading-none">Hans Zimmer &amp; Benjamin Wallfisch</span>
+<span class="font-label-sm text-[9px] text-on-surface-variant tracking-wider uppercase">Track: "Memory Lab (Yamaha CS-80 Brass)"</span>
+</div>
+</div>
+</div>
+<!-- Suggested Inquiry Pills (Touch or Voice Prompts) -->
+<div class="space-y-1.5">
+<span class="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-[0.18em]">Curated Inquiries</span>
+<div class="flex flex-col gap-1.5">
+<button class="w-full text-left p-2.5 rounded-lg bg-[#0D1535]/60 hover:bg-[#181b27] border border-white/5 hover:border-violet-500/40 transition-all text-on-surface-variant hover:text-on-surface font-body-md text-[12px] leading-snug flex items-center justify-between group/pill">
+<span>"Explain the symbolic weight of the wooden horse"</span>
+<span class="material-symbols-outlined text-[14px] text-outline group-hover/pill:text-pink-300 group-hover/pill:translate-x-0.5 transition-all">north_east</span>
+</button>
+<button class="w-full text-left p-2.5 rounded-lg bg-[#0D1535]/60 hover:bg-[#181b27] border border-white/5 hover:border-violet-500/40 transition-all text-on-surface-variant hover:text-on-surface font-body-md text-[12px] leading-snug flex items-center justify-between group/pill">
+<span>"Why is Dr. Stelline legally restricted to the bio-cage?"</span>
+<span class="material-symbols-outlined text-[14px] text-outline group-hover/pill:text-pink-300 group-hover/pill:translate-x-0.5 transition-all">north_east</span>
+</button>
+<button class="w-full text-left p-2.5 rounded-lg bg-[#0D1535]/60 hover:bg-[#181b27] border border-white/5 hover:border-violet-500/40 transition-all text-on-surface-variant hover:text-on-surface font-body-md text-[12px] leading-snug flex items-center justify-between group/pill">
+<span>"Compare this scene's lighting to Tarkovsky's Stalker"</span>
+<span class="material-symbols-outlined text-[14px] text-outline group-hover/pill:text-pink-300 group-hover/pill:translate-x-0.5 transition-all">north_east</span>
+</button>
+</div>
+</div>
+</div>
+<!-- COMPANION INPUT FOOTER: Seamless Whisper / Text Dispatch -->
+<div class="relative z-20 p-space-sm bg-[#080D24]/95 backdrop-blur-xl border-t border-white/10">
+<form class="relative flex items-center w-full" onsubmit="event.preventDefault();">
+<input class="w-full py-2.5 pl-3.5 pr-20 bg-[#0D1535]/90 border border-white/10 rounded-full font-body-md text-[13px] text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-violet-500/50 focus:bg-[#181b27] transition-all shadow-inner" placeholder="Ask Watch AI anything about this moment..." type="text"/>
+<div class="absolute right-1.5 flex items-center gap-1">
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:text-pink-300 transition-colors" title="Voice Query" type="button">
+<span class="material-symbols-outlined text-[16px]">mic</span>
+</button>
+<!-- Send button: Electric Blue -> Violet -> Pink Gradient -->
+<button class="w-7 h-7 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white flex items-center justify-center hover:shadow-[0_0_14px_rgba(236,72,153,0.7)] transition-all" title="Send Query" type="submit">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">arrow_upward</span>
+</button>
+</div>
+</form>
+<div class="mt-1.5 flex items-center justify-center gap-1.5">
+<span class="w-1 h-1 rounded-full bg-pink-400"></span>
+<span class="font-label-sm text-[9px] text-on-surface-variant/70 tracking-[0.2em] uppercase">Private Encryption Active • Spatial Sync v4.2</span>
+</div>
+</div>
+</aside>
+</section>
+<!-- SCRIPT FOR CINEMATIC MICRO-INTERACTIONS -->
+<script>
+    (function initCinemaSpace() {
+      // Dynamic Reaction Spawner Micro-Interaction
+      const reactionBtn = document.getElementById('send-reaction-btn');
+      const reactionsContainer = document.getElementById('reactions-container');
+      const emojis = ['✨', '🔥', '👏', '🎬', '🤯'];
+
+      if (reactionBtn && reactionsContainer) {
+        reactionBtn.addEventListener('click', () => {
+          const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+          const node = document.createElement('div');
+          node.className = 'flex flex-col items-center transform transition-all duration-700 ease-out opacity-100 translate-y-0';
+          node.innerHTML = `
+            <span class="text-2xl filter drop-shadow-[0_0_12px_rgba(236,72,153,0.8)]">${randomEmoji}</span>
+            <span class="font-label-sm text-[9px] text-pink-300 tracking-widest uppercase">You</span>
+          `;
+          reactionsContainer.appendChild(node);
+
+          setTimeout(() => {
+            node.classList.add('-translate-y-8', 'opacity-0');
+          }, 100);
+
+          setTimeout(() => {
+            node.remove();
+          }, 1500);
+        });
+      }
+    })();
+  </script>
+</div></main><footer class="w-full bg-[#050712] border-t border-white/[0.06] pt-space-xl pb-space-lg"><div class="w-full px-margin-mobile md:px-gutter lg:px-margin flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex items-center gap-space-md"><span class="font-label-sm text-label-sm uppercase tracking-[0.18em] text-on-surface-variant">© 2024 WATCH SPACES CINEMA ARCHITECTURE</span><div class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]"></span><span class="font-label-sm text-label-sm tracking-[0.18em] text-on-surface-variant uppercase">Dolby Atmos • 4K UHD Master Sync</span></div></div><div class="flex items-center gap-space-md"><a class="font-label-sm text-label-sm tracking-[0.18em] text-on-surface-variant hover:text-on-surface uppercase transition-colors duration-300" href="#">Architecture</a><a class="font-label-sm text-label-sm tracking-[0.18em] text-on-surface-variant hover:text-on-surface uppercase transition-colors duration-300" href="#">Acoustics</a><a class="font-label-sm text-label-sm tracking-[0.18em] text-on-surface-variant hover:text-on-surface uppercase transition-colors duration-300" href="#">Privacy Protocol</a><a class="font-label-sm text-label-sm tracking-[0.18em] text-on-surface-variant hover:text-on-surface uppercase transition-colors duration-300" href="#">Membership Terms</a></div></div></footer></body></html>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Title, TimelineEvent } from '../types';
 import { api } from '../services/api';
-import { Shield, CheckCircle2, AlertTriangle, Upload, Eye, FileText } from 'lucide-react';
 
 interface AdminTimelineViewProps {
   titles: Title[];
@@ -66,164 +65,165 @@ export const AdminTimelineView: React.FC<AdminTimelineViewProps> = ({ titles }) 
       const parsed = JSON.parse(timelineJson);
       const res = await api.uploadTimeline(selectedTitleId, parsed);
       setExistingEvents(res.events || []);
-      setStatusMessage('Timeline successfully published to PostgreSQL database!');
-      setValidationResult({ valid: true, totalEvents: res.events.length, errors: [] });
+      setStatusMessage(`Successfully committed ${res.events?.length || 0} events to backend database!`);
     } catch (err: any) {
       setStatusMessage(`Upload failed: ${err.message}`);
     }
   };
 
   return (
-    <div style={{ padding: '32px 48px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-        <Shield size={28} color="#E50914" />
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>Admin Timeline Management & Schema Validation</h1>
-      </div>
-      <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '28px' }}>
-        Author, validate, and publish timestamp-keyed scene markers, character metadata, glossary items, and narrative variation branches.
-      </p>
-
-      {/* Title Selector */}
-      <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>Select Title:</label>
-        <select
-          value={selectedTitleId}
-          onChange={(e) => setSelectedTitleId(e.target.value)}
-          style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '6px',
-            padding: '8px 16px',
-            fontSize: '0.9rem'
-          }}
-        >
-          {titles.map((t) => (
-            <option key={t.id} value={t.id} style={{ background: '#1c1c1c' }}>
-              {t.name} ({t.durationSeconds}s)
-            </option>
-          ))}
-        </select>
+    <div className="w-full px-4 sm:px-8 lg:px-14 max-w-7xl mx-auto pt-10 pb-24 text-on-surface">
+      <div className="space-y-1 mb-8">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_#f3bd79]" />
+          <span className="font-label-sm text-[10px] tracking-[0.2em] uppercase text-secondary font-semibold">
+            SYSTEM TELEMETRY & SCHEMA INGESTION
+          </span>
+        </div>
+        <h1 className="font-display-lg text-3xl sm:text-5xl text-white font-bold tracking-tight">
+          Admin Timeline & Variation Engine
+        </h1>
+        <p className="font-body-md text-xs sm:text-sm text-on-surface-variant max-w-2xl leading-relaxed">
+          Validate and upload schema-compliant JSON timelines (trivia, character dossiers, glossary items, and narrative variation branch points) for authoritative synchronization.
+        </p>
       </div>
 
-      {/* Editor & Preview Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
-        {/* Left: JSON Input */}
-        <div className="glass-panel" style={{ borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.95rem' }}>
-              <FileText size={18} color="#00F0FF" /> Timeline Schema JSON
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left: Editor & Schema Tools */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="p-6 rounded-3xl bg-surface-container-low border border-white/5 space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-white uppercase tracking-wider font-label-md">
+                Target Cinema Title
+              </label>
+              <span className="font-mono text-xs text-secondary font-bold">
+                {existingEvents.length} Events Ingested
+              </span>
             </div>
+            <select
+              value={selectedTitleId}
+              onChange={(e) => setSelectedTitleId(e.target.value)}
+              className="w-full bg-surface-container-lowest border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-secondary"
+            >
+              {titles.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({t.id})
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="p-6 rounded-3xl bg-surface-container-low border border-white/5 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-white uppercase tracking-wider font-label-md">
+                Timeline Schema Payload (JSON)
+              </label>
               <button
+                type="button"
+                onClick={() => loadExistingTimeline(selectedTitleId)}
+                className="text-[10px] text-secondary hover:underline uppercase"
+              >
+                Reload Existing
+              </button>
+            </div>
+            <textarea
+              rows={16}
+              value={timelineJson}
+              onChange={(e) => setTimelineJson(e.target.value)}
+              className="w-full bg-surface-container-lowest border border-white/10 rounded-2xl p-4 text-xs font-mono text-white/90 focus:outline-none focus:border-secondary"
+            />
+
+            {statusMessage && (
+              <div className="p-3 rounded-xl bg-surface-container-lowest border border-secondary/30 text-xs text-secondary font-mono">
+                {statusMessage}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
                 onClick={handleValidate}
-                className="btn-secondary"
-                style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+                className="px-6 py-3 rounded-xl bg-surface-container-high hover:bg-surface-bright text-white font-label-md text-xs uppercase tracking-wider font-bold border border-white/10 transition-colors"
               >
                 Validate Schema
               </button>
               <button
+                type="button"
                 onClick={handleUpload}
-                className="btn-netflix"
-                style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#7C3AED] to-[#EC4899] text-white font-label-md text-xs uppercase tracking-wider font-bold shadow-[0_0_20px_rgba(139,92,246,0.5)] hover:shadow-[0_0_30px_rgba(236,72,153,0.7)] transition-all"
               >
-                <Upload size={14} /> Publish Timeline
+                Upload to Neon DB
               </button>
             </div>
           </div>
+        </div>
 
-          <textarea
-            value={timelineJson}
-            onChange={(e) => setTimelineJson(e.target.value)}
-            style={{
-              flex: 1,
-              minHeight: '480px',
-              backgroundColor: '#0a0a0a',
-              color: '#00F0FF',
-              fontFamily: 'monospace',
-              fontSize: '0.85rem',
-              padding: '16px',
-              borderRadius: '8px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              outline: 'none',
-              resize: 'vertical'
-            }}
-          />
-
-          {statusMessage && (
-            <div style={{
-              marginTop: '12px',
-              padding: '10px 14px',
-              borderRadius: '6px',
-              fontSize: '0.85rem',
-              background: validationResult?.valid ? 'rgba(0, 255, 102, 0.1)' : 'rgba(229, 9, 20, 0.1)',
-              border: validationResult?.valid ? '1px solid #00FF66' : '1px solid #E50914',
-              color: validationResult?.valid ? '#00FF66' : '#FF4D4D'
-            }}>
-              {statusMessage}
-              {validationResult?.errors && validationResult.errors.length > 0 && (
-                <ul style={{ marginTop: '6px', paddingLeft: '20px', fontSize: '0.8rem' }}>
+        {/* Right: Validation Inspector & Active Events Feed */}
+        <div className="lg:col-span-5 space-y-6">
+          {validationResult && (
+            <div className={`p-6 rounded-3xl border ${validationResult.valid ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-error/10 border-error/30'} space-y-2`}>
+              <div className="flex items-center justify-between">
+                <span className="font-label-sm text-xs uppercase font-bold tracking-wider">
+                  Validation Status: {validationResult.valid ? 'PASS' : 'FAIL'}
+                </span>
+                <span className="font-mono text-xs font-bold">
+                  {validationResult.totalEvents || 0} valid events
+                </span>
+              </div>
+              {validationResult.errors && validationResult.errors.length > 0 && (
+                <div className="mt-2 space-y-1">
                   {validationResult.errors.map((err, i) => (
-                    <li key={i}>{err}</li>
+                    <div key={i} className="text-xs text-error font-mono">
+                      • {err}
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
             </div>
           )}
-        </div>
 
-        {/* Right: Live Authored Markers Preview */}
-        <div className="glass-panel" style={{ borderRadius: '12px', padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.95rem', marginBottom: '16px' }}>
-            <Eye size={18} color="#FBBF24" /> Live Database Timeline ({existingEvents.length} events)
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '540px', overflowY: 'auto' }}>
-            {existingEvents.length === 0 ? (
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '40px' }}>
-                No authored timeline events found for this title.
-              </div>
-            ) : (
-              existingEvents.map((ev, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '8px',
-                    padding: '12px'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{
-                      fontWeight: 700,
-                      fontSize: '0.75rem',
-                      textTransform: 'uppercase',
-                      color: ev.type === 'trivia' ? '#00F0FF' : (ev.type === 'variation_point' ? '#FF4D4D' : '#FBBF24')
-                    }}>
-                      {ev.type}
-                    </span>
-                    <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
-                      ts: {ev.ts}s
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#E5E7EB' }}>
-                    {ev.text || ev.payload?.text || ev.payload?.name || ev.payload?.term || ev.payload?.prompt || JSON.stringify(ev.payload || {})}
-                  </div>
-                  {ev.options && ev.options.length > 0 && (
-                    <div style={{ marginTop: '8px', paddingLeft: '8px', borderLeft: '2px solid #E50914' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Options:</div>
-                      {ev.options.map(opt => (
-                        <div key={opt.id} style={{ fontSize: '0.75rem', color: '#dedede' }}>
-                          • {opt.label} ({opt.assetRef})
-                        </div>
-                      ))}
-                    </div>
-                  )}
+          <div className="p-6 rounded-3xl bg-surface-container-low border border-white/5 space-y-4">
+            <h3 className="font-title-md text-sm text-white font-bold uppercase tracking-wider">
+              Ingested Timeline Events ({existingEvents.length})
+            </h3>
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              {existingEvents.length === 0 ? (
+                <div className="py-8 text-center text-xs text-on-surface-variant">
+                  No timeline events found for this title.
                 </div>
-              ))
-            )}
+              ) : (
+                existingEvents.map((evt, idx) => (
+                  <div
+                    key={evt.id || idx}
+                    className="p-3.5 rounded-2xl bg-surface-container-lowest border border-white/5 space-y-1"
+                  >
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="px-2 py-0.5 rounded bg-primary-container/20 text-primary-fixed-dim uppercase font-semibold font-mono">
+                        {evt.type}
+                      </span>
+                      <span className="font-mono text-secondary font-bold">
+                        {Math.floor(evt.ts / 60)}:{(evt.ts % 60).toString().padStart(2, '0')} ({evt.ts}s)
+                      </span>
+                    </div>
+                    <div className="text-xs text-white">
+                      {evt.text || evt.definition || (evt.payload && JSON.stringify(evt.payload))}
+                    </div>
+                    {evt.options && (
+                      <div className="pt-1 flex flex-wrap gap-1">
+                        {evt.options.map((opt) => (
+                          <span
+                            key={opt.id}
+                            className="px-2 py-0.5 rounded bg-white/5 text-[10px] text-on-surface-variant font-mono"
+                          >
+                            Choice: {opt.label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

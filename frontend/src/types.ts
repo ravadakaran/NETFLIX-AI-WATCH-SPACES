@@ -6,6 +6,8 @@ export interface User {
   displayName: string;
   role: UserRole;
   subtitleLocale?: string;
+  avatarUrl?: string;
+  profileImage?: string;
 }
 
 export interface Title {
