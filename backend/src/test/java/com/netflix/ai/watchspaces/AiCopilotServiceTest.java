@@ -3,7 +3,6 @@ package com.netflix.ai.watchspaces;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.ai.watchspaces.dto.AiDtos.AiAnswerResponse;
 import com.netflix.ai.watchspaces.dto.AiDtos.AiQuestionRequest;
-import com.netflix.ai.watchspaces.entity.ChatMessage;
 import com.netflix.ai.watchspaces.entity.TimelineEvent;
 import com.netflix.ai.watchspaces.entity.Title;
 import com.netflix.ai.watchspaces.entity.User;
@@ -22,10 +21,10 @@ import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({"null"})
 public class AiCopilotServiceTest {
 
     @Mock

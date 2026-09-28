@@ -22,7 +22,8 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
   const isBroadcastingRef = useRef(false);
 
   // Room state
-  const isHost = currentUser.id === space.hostUserId || currentUser.role === 'HOST';
+  const [currentHostId, setCurrentHostId] = useState<string>(space.hostUserId);
+  const isHost = currentUser.id === currentHostId || currentUser.role === 'HOST';
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(space.durationSeconds || 600);
@@ -40,6 +41,10 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  
+  // Typing state
+  const [activeTypers, setActiveTypers] = useState<{ [userId: string]: { displayName: string, timestamp: number } }>({});
+  const lastTypingTimeRef = useRef<number>(0);
 
   // AI Copilot state
   const [aiInquiries, setAiInquiries] = useState<Array<{ q: string; a?: string; latency?: number }>>([]);
@@ -59,6 +64,10 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
 
   // Invite code copy feedback
   const [copiedCode, setCopiedCode] = useState(false);
+
+  // Moderation state
+  const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
+  const [isRoomLocked, setIsRoomLocked] = useState<boolean>(space.isLocked || false);
 
   // 1. Initialize WebSocket & Fetch Timeline Data
   useEffect(() => {
@@ -113,20 +122,73 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
       }
     });
 
+    socket.subscribe('room.chat.history', (msg) => {
+      const items: any[] = Array.isArray(msg.payload) ? msg.payload : [];
+      setMessages(prev => {
+        const existingIds = new Set(prev.map(m => m.id));
+        const newItems = items
+          .filter(p => !existingIds.has(p.messageId || p.id))
+          .map(p => ({
+            id: p.messageId || p.id || 'hist_' + Math.random(),
+            userId: p.userId,
+            displayName: p.displayName || 'Guest',
+            body: p.body,
+            msgType: p.msgType || 'chat',
+            createdAt: new Date().toISOString()
+          }));
+        return [...newItems, ...prev];
+      });
+      scrollToBottom();
+    });
+
     socket.subscribe('room.chat.message', (msg) => {
       const p = msg.payload;
-      setMessages(prev => [
-        ...prev,
-        {
-          id: p.id || 'msg_' + Date.now() + Math.random(),
-          userId: p.userId,
-          displayName: p.displayName || 'Guest',
-          body: p.body,
-          msgType: p.msgType || 'chat',
-          createdAt: new Date().toISOString()
-        }
-      ]);
+      const msgId = p.messageId || p.id || 'msg_' + Date.now() + Math.random();
+      setMessages(prev => {
+        if (prev.some(m => m.id === msgId)) return prev;
+        return [
+          ...prev,
+          {
+            id: msgId,
+            userId: p.userId,
+            displayName: p.displayName || 'Guest',
+            body: p.body,
+            msgType: p.msgType || 'chat',
+            createdAt: new Date().toISOString()
+          }
+        ];
+      });
       scrollToBottom();
+    });
+
+    socket.subscribe('room.presence.update', (msg) => {
+      const p = msg.payload;
+      if (p.action === 'joined') {
+        setParticipants(prev => {
+          if (prev.some(u => u.userId === p.participantId)) return prev;
+          return [...prev, { userId: p.participantId, displayName: p.displayName, isHost: false }];
+        });
+        setMessages(prev => [
+          ...prev,
+          {
+            id: 'sys_join_' + Date.now() + Math.random(),
+            msgType: 'system',
+            body: `${p.displayName || 'A guest'} joined the space.`,
+            createdAt: new Date().toISOString()
+          }
+        ]);
+      } else if (p.action === 'left') {
+        setParticipants(prev => prev.filter(u => u.userId !== p.participantId));
+        setMessages(prev => [
+          ...prev,
+          {
+            id: 'sys_left_' + Date.now() + Math.random(),
+            msgType: 'system',
+            body: `${p.displayName || 'A guest'} left the space.`,
+            createdAt: new Date().toISOString()
+          }
+        ]);
+      }
     });
 
     socket.subscribe('room.user.joined', (msg) => {
@@ -182,7 +244,66 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
       triggerReaction(emoji, sender);
     });
 
+    socket.subscribe('room.chat.typing', (msg) => {
+      const p = msg.payload;
+      if (p.userId === currentUser.id) return;
+      setActiveTypers(prev => ({
+        ...prev,
+        [p.userId]: { displayName: p.displayName || 'Guest', timestamp: Date.now() }
+      }));
+      scrollToBottom();
+    });
+
+    socket.subscribe('room.mod.mute', (msg) => {
+      const { userId, isMuted } = msg.payload;
+      setMutedUsers(prev => {
+        const next = new Set(prev);
+        if (isMuted) next.add(userId);
+        else next.delete(userId);
+        return next;
+      });
+    });
+
+    socket.subscribe('room.mod.kick', (msg) => {
+      if (msg.payload.userId === currentUser.id) {
+        alert("You have been kicked by the host.");
+        onLeave();
+      }
+    });
+
+    socket.subscribe('room.mod.lock', (msg) => {
+      setIsRoomLocked(msg.payload.isLocked);
+    });
+
+    socket.subscribe('room.mod.transfer', (msg) => {
+      setCurrentHostId(msg.payload.userId);
+    });
+
+    const typingInterval = setInterval(() => {
+      setActiveTypers(prev => {
+        const now = Date.now();
+        const next = { ...prev };
+        let changed = false;
+        Object.keys(next).forEach(uid => {
+          if (now - next[uid].timestamp > 3000) {
+            delete next[uid];
+            changed = true;
+          }
+        });
+        return changed ? next : prev;
+      });
+    }, 1000);
+
     return () => {
+      if (videoRef.current) {
+        const watchedSec = Math.floor(videoRef.current.currentTime);
+        const durationSec = duration || space.durationSeconds || 1;
+        const completed = watchedSec > 0 && watchedSec >= (durationSec * 0.9);
+        if (watchedSec > 5) {
+          api.recordInteraction(space.titleId, watchedSec, completed).catch(() => {});
+        }
+      }
+      clearInterval(typingInterval);
       socket.disconnect();
     };
   }, [space.watchSpaceId, space.titleId]);
@@ -278,6 +399,23 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
     if (e) e.preventDefault();
     if (!chatInput.trim()) return;
 
+    if (mutedUsers.has(currentUser.id)) {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: 'sys_' + Date.now(),
+          userId: 'system',
+          displayName: 'System',
+          body: 'You are muted and cannot send messages.',
+          msgType: 'system',
+          createdAt: new Date().toISOString()
+        }
+      ]);
+      setChatInput('');
+      scrollToBottom();
+      return;
+    }
+
     socketRef.current?.sendChat(chatInput.trim(), Math.floor(currentTime));
 
     // Optimistic local append
@@ -294,6 +432,15 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
     ]);
     setChatInput('');
     scrollToBottom();
+  };
+
+  const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setChatInput(e.target.value);
+    const now = Date.now();
+    if (now - lastTypingTimeRef.current > 2000) {
+      socketRef.current?.sendTyping();
+      lastTypingTimeRef.current = now;
+    }
   };
 
   const handleAskAi = async (question: string) => {
@@ -420,6 +567,24 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Host Lock Room Button */}
+            {isHost && (
+              <button
+                onClick={() => socketRef.current?.sendModLock(!isRoomLocked)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-xl border transition-all font-label-sm text-[10px] uppercase font-bold ${
+                  isRoomLocked 
+                    ? 'bg-pink-950/60 border-pink-500/50 text-pink-300 hover:bg-pink-900/60' 
+                    : 'bg-[#181b27]/80 hover:bg-violet-950/70 border-violet-500/30 text-on-surface hover:text-white'
+                }`}
+                title={isRoomLocked ? "Unlock Room" : "Lock Room"}
+              >
+                <span className="material-symbols-outlined text-[14px]">
+                  {isRoomLocked ? 'lock' : 'lock_open'}
+                </span>
+                <span className="hidden sm:inline">{isRoomLocked ? 'Locked' : 'Unlocked'}</span>
+              </button>
+            )}
+
             {/* Invite Code Pill */}
             <button
               onClick={copyInviteCode}
@@ -841,13 +1006,44 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
                       )}
                     </div>
                     <div className="text-[10px] text-on-surface-variant font-mono">
-                      Channel: {idx % 2 === 0 ? 'Left' : 'Right'} (Spatial)
+                      {mutedUsers.has(p.userId) ? (
+                        <span className="text-red-400 flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">mic_off</span>Muted</span>
+                      ) : (
+                        `Channel: ${idx % 2 === 0 ? 'Left' : 'Right'} (Spatial)`
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[16px] text-cyan-400">mic</span>
+                <div className="flex items-center gap-2">
+                  {!mutedUsers.has(p.userId) && (
+                    <span className="material-symbols-outlined text-[16px] text-cyan-400">mic</span>
+                  )}
+                  {isHost && p.userId !== currentUser.id && (
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => socketRef.current?.sendModMute(p.userId, !mutedUsers.has(p.userId))}
+                        className="p-1 rounded bg-[#080D24] border border-white/10 hover:border-violet-500/50 text-on-surface-variant hover:text-white transition-all"
+                        title={mutedUsers.has(p.userId) ? "Unmute" : "Mute"}
+                      >
+                        <span className="material-symbols-outlined text-[14px]">{mutedUsers.has(p.userId) ? 'mic' : 'mic_off'}</span>
+                      </button>
+                      <button 
+                        onClick={() => socketRef.current?.sendModKick(p.userId)}
+                        className="p-1 rounded bg-[#080D24] border border-white/10 hover:border-pink-500/50 text-on-surface-variant hover:text-pink-400 transition-all"
+                        title="Kick"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">person_remove</span>
+                      </button>
+                      <button 
+                        onClick={() => socketRef.current?.sendModTransferHost(p.userId)}
+                        className="p-1 rounded bg-[#080D24] border border-white/10 hover:border-cyan-500/50 text-on-surface-variant hover:text-cyan-400 transition-all"
+                        title="Make Host"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">admin_panel_settings</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -899,13 +1095,29 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
                 })
               )}
             </div>
+            
+            {Object.keys(activeTypers).length > 0 && (
+              <div className="px-4 py-1 text-[10px] text-on-surface-variant font-mono italic animate-in fade-in flex items-center gap-2">
+                <span className="flex gap-0.5">
+                  <span className="w-1 h-1 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1 h-1 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1 h-1 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </span>
+                {(() => {
+                  const names = Object.values(activeTypers).map(t => t.displayName);
+                  if (names.length === 1) return `${names[0]} is typing...`;
+                  if (names.length === 2) return `${names.join(' and ')} are typing...`;
+                  return `${names.slice(0, 2).join(', ')} and others are typing...`;
+                })()}
+              </div>
+            )}
 
             {/* Chat Input */}
             <form onSubmit={handleSendChat} className="p-3 border-t border-white/10 bg-[#080D24]/95 backdrop-blur-xl flex items-center gap-2">
               <input
                 type="text"
                 value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
+                onChange={handleTyping}
                 placeholder="Message the room..."
                 className="flex-1 py-2 px-3.5 bg-[#0D1535]/90 rounded-full text-xs text-white placeholder:text-on-surface-variant/50 focus:outline-none focus:border-violet-500/50 border border-white/10"
               />

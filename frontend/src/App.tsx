@@ -11,8 +11,8 @@ import { SignInView } from './components/SignInView';
 import { SignUpView } from './components/SignUpView';
 import { CreateRoomModal } from './components/CreateRoomModal';
 import { JoinRoomModal } from './components/JoinRoomModal';
-import { LoginModal } from './components/LoginModal';
 import { AdminTimelineView } from './components/AdminTimelineView';
+import { ProfileSettingsModal } from './components/ProfileSettingsModal';
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -29,7 +29,8 @@ export const App: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [modalInitialTitle, setModalInitialTitle] = useState<Title | undefined>(undefined);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState<boolean>(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState<boolean>(false);
+  const [mySpaces, setMySpaces] = useState<WatchSpace[]>([]);
 
   // Notifications & Loading
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -43,6 +44,14 @@ export const App: React.FC = () => {
   // 1. Initial Authentication & Data Ingestion
   useEffect(() => {
     initApp();
+
+    const handleAuthExpired = () => {
+      setCurrentUser(null);
+      setActiveTab('login');
+      showToast('Your session expired. Please sign in again.');
+    };
+    window.addEventListener('auth:expired', handleAuthExpired);
+    return () => window.removeEventListener('auth:expired', handleAuthExpired);
   }, []);
 
   const initApp = async () => {
@@ -79,12 +88,14 @@ export const App: React.FC = () => {
       }
 
       if (token) {
-        const [recsRes, histRes] = await Promise.all([
+        const [recsRes, histRes, mySpacesRes] = await Promise.all([
           api.getRecommendations().catch(() => ({ items: [] })),
-          api.getHistory().catch(() => [])
+          api.getHistory().catch(() => []),
+          api.getMySpaces().catch(() => [])
         ]);
         setRecommendations(recsRes.items || []);
         setHistory(histRes || []);
+        if (mySpacesRes) setMySpaces(mySpacesRes);
       }
     } catch (err: any) {
       console.warn('Backend connection note, activating rich offline state:', err.message);
@@ -316,6 +327,17 @@ export const App: React.FC = () => {
     handleCreateSpace(title.id, 1, 'normal', true);
   };
 
+  const handleUpdateProfile = async (data: { displayName?: string; subtitleLocale?: string; password?: string }) => {
+    try {
+      const updatedUser = await api.updateProfile(data);
+      setCurrentUser(updatedUser);
+      setIsProfileSettingsOpen(false);
+      showToast('Profile updated successfully.');
+    } catch (err: any) {
+      showToast(`Failed to update profile: ${err.message}`);
+    }
+  };
+
   const isPublicPage = activeTab === 'landing' || activeTab === 'login' || activeTab === 'signup';
 
   return (
@@ -331,6 +353,7 @@ export const App: React.FC = () => {
           onOpenCreateModal={() => handleOpenCreateModal()}
           onOpenLogin={() => setActiveTab('login')}
           onLogout={handleLogout}
+          onOpenProfileSettings={() => setIsProfileSettingsOpen(true)}
           hasActiveSpace={!!activeSpace}
         />
       )}
@@ -339,7 +362,7 @@ export const App: React.FC = () => {
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl bg-[#080D24]/95 backdrop-blur-2xl border border-violet-500/30 text-white text-xs font-bold tracking-wide shadow-[0_12px_35px_rgba(0,0,0,0.85),0_0_20px_rgba(139,92,246,0.35)] flex items-center gap-2.5 animate-in slide-in-from-bottom-4">
           <span className="material-symbols-outlined text-[18px] text-pink-400" style={{ fontVariationSettings: "'FILL' 1" }}>
-            sparkles
+            auto_awesome
           </span>
           <span>{toastMessage}</span>
         </div>
@@ -378,6 +401,7 @@ export const App: React.FC = () => {
             currentUser={currentUser}
             onLeave={() => {
               setActiveTab('spaces');
+              api.getMySpaces().then(setMySpaces).catch(() => {});
               api.getActiveSpaces().then(setActiveSpaces).catch(() => {});
             }}
           />
@@ -391,7 +415,7 @@ export const App: React.FC = () => {
         ) : activeTab === 'spaces' ? (
           <MySpacesHub
             currentUser={currentUser}
-            activeSpaces={activeSpaces}
+            activeSpaces={mySpaces.length > 0 ? mySpaces : activeSpaces}
             history={history}
             titles={titles}
             onOpenCreateModal={handleOpenCreateModal}
@@ -435,11 +459,12 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Custom Credentials Login/Register Modal */}
-      {isLoginModalOpen && (
-        <LoginModal
-          onClose={() => setIsLoginModalOpen(false)}
-          onSuccess={handleLoginSuccess}
+      {/* Profile Settings Modal */}
+      {isProfileSettingsOpen && currentUser && (
+        <ProfileSettingsModal
+          currentUser={currentUser}
+          onClose={() => setIsProfileSettingsOpen(false)}
+          onUpdate={handleUpdateProfile}
         />
       )}
     </div>

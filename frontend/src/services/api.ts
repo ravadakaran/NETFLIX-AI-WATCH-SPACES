@@ -10,11 +10,65 @@ export function setToken(token: string) {
   localStorage.setItem('netflix_token', token);
 }
 
-export function removeToken() {
-  localStorage.removeItem('netflix_token');
+export function getRefreshToken(): string | null {
+  return localStorage.getItem('netflix_refresh_token');
 }
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export function setRefreshToken(token: string) {
+  localStorage.setItem('netflix_refresh_token', token);
+}
+
+export function removeToken() {
+  localStorage.removeItem('netflix_token');
+  localStorage.removeItem('netflix_refresh_token');
+}
+
+export function clearTokens() {
+  removeToken();
+}
+
+let isRefreshing = false;
+let refreshSubscribers: ((token: string | null) => void)[] = [];
+
+function onTokenRefreshed(token: string | null) {
+  refreshSubscribers.forEach(cb => cb(token));
+  refreshSubscribers = [];
+}
+
+function addRefreshSubscriber(cb: (token: string | null) => void) {
+  refreshSubscribers.push(cb);
+}
+
+async function tryRefreshToken(): Promise<string | null> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken })
+    });
+    if (!res.ok) {
+      removeToken();
+      return null;
+    }
+    const data = await res.json();
+    if (data.accessToken) {
+      setToken(data.accessToken);
+      if (data.refreshToken) {
+        setRefreshToken(data.refreshToken);
+      }
+      return data.accessToken;
+    }
+    return null;
+  } catch {
+    removeToken();
+    return null;
+  }
+}
+
+async function request<T>(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -29,6 +83,33 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...options,
     headers
   });
+
+  // Handle 401 Unauthorized with automatic refresh token rotation
+  if (response.status === 401 && !isRetry && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh') && !endpoint.includes('/auth/register')) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      const newToken = await tryRefreshToken();
+      isRefreshing = false;
+      onTokenRefreshed(newToken);
+
+      if (newToken) {
+        return request<T>(endpoint, options, true);
+      } else {
+        removeToken();
+        window.dispatchEvent(new CustomEvent('auth:expired'));
+      }
+    } else {
+      return new Promise<T>((resolve, reject) => {
+        addRefreshSubscriber((newToken) => {
+          if (newToken) {
+            resolve(request<T>(endpoint, options, true));
+          } else {
+            reject(new Error('Session expired. Please sign in again.'));
+          }
+        });
+      });
+    }
+  }
 
   if (!response.ok) {
     let errorMsg = `HTTP Error ${response.status}`;
@@ -56,6 +137,9 @@ export const api = {
       { method: 'POST', body: JSON.stringify({ email, password }) }
     );
     setToken(data.accessToken);
+    if (data.refreshToken) {
+      setRefreshToken(data.refreshToken);
+    }
     return data;
   },
 
@@ -65,11 +149,25 @@ export const api = {
       { method: 'POST', body: JSON.stringify({ email, displayName, password, role }) }
     );
     setToken(data.accessToken);
+    if (data.refreshToken) {
+      setRefreshToken(data.refreshToken);
+    }
     return data;
+  },
+
+  logout() {
+    clearTokens();
   },
 
   async getCurrentUser(): Promise<User> {
     return request<User>('/auth/me');
+  },
+
+  async updateProfile(data: { displayName?: string; subtitleLocale?: string; password?: string }): Promise<User> {
+    return request<User>('/auth/me', {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
   },
 
   // Titles
@@ -119,6 +217,10 @@ export const api = {
 
   async getActiveSpaces(): Promise<WatchSpace[]> {
     return request<WatchSpace[]>('/watch-spaces');
+  },
+
+  async getMySpaces(): Promise<WatchSpace[]> {
+    return request<WatchSpace[]>('/watch-spaces/me');
   },
 
   // AI Copilot

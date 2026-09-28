@@ -6,7 +6,6 @@ import com.netflix.ai.watchspaces.entity.Title;
 import com.netflix.ai.watchspaces.entity.User;
 import com.netflix.ai.watchspaces.repository.InteractionRepository;
 import com.netflix.ai.watchspaces.repository.TitleRepository;
-import com.netflix.ai.watchspaces.repository.UserRepository;
 import com.netflix.ai.watchspaces.service.RecommendationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,9 +28,6 @@ public class RecommendationServiceTest {
     @Mock
     private TitleRepository titleRepository;
 
-    @Mock
-    private UserRepository userRepository;
-
     private RecommendationService recommendationService;
 
     private UUID userId;
@@ -43,7 +39,7 @@ public class RecommendationServiceTest {
 
     @BeforeEach
     void setUp() {
-        recommendationService = new RecommendationService(interactionRepository, titleRepository, userRepository);
+        recommendationService = new RecommendationService(interactionRepository, titleRepository);
         userId = UUID.randomUUID();
         testUser = User.builder().id(userId).email("user@test.com").displayName("User").build();
 

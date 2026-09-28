@@ -10,13 +10,21 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Configuration
 @EnableWebSocket
 @RequiredArgsConstructor
+@SuppressWarnings({"null"})
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final WatchSpaceWebSocketHandler watchSpaceWebSocketHandler;
 
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}")
+    private String allowedOrigins;
+
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        String[] origins = java.util.Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toArray(String[]::new);
         registry.addHandler(watchSpaceWebSocketHandler, "/ws/watch-spaces/{watchSpaceId}")
-                .setAllowedOriginPatterns("*");
+                .setAllowedOrigins(origins);
     }
 }

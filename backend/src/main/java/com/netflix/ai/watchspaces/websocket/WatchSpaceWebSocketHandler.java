@@ -28,6 +28,7 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings({"null", "unchecked"})
 public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
 
     private final RoomSessionManager sessionManager;
@@ -105,6 +106,34 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
                 .build();
         sessionManager.sendToSession(session, currentPlayback);
 
+        // Send recent chat history (up to 50 messages) to newly connected client
+        try {
+            List<ChatMessage> history = chatMessageRepository.findTop50ByWatchSpaceIdOrderByCreatedAtDesc(spaceId);
+            if (history != null && !history.isEmpty()) {
+                List<ChatMessage> chronological = new ArrayList<>(history);
+                Collections.reverse(chronological);
+                List<ChatPayload> historyPayload = chronological.stream()
+                        .map(cm -> ChatPayload.builder()
+                                .messageId(cm.getId() != null ? cm.getId().toString() : "msg_" + UUID.randomUUID().toString().substring(0, 8))
+                                .userId(cm.getUser() != null ? cm.getUser().getId().toString() : "")
+                                .displayName(cm.getUser() != null ? cm.getUser().getDisplayName() : "Guest")
+                                .body(cm.getBody())
+                                .tsSeconds(cm.getTsSeconds())
+                                .build())
+                        .collect(java.util.stream.Collectors.toList());
+
+                WsEnvelope historyEnv = WsEnvelope.builder()
+                        .event("room.chat.history")
+                        .watchSpaceId(watchSpaceIdStr)
+                        .payload(historyPayload)
+                        .ts(System.currentTimeMillis())
+                        .build();
+                sessionManager.sendToSession(session, historyEnv);
+            }
+        } catch (Exception e) {
+            log.error("Failed to send chat history for space {}: {}", watchSpaceIdStr, e.getMessage());
+        }
+
         log.info("User {} connected to space {}, total: {}", user.getDisplayName(), watchSpaceIdStr, count);
     }
 
@@ -154,6 +183,10 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
             sessionManager.broadcast(spaceId, envelope);
 
         } else if ("room.chat.message".equalsIgnoreCase(event)) {
+            if (sessionManager.isMuted(spaceId, ctx.userId)) {
+                return; // User is muted
+            }
+
             ChatPayload chat = objectMapper.convertValue(envelope.getPayload(), ChatPayload.class);
             chat.setUserId(ctx.userId.toString());
             chat.setDisplayName(ctx.displayName);
@@ -184,6 +217,16 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
             envelope.setTs(now);
             sessionManager.broadcast(spaceId, envelope);
 
+        } else if ("room.chat.typing".equalsIgnoreCase(event)) {
+            // Typing indicator
+            Map<String, Object> typingPayload = new HashMap<>();
+            typingPayload.put("userId", ctx.userId.toString());
+            typingPayload.put("displayName", ctx.displayName);
+            
+            envelope.setPayload(typingPayload);
+            envelope.setTs(now);
+            sessionManager.broadcast(spaceId, envelope);
+
         } else if ("room.sync.ping".equalsIgnoreCase(event)) {
             SyncPingPayload ping = objectMapper.convertValue(envelope.getPayload(), SyncPingPayload.class);
             WsEnvelope pongEnv = WsEnvelope.builder()
@@ -210,6 +253,56 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
 
         } else if ("room.variation.applied".equalsIgnoreCase(event)) {
             if (ctx.isHost) {
+                envelope.setTs(now);
+                sessionManager.broadcast(spaceId, envelope);
+            }
+
+        } else if ("room.mod.mute".equalsIgnoreCase(event)) {
+            if (ctx.isHost) {
+                Map<String, Object> payloadMap = (Map<String, Object>) envelope.getPayload();
+                String targetId = (String) payloadMap.get("userId");
+                Boolean isMuted = (Boolean) payloadMap.get("isMuted");
+                if (isMuted != null && isMuted) {
+                    sessionManager.muteUser(spaceId, UUID.fromString(targetId));
+                } else {
+                    sessionManager.unmuteUser(spaceId, UUID.fromString(targetId));
+                }
+                envelope.setTs(now);
+                sessionManager.broadcast(spaceId, envelope);
+            }
+
+        } else if ("room.mod.kick".equalsIgnoreCase(event)) {
+            if (ctx.isHost) {
+                Map<String, Object> payloadMap = (Map<String, Object>) envelope.getPayload();
+                String targetId = (String) payloadMap.get("userId");
+                sessionManager.kickUser(spaceId, UUID.fromString(targetId));
+                envelope.setTs(now);
+                sessionManager.broadcast(spaceId, envelope);
+            }
+
+        } else if ("room.mod.lock".equalsIgnoreCase(event)) {
+            if (ctx.isHost) {
+                Map<String, Object> payloadMap = (Map<String, Object>) envelope.getPayload();
+                Boolean isLocked = (Boolean) payloadMap.get("isLocked");
+                try {
+                    watchSpaceService.updateRoomLock(UUID.fromString(spaceId), isLocked != null && isLocked);
+                } catch (Exception e) {
+                    log.error("Failed to update room lock: {}", e.getMessage());
+                }
+                envelope.setTs(now);
+                sessionManager.broadcast(spaceId, envelope);
+            }
+
+        } else if ("room.mod.transfer".equalsIgnoreCase(event)) {
+            if (ctx.isHost) {
+                Map<String, Object> payloadMap = (Map<String, Object>) envelope.getPayload();
+                String targetId = (String) payloadMap.get("userId");
+                try {
+                    watchSpaceService.transferHost(UUID.fromString(spaceId), UUID.fromString(targetId));
+                    sessionManager.updateHost(spaceId, UUID.fromString(targetId));
+                } catch (Exception e) {
+                    log.error("Failed to transfer host: {}", e.getMessage());
+                }
                 envelope.setTs(now);
                 sessionManager.broadcast(spaceId, envelope);
             }

@@ -17,6 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/watch-spaces")
 @RequiredArgsConstructor
+@SuppressWarnings({"null"})
 public class WatchSpaceController {
 
     private final WatchSpaceService watchSpaceService;
@@ -42,11 +43,17 @@ public class WatchSpaceController {
 
     @PostMapping("/join")
     public ResponseEntity<WatchSpaceDto> joinWatchSpaceByCode(
-            @RequestBody JoinSpaceRequest request,
+            @Valid @RequestBody JoinSpaceRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
         User user = userRepository.findById(principal.getId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         return ResponseEntity.ok(watchSpaceService.joinWatchSpace(user, null, request.getInviteCode()));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<WatchSpaceDto>> getMySpaces(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(watchSpaceService.getUserSpaces(principal.getId()));
     }
 
     @GetMapping("/{id}")

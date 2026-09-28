@@ -29,6 +29,7 @@ public class WatchSpaceDtos {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class JoinSpaceRequest {
+        @javax.validation.constraints.NotBlank(message = "Invite code is required")
         private String inviteCode;
     }
 
@@ -52,6 +53,7 @@ public class WatchSpaceDtos {
         private Boolean votingEnabled;
         private String playbackState;
         private Double positionSeconds;
+        private Boolean isLocked;
         private Instant createdAt;
         private Instant endedAt;
         private List<ParticipantDto> participants;

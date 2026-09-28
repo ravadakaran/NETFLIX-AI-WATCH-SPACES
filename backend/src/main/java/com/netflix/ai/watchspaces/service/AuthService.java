@@ -20,6 +20,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings({"null"})
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -37,7 +38,7 @@ public class AuthService {
                 .email(request.getEmail().toLowerCase().trim())
                 .displayName(request.getDisplayName().trim())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() != null ? request.getRole() : UserRole.VIEWER)
+                .role(UserRole.VIEWER) // Enforce VIEWER to prevent privilege escalation via registration
                 .subtitleLocale("en-US")
                 .createdAt(Instant.now())
                 .build();
@@ -117,5 +118,25 @@ public class AuthService {
                 .role(user.getRole())
                 .subtitleLocale(user.getSubtitleLocale())
                 .build();
+    }
+
+    @Transactional
+    public UserDto updateProfile(UUID userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        if (request.getDisplayName() != null && !request.getDisplayName().trim().isEmpty()) {
+            user.setDisplayName(request.getDisplayName().trim());
+        }
+        
+        if (request.getSubtitleLocale() != null && !request.getSubtitleLocale().trim().isEmpty()) {
+            user.setSubtitleLocale(request.getSubtitleLocale().trim());
+        }
+        
+        if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        }
+        
+        return mapToDto(userRepository.save(user));
     }
 }

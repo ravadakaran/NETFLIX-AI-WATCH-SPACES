@@ -16,6 +16,12 @@ export class WatchSpaceSocket {
   private pingInterval: any = null;
   private driftMs = 0;
   private onDriftChange?: (drift: number) => void;
+  private isIntentionallyClosed = false;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 6;
+  private reconnectTimer: any = null;
+  private onOpenCallback?: () => void;
+  private onCloseCallback?: () => void;
 
   constructor(spaceId: string, onDriftChange?: (drift: number) => void) {
     this.spaceId = spaceId;
@@ -23,17 +29,30 @@ export class WatchSpaceSocket {
   }
 
   public connect(onOpen?: () => void, onClose?: () => void) {
+    if (onOpen) this.onOpenCallback = onOpen;
+    if (onClose) this.onCloseCallback = onClose;
+    this.isIntentionallyClosed = false;
+
     const token = getToken();
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
     const url = `${protocol}//${host}/ws/watch-spaces/${this.spaceId}?token=${encodeURIComponent(token || '')}`;
 
+    if (this.socket) {
+      try {
+        this.socket.close();
+      } catch {
+        // ignore
+      }
+    }
+
     this.socket = new WebSocket(url);
 
     this.socket.onopen = () => {
       console.log(`[WS] Connected to Watch Space ${this.spaceId}`);
+      this.reconnectAttempts = 0;
       this.startDriftMeasurement();
-      if (onOpen) onOpen();
+      if (this.onOpenCallback) this.onOpenCallback();
     };
 
     this.socket.onmessage = (event) => {
@@ -59,7 +78,21 @@ export class WatchSpaceSocket {
     this.socket.onclose = (event) => {
       console.log(`[WS] Disconnected from Watch Space ${this.spaceId}`, event.reason);
       this.stopDriftMeasurement();
-      if (onClose) onClose();
+      if (this.onCloseCallback) this.onCloseCallback();
+
+      // Automatic reconnection with exponential backoff
+      if (event.reason === 'KICKED') {
+        this.isIntentionallyClosed = true; // don't reconnect
+      }
+
+      if (!this.isIntentionallyClosed && this.reconnectAttempts < this.maxReconnectAttempts) {
+        const delay = Math.min(1000 * Math.pow(1.5, this.reconnectAttempts), 8000);
+        this.reconnectAttempts++;
+        console.log(`[WS] Reconnecting in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+        this.reconnectTimer = setTimeout(() => {
+          this.connect(this.onOpenCallback, this.onCloseCallback);
+        }, delay);
+      }
     };
 
     this.socket.onerror = (err) => {
@@ -117,6 +150,10 @@ export class WatchSpaceSocket {
     });
   }
 
+  public sendTyping() {
+    this.send('room.chat.typing', {});
+  }
+
   // Variation voting
   public castVote(variationId: string, optionId: string) {
     this.send('room.variation.vote', {
@@ -143,6 +180,23 @@ export class WatchSpaceSocket {
     });
   }
 
+  // Moderation
+  public sendModMute(userId: string, isMuted: boolean) {
+    this.send('room.mod.mute', { userId, isMuted });
+  }
+
+  public sendModKick(userId: string) {
+    this.send('room.mod.kick', { userId });
+  }
+
+  public sendModLock(isLocked: boolean) {
+    this.send('room.mod.lock', { isLocked });
+  }
+
+  public sendModTransferHost(userId: string) {
+    this.send('room.mod.transfer', { userId });
+  }
+
   // Ask AI
   public askAi(currentTs: number, question: string) {
     this.send('room.ai.ask', {
@@ -165,6 +219,11 @@ export class WatchSpaceSocket {
   }
 
   public disconnect() {
+    this.isIntentionallyClosed = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     this.stopDriftMeasurement();
     if (this.socket) {
       this.socket.close();

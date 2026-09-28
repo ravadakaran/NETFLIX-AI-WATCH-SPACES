@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings({"null"})
 public class RoomSessionManager {
 
     private final ObjectMapper objectMapper;
@@ -24,6 +25,9 @@ public class RoomSessionManager {
 
     // Variation active votes: watchSpaceId -> (optionId -> count)
     private final Map<String, Map<String, Integer>> activeVotes = new ConcurrentHashMap<>();
+
+    // watchSpaceId -> set of muted user UUIDs
+    private final Map<String, Set<UUID>> mutedUsers = new ConcurrentHashMap<>();
 
     public static class SessionContext {
         public WebSocketSession session;
@@ -51,10 +55,51 @@ public class RoomSessionManager {
             if (sessions.isEmpty()) {
                 roomSessions.remove(watchSpaceId);
                 activeVotes.remove(watchSpaceId);
+                mutedUsers.remove(watchSpaceId);
             }
             return removed;
         }
         return null;
+    }
+
+    public void muteUser(String watchSpaceId, UUID userId) {
+        mutedUsers.computeIfAbsent(watchSpaceId, k -> ConcurrentHashMap.newKeySet()).add(userId);
+    }
+
+    public void unmuteUser(String watchSpaceId, UUID userId) {
+        Set<UUID> set = mutedUsers.get(watchSpaceId);
+        if (set != null) {
+            set.remove(userId);
+        }
+    }
+
+    public boolean isMuted(String watchSpaceId, UUID userId) {
+        Set<UUID> set = mutedUsers.get(watchSpaceId);
+        return set != null && set.contains(userId);
+    }
+
+    public void kickUser(String watchSpaceId, UUID userId) {
+        Map<String, SessionContext> sessions = roomSessions.get(watchSpaceId);
+        if (sessions != null) {
+            for (SessionContext ctx : sessions.values()) {
+                if (ctx.userId.equals(userId)) {
+                    try {
+                        ctx.session.close(org.springframework.web.socket.CloseStatus.NORMAL.withReason("KICKED"));
+                    } catch (IOException e) {
+                        log.warn("Error closing session for kicked user: {}", e.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    public void updateHost(String watchSpaceId, UUID newHostId) {
+        Map<String, SessionContext> sessions = roomSessions.get(watchSpaceId);
+        if (sessions != null) {
+            for (SessionContext ctx : sessions.values()) {
+                ctx.isHost = ctx.userId.equals(newHostId);
+            }
+        }
     }
 
     public int getParticipantCount(String watchSpaceId) {

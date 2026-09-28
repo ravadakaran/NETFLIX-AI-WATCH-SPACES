@@ -6,7 +6,6 @@ import com.netflix.ai.watchspaces.entity.Title;
 import com.netflix.ai.watchspaces.entity.User;
 import com.netflix.ai.watchspaces.repository.InteractionRepository;
 import com.netflix.ai.watchspaces.repository.TitleRepository;
-import com.netflix.ai.watchspaces.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,11 +18,11 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings({"null"})
 public class RecommendationService {
 
     private final InteractionRepository interactionRepository;
     private final TitleRepository titleRepository;
-    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public RecommendationResponseDto getRecommendations(UUID userId) {

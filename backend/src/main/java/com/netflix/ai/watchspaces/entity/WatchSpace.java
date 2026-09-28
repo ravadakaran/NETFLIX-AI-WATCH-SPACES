@@ -62,6 +62,10 @@ public class WatchSpace {
     @Builder.Default
     private Double positionSeconds = 0.0;
 
+    @Column(name = "is_locked", nullable = false)
+    @Builder.Default
+    private Boolean isLocked = false;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -90,6 +94,9 @@ public class WatchSpace {
         }
         if (positionSeconds == null) {
             positionSeconds = 0.0;
+        }
+        if (isLocked == null) {
+            isLocked = false;
         }
     }
 }

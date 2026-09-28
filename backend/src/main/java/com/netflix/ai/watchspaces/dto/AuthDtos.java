@@ -74,4 +74,18 @@ public class AuthDtos {
         private UserRole role;
         private String subtitleLocale;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateProfileRequest {
+        @Size(min = 2, max = 50)
+        private String displayName;
+
+        @Size(min = 2, max = 20)
+        private String subtitleLocale;
+
+        @Size(min = 6, max = 100)
+        private String password;
+    }
 }

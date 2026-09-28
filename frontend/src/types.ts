@@ -64,6 +64,7 @@ export interface WatchSpace {
   votingEnabled: boolean;
   playbackState: 'play' | 'pause' | 'seek' | string;
   positionSeconds: number;
+  isLocked?: boolean;
   createdAt: string;
   endedAt?: string;
   participants: Participant[];

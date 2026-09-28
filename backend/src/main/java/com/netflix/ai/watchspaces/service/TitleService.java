@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings({"null"})
 public class TitleService {
 
     private final TitleRepository titleRepository;

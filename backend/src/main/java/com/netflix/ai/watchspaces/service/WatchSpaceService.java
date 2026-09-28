@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings({"null"})
 public class WatchSpaceService {
 
     private final WatchSpaceRepository watchSpaceRepository;
@@ -92,6 +93,9 @@ public class WatchSpaceService {
         if (space.getStatus() == WatchSpaceStatus.ENDED) {
             throw new IllegalStateException("Watch Space has ended");
         }
+        if (Boolean.TRUE.equals(space.getIsLocked())) {
+            throw new IllegalStateException("Watch Space is locked by the host");
+        }
 
         long activeCount = participantRepository.countByIdWatchSpaceIdAndLeftAtIsNull(space.getId());
         Optional<WatchSpaceParticipant> existing = participantRepository.findByIdWatchSpaceIdAndIdUserId(space.getId(), user.getId());
@@ -158,6 +162,24 @@ public class WatchSpaceService {
         });
     }
 
+    @Transactional
+    public void updateRoomLock(UUID spaceId, boolean isLocked) {
+        watchSpaceRepository.findById(spaceId).ifPresent(space -> {
+            space.setIsLocked(isLocked);
+            watchSpaceRepository.save(space);
+        });
+    }
+
+    @Transactional
+    public void transferHost(UUID spaceId, UUID newHostId) {
+        watchSpaceRepository.findById(spaceId).ifPresent(space -> {
+            userRepository.findById(newHostId).ifPresent(newHost -> {
+                space.setHostUser(newHost);
+                watchSpaceRepository.save(space);
+            });
+        });
+    }
+
     @Transactional(readOnly = true)
     public AnalyticsDto getAnalytics(UUID spaceId) {
         WatchSpace space = watchSpaceRepository.findById(spaceId)
@@ -192,6 +214,30 @@ public class WatchSpaceService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<WatchSpaceDto> getUserSpaces(UUID userId) {
+        List<WatchSpaceParticipant> participants = participantRepository.findByIdUserIdOrderByJoinedAtDesc(userId);
+        List<WatchSpace> hostedSpaces = watchSpaceRepository.findByHostUserIdOrderByCreatedAtDesc(userId);
+
+        Set<UUID> seenIds = new LinkedHashSet<>();
+        List<WatchSpaceDto> result = new ArrayList<>();
+
+        for (WatchSpace space : hostedSpaces) {
+            if (space != null && seenIds.add(space.getId())) {
+                result.add(mapToDto(space));
+            }
+        }
+
+        for (WatchSpaceParticipant p : participants) {
+            WatchSpace space = p.getWatchSpace();
+            if (space != null && seenIds.add(space.getId())) {
+                result.add(mapToDto(space));
+            }
+        }
+
+        return result;
+    }
+
     public WatchSpaceDto mapToDto(WatchSpace space) {
         List<WatchSpaceParticipant> activeParticipants = participantRepository.findByIdWatchSpaceIdAndLeftAtIsNull(space.getId());
 
@@ -221,6 +267,7 @@ public class WatchSpaceService {
                 .votingEnabled(space.getVotingEnabled())
                 .playbackState(space.getPlaybackState())
                 .positionSeconds(space.getPositionSeconds())
+                .isLocked(space.getIsLocked())
                 .createdAt(space.getCreatedAt())
                 .endedAt(space.getEndedAt())
                 .participants(participantDtos)

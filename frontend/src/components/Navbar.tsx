@@ -17,6 +17,7 @@ interface NavbarProps {
   onOpenCreateModal: () => void;
   onOpenLogin: () => void;
   onLogout: () => void;
+  onOpenProfileSettings: () => void;
   hasActiveSpace?: boolean;
 }
 
@@ -27,6 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCreateModal,
   onOpenLogin,
   onLogout,
+  onOpenProfileSettings,
   hasActiveSpace
 }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -201,6 +203,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <button
                       onClick={() => {
                         setIsProfileOpen(false);
+                        onOpenProfileSettings();
                       }}
                       className="w-full text-left px-3 py-2 rounded-xl text-xs text-on-surface hover:text-white hover:bg-white/5 flex items-center gap-2.5 transition-colors"
                     >
@@ -211,6 +214,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <button
                       onClick={() => {
                         setIsProfileOpen(false);
+                        onOpenProfileSettings();
                       }}
                       className="w-full text-left px-3 py-2 rounded-xl text-xs text-on-surface hover:text-white hover:bg-white/5 flex items-center gap-2.5 transition-colors"
                     >

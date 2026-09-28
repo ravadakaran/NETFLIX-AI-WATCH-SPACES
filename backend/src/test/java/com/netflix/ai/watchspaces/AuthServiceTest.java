@@ -10,15 +10,12 @@ import com.netflix.ai.watchspaces.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({"null"})
 public class AuthServiceTest {
 
     @Mock
@@ -84,5 +82,23 @@ public class AuthServiceTest {
         when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () -> authService.register(req));
+    }
+
+    @Test
+    void testRegisterIgnoresAdminRoleAndForcesViewer() {
+        RegisterRequest req = new RegisterRequest("hacker@example.com", "Hacker", "password123", UserRole.ADMIN);
+        when(userRepository.existsByEmail("hacker@example.com")).thenReturn(false);
+        when(passwordEncoder.encode("password123")).thenReturn("hashedPassword");
+
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User u = invocation.getArgument(0);
+            assertEquals(UserRole.VIEWER, u.getRole(), "User role must be VIEWER regardless of client input");
+            u.setId(UUID.randomUUID());
+            return u;
+        });
+
+        AuthResponse resp = authService.register(req);
+        assertNotNull(resp);
+        assertEquals(UserRole.VIEWER, resp.getUser().getRole());
     }
 }

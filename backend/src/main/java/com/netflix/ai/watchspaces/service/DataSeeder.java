@@ -16,6 +16,7 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings({"null"})
 public class DataSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;

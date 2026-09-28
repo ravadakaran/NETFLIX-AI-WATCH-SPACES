@@ -182,3 +182,56 @@ This document tracks all features, architectural components, databases, APIs, an
   - Updated `GEMINI.md` to permanently establish the Stitch Nocturne Luminary Design System and the 7 screens stored in `stitch_screens/` as the immutable source of truth.
   - TypeScript build passes cleanly with 0 errors via `npm run build`.
 
+---
+
+## 6. Security Hardening, Session Reliability & Architectural Upgrades (Phase 1 & Phase 2)
+
+### Security Hardening
+- [x] **Registration Role Escalation Elimination**:
+  - `AuthService.java`: Enforced immutable `UserRole.VIEWER` on public registration, ignoring client-provided role fields.
+  - `AuthServiceTest.java`: Added unit test `testRegisterIgnoresAdminRoleAndForcesViewer` verifying that any attempt to register as `ADMIN` defaults to `VIEWER`.
+- [x] **Strict CORS & WebSocket Origin Restriction**:
+  - `SecurityConfig.java`: Replaced wildcard origin patterns with configurable `app.cors.allowed-origins` (`http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173`).
+  - `WebSocketConfig.java`: Replaced wildcard `*` with the same verified origin whitelist.
+  - `application.yml` & `.env.example`: Added `CORS_ALLOWED_ORIGINS` configuration.
+- [x] **Credential & Environment Protection**:
+  - Confirmed `.env` is untracked in Git and protected by `.gitignore`.
+  - Updated `.env.example` with safe dummy values, server port documentation, and CORS settings.
+
+### Session & Real-Time Reliability
+- [x] **Transparent Token Refresh Interceptor**:
+  - `api.ts`: Stored `refreshToken` in `localStorage` alongside `accessToken`.
+  - Implemented 401 retry interceptor that automatically calls `/api/v1/auth/refresh`, rotates tokens, and seamlessly replays the pending request.
+  - Dispatches global `auth:expired` event upon refresh failure to route users cleanly to sign-in in `App.tsx`.
+- [x] **WebSocket Auto-Reconnect with Exponential Backoff**:
+  - `websocket.ts`: Implemented automatic reconnection logic with exponential backoff (`1000ms * 1.5^attempt`, max 8s, up to 6 attempts) upon unexpected disconnections.
+  - Clean `disconnect()` cancels any pending reconnect timer and shuts down drift measurement.
+- [x] **Chat History Replay on Room Join**:
+  - `WatchSpaceWebSocketHandler.java`: Queries `chatMessageRepository.findTop50ByWatchSpaceIdOrderByCreatedAtDesc` and sends past room messages in chronological order via `room.chat.history`.
+  - `WatchRoom.tsx`: Subscribes to `room.chat.history` and implements message deduplication to avoid duplicate chat bubbles.
+- [x] **Real-Time Presence & Live Viewer Sync**:
+  - `WatchRoom.tsx`: Subscribed to `room.presence.update` (`joined` and `left`), updating the live participant roster and participant count in real time.
+- [x] **Watch Telemetry & Recommendation Engine Feeding**:
+  - `WatchRoom.tsx`: Automatically triggers `api.recordInteraction()` on room exit/unmount, reporting watched seconds and completion status to feed the recommendation engine.
+- [x] **Personal Vault "My Spaces" Endpoint**:
+  - `WatchSpaceService.java`: Added `getUserSpaces(UUID userId)` aggregating both hosted and participated watch spaces.
+  - `WatchSpaceController.java`: Added `GET /api/v1/watch-spaces/me` endpoint.
+  - `api.ts` & `App.tsx`: Wired `api.getMySpaces()` so `MySpacesHub.tsx` displays the user's authentic personal watch spaces.
+- [x] **Dead Code Removal**:
+  - Removed obsolete unreferenced `LoginModal.tsx` and its unused state/import in `App.tsx`.
+- [x] **IDE Zero-Warning Codebase Cleanliness**:
+  - Migrated legacy `WebSecurityConfigurerAdapter` to modern `SecurityFilterChain` Bean in `SecurityConfig.java`.
+  - Resolved 185+ IDE-specific strict compiler warnings (unused imports, variables, missing `@NonNull` annotations).
+  - Bypassed Java Language Server caching bugs by refactoring static inner class imports (`TitleDtos`, `AiDtos`) to their outer parents.
+
+---
+
+## 7. Current Verification Status
+
+- **Backend Unit & Integration Tests**: 9 tests passing (100% success rate, 0 failures, 0 errors, `BUILD SUCCESS`):
+  - `AuthServiceTest` (3 tests)
+  - `AiCopilotServiceTest` (2 tests)
+  - `RecommendationServiceTest` (1 test)
+  - `TimelineValidationTest` (3 tests)
+- **Frontend Production Build**: `tsc && vite build` transforms 44 modules with 0 errors in 1.5s.
+

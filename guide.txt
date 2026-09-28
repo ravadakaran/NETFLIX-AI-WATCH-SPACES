@@ -1,0 +1,163 @@
+================================================================================
+          NETFLIX AI WATCH SPACES --- COMPLETE EXECUTION & RUN GUIDE
+================================================================================
+
+This document provides exact, step-by-step instructions to run, test, and
+verify both the Spring Boot backend and React/Vite frontend.
+
+--------------------------------------------------------------------------------
+1. SYSTEM PREREQUISITES
+--------------------------------------------------------------------------------
+- Java: JDK 11 or higher (Check: `java -version`)
+- Maven: 3.6 or higher (Check: `mvn -version`)
+- Node.js: v18.0 or higher (Check: `node -v`)
+- npm: v9.0 or higher (Check: `npm -v`)
+- Git (Check: `git --version`)
+- OS: Windows / macOS / Linux
+
+--------------------------------------------------------------------------------
+2. PROJECT TOPOLOGY & PORTS
+--------------------------------------------------------------------------------
+- Backend Server:   http://localhost:8081
+- WebSocket URL:    ws://localhost:8081/ws/watch-spaces/{id}?token={jwt}
+- Frontend Client:  http://localhost:5173
+- Database:         Neon Cloud Serverless PostgreSQL (pre-configured)
+
+--------------------------------------------------------------------------------
+3. ENVIRONMENT SETUP
+--------------------------------------------------------------------------------
+Check that a `.env` file exists in the project root (d:\projects\Netflix\.env).
+If starting fresh on a new machine, copy `.env.example` to `.env`:
+
+  Windows (PowerShell):
+    Copy-Item .env.example .env
+
+  macOS / Linux:
+    cp .env.example .env
+
+The default settings connect directly to the managed cloud database.
+Key properties:
+  SERVER_PORT=8081
+  CLIENT_URL=http://localhost:5173
+  CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173
+  JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+
+--------------------------------------------------------------------------------
+4. STARTING THE BACKEND (Spring Boot)
+--------------------------------------------------------------------------------
+Open a terminal (Terminal 1) and navigate to the backend directory:
+
+  cd d:\projects\Netflix\backend
+
+Step 4.1: Run Backend Tests (Optional verification)
+  mvn test
+
+Step 4.2: Start the Spring Boot Application
+  mvn spring-boot:run
+
+When ready, the logs will display:
+  [main] INFO  ... - Started WatchSpacesApplication in X.XXX seconds
+  The backend is now live on http://localhost:8081
+
+Data Auto-Seeding:
+On first run, the database automatically seeds:
+- 3 Personas: admin@example.com, host@example.com, viewer@example.com (Password: password)
+- 5 Titles: Cyberpunk 2099, Cosmos Deep, Shadow Protocol, Neon Horizon, Echoes of the Void
+- Timeline events (trivia markers, character bios, glossary, narrative branch points)
+- Live demo Watch Space with invite code: NX-DEMO
+
+--------------------------------------------------------------------------------
+5. STARTING THE FRONTEND (React 18 + Vite)
+--------------------------------------------------------------------------------
+Open a separate terminal (Terminal 2) and navigate to the frontend directory:
+
+  cd d:\projects\Netflix\frontend
+
+Step 5.1: Install Dependencies (if not already done)
+  npm install
+
+Step 5.2: Launch the Vite Dev Server
+  npm run dev
+
+When ready, the console will show:
+  VITE v5.4.21 ready in XXX ms
+  ➜  Local:   http://localhost:5173/
+
+Open your browser and navigate to: http://localhost:5173
+
+--------------------------------------------------------------------------------
+6. TEST ACCOUNTS & QUICK DEMO
+--------------------------------------------------------------------------------
+You can log in with any of these pre-seeded accounts:
+
+  Role     | Email               | Password   | Permissions
+  ---------+---------------------+------------+---------------------------------
+  Host     | host@example.com    | password   | Create rooms, Play/Pause/Seek, Polls
+  Viewer   | viewer@example.com  | password   | Join rooms, Vote, Chat, Ask AI
+  Admin    | admin@example.com   | password   | Full access + Admin Timeline view
+
+One-Click Demo Launch:
+- On the Landing page (http://localhost:5173), click "Launch Demo Space (NX-DEMO)".
+- It logs you in directly as Alex (Host) and enters the live synchronized theater.
+
+--------------------------------------------------------------------------------
+7. TESTING MULTI-USER SYNCHRONIZATION (THEATER DEMO)
+--------------------------------------------------------------------------------
+To test real-time synchronized playback and co-presence:
+
+1. In Browser 1 (e.g., Chrome Normal Window):
+   - Sign in as: host@example.com / password
+   - Click "Create New Space" or select "Cyberpunk 2099" -> Launch Space.
+   - Note the room invite code (e.g. NX-XXXX) or click "Invite: NX-XXXX" to copy code.
+   - Click Play on the video player.
+
+2. In Browser 2 (e.g., Chrome Incognito Window or Firefox / Edge):
+   - Navigate to: http://localhost:5173
+   - Sign in as: viewer@example.com / password (or click "Get Started" to register a new viewer)
+   - Click "Join with Invite Code" in the navbar or My Spaces.
+   - Enter the invite code from Browser 1 and click Join.
+
+3. Verify Real-Time Synchronization:
+   - Play / Pause / Seek in Browser 1: Watch Browser 2 follow within ~12ms.
+   - Type in the Chat in either browser: Messages appear instantly.
+   - Send floating reactions (🔥 🤯 🍿 👏 ❤️): Reactions float on both screens.
+   - Grounded AI Co-Pilot: In either window, open the AI Scholar tab and ask a question.
+     Both source citations and verified timeline answers will display.
+   - Narrative Variation Voting: When reaching a red variation dot on the scrubber,
+     the host opens the poll, both viewers vote, and the winning branch applies.
+
+--------------------------------------------------------------------------------
+8. USEFUL COMMANDS CHEATSHEET
+--------------------------------------------------------------------------------
+Backend:
+  cd backend
+  mvn clean compile          # Recompile backend sources
+  mvn test                   # Execute all 9 automated unit/integration tests
+  mvn spring-boot:run        # Run server on port 8081
+  mvn package -DskipTests    # Build standalone executable JAR in target/
+
+Frontend:
+  cd frontend
+  npm run dev                # Start Vite dev server on port 5173
+  npm run build              # TypeScript typecheck + production build to dist/
+  npm run preview            # Preview the production build locally
+
+--------------------------------------------------------------------------------
+9. TROUBLESHOOTING & FAQS
+--------------------------------------------------------------------------------
+Q: Port 8081 is already in use.
+A: Either stop the running process on port 8081, or change `SERVER_PORT=8082` in `.env`
+   and update `vite.config.ts` proxy target if proxying.
+
+Q: PostgreSQL connection error on startup.
+A: Ensure your internet connection allows outbound SSL to Neon cloud.
+   Connection string uses `sslmode=require`.
+
+Q: WebSocket connection fails (`room.sync.pong` not received).
+A: Confirm the backend is running on port 8081 and that your browser is allowing
+   WebSocket connections to `ws://localhost:8081`.
+
+Q: "Session expired" toast message appears.
+A: Your JWT access token expired and the refresh token was rotated or cleared.
+   Simply sign in again with any of the demo accounts above.
+================================================================================

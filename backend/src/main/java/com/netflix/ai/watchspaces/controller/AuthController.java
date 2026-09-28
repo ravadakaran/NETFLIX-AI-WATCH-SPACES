@@ -36,4 +36,9 @@ public class AuthController {
     public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(authService.getCurrentUserDto(principal.getId()));
     }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserDto> updateProfile(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody UpdateProfileRequest request) {
+        return ResponseEntity.ok(authService.updateProfile(principal.getId(), request));
+    }
 }

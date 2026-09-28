@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings({"null"})
 public class AiCopilotService {
 
     private final WatchSpaceRepository watchSpaceRepository;

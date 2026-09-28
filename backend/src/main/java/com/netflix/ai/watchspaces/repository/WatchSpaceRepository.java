@@ -11,7 +11,10 @@ import java.util.UUID;
 
 @Repository
 public interface WatchSpaceRepository extends JpaRepository<WatchSpace, UUID> {
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"title", "hostUser"})
     Optional<WatchSpace> findByInviteCode(String inviteCode);
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"title", "hostUser"})
     List<WatchSpace> findByHostUserIdOrderByCreatedAtDesc(UUID hostUserId);
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"title", "hostUser"})
     List<WatchSpace> findByStatusOrderByCreatedAtDesc(WatchSpaceStatus status);
 }
