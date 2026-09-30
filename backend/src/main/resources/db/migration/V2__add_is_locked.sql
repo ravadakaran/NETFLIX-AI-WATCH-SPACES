@@ -1,0 +1,1 @@
+ALTER TABLE watch_spaces ADD COLUMN IF NOT EXISTS is_locked BOOLEAN DEFAULT false;

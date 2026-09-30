@@ -2,7 +2,8 @@ package com.netflix.ai.watchspaces.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
@@ -12,7 +13,8 @@ import java.time.Instant;
 @Table(name = "watch_space_participants", indexes = {
     @Index(name = "idx_participants_space", columnList = "watch_space_id")
 })
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

@@ -10,7 +10,6 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Configuration
 @EnableWebSocket
 @RequiredArgsConstructor
-@SuppressWarnings({"null"})
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final WatchSpaceWebSocketHandler watchSpaceWebSocketHandler;

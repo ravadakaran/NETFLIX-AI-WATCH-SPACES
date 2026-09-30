@@ -16,7 +16,6 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@SuppressWarnings({"null"})
 public class DataSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
@@ -27,6 +26,7 @@ public class DataSeeder implements CommandLineRunner {
     private final WatchSpaceRepository watchSpaceRepository;
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
+    private final GeminiService geminiService;
 
     @Override
     @Transactional
@@ -234,14 +234,23 @@ public class DataSeeder implements CommandLineRunner {
 
     private TimelineEvent createTimelineEvent(Title title, int ts, String type, Map<String, Object> payload) {
         try {
+            String payloadStr = objectMapper.writeValueAsString(payload);
             TimelineEvent event = TimelineEvent.builder()
                     .title(title)
                     .tsSeconds(ts)
                     .eventType(type)
-                    .payload(objectMapper.writeValueAsString(payload))
+                    .payload(payloadStr)
                     .createdAt(Instant.now())
                     .build();
-            return timelineEventRepository.save(event);
+            event = timelineEventRepository.save(event);
+            
+            // Compute embedding for the payload content
+            List<Double> embedding = geminiService.getEmbedding(payloadStr);
+            if (embedding != null && !embedding.isEmpty()) {
+                timelineEventRepository.updateEmbedding(event.getId(), embedding.toString());
+            }
+            
+            return event;
         } catch (Exception e) {
             log.error("Failed to seed event: {}", e.getMessage());
             return null;

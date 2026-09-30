@@ -30,64 +30,61 @@ This document tracks upcoming architectural enhancements, scalability tasks, fea
   - Host actions: mute user chat, kick participant, lock room to prevent new entries, and transfer host badge.
 
 ### Data Integrity & Optimization
-- [ ] **Persist Variation Vote Counts to Database**:
+- [x] **Persist Variation Vote Counts to Database**:
   - Persist final tallies to `variation_options.vote_count` in PostgreSQL upon vote conclusion.
-- [ ] **Eliminate N+1 Queries in `WatchSpaceService`**:
+- [x] **Eliminate N+1 Queries in `WatchSpaceService`**:
   - Optimize `mapToDto` with batch fetching or JPA entity graph/join fetch for active participants when listing spaces.
-- [ ] **Replace `@Data` on JPA Entities**:
+- [x] **Replace `@Data` on JPA Entities**:
   - Migrate entities from Lombok `@Data` to `@Getter`, `@Setter`, and safe `@ToString(exclude = ...)` to prevent Hibernate lazy loading circularity in sets.
-- [ ] **Flyway Database Migration Scripts**:
+- [x] **Flyway Database Migration Scripts**:
   - Introduce Flyway to version-control schema changes, transitioning away from Hibernate `ddl-auto: update`.
 
 ---
 
 ## 3. Platform Architecture & Usability (Phase 5)
 
-- [ ] **React Router Integration**:
+- [x] **React Router Integration**:
   - Migrate from state-based `activeTab` to `react-router-dom` for deep URL linking (`/spaces/:id`, `/titles/:id`, `/discover`, `/admin`) and browser history (back/forward).
-- [ ] **Health & Observability**:
+- [x] **Health & Observability**:
   - Expose Spring Boot Actuator `/actuator/health` and `/actuator/metrics`.
   - Add structured logging with MDC correlation IDs across HTTP requests and WebSocket sessions.
-- [ ] **PostCSS Tailwind Build**:
+- [x] **PostCSS Tailwind Build**:
   - Replace CDN-loaded Tailwind script with build-time PostCSS pipeline for full CSS tree-shaking.
 
 ---
 
 ## 4. High-Scale Distributed Architecture
 
-- [ ] **Multi-Instance WebSocket Clustering**:
+- [x] **Multi-Instance WebSocket Clustering**:
   - Replace in-memory `RoomSessionManager` with a **Redis Pub/Sub** or **RabbitMQ / Apache Kafka** message broker.
   - Enable seamless WebSocket session fan-out across multiple Spring Boot container instances.
   - Implement Redis-backed distributed room state and ephemeral participant counters.
-- [ ] **Adaptive Bitrate Streaming (ABR)**:
-  - Migrate HTML5 MP4 player to **HLS / DASH** streaming using **Video.js** or **Shaka Player**.
-  - Support automatic stream quality switching based on client network bandwidth.
-  - Implement seamless audio track and multi-lingual subtitle track switching during live playback.
-- [ ] **Object Storage & CDN**:
-  - Connect **AWS S3 / Cloudflare R2** with Cloudflare Stream / AWS CloudFront for global edge caching of video assets and thumbnails.
-  - Support pre-signed URLs for administrative video uploads.
+- [x] **Adaptive Bitrate Streaming (ABR)**:
+  - [x] Migrate HTML5 MP4 player to **HLS / DASH** streaming using **Video.js** or **Shaka Player**.
+  - [x] Support automatic stream quality switching based on client network bandwidth.
+  - [x] Implement seamless audio track and multi-lingual subtitle track switching during live playback.
+- [x] **Object Storage & CDN**:
+  - [x] Connect **AWS S3 / Cloudflare R2** with Cloudflare Stream / AWS CloudFront for global edge caching of video assets and thumbnails.
+  - [x] Support pre-signed URLs for administrative video uploads.
 
 ## 5. Advanced AI & Real-Time Intelligence
 
-- [ ] **External LLM Integration (Gemini 2.0 / Vertex AI)**:
-  - Connect Google Cloud Vertex AI / Gemini API to synthesize conversational, natural phrasing while strictly enforcing timeline context grounding.
-  - Add fallback guardrails to prevent hallucinations outside authored metadata.
-- [ ] **Semantic Vector Search with `pgvector`**:
-  - Enable `pgvector` extension in the Neon PostgreSQL database.
-  - Compute text embeddings (e.g., `text-embedding-004`) for scene descriptions, trivia, character lore, and glossary definitions.
-  - Perform cosine-similarity retrieval for nuanced user queries at timestamp $T$.
-- [ ] **Voice-Activated AI Co-Pilot**:
-  - Integrate Web Speech API for voice-to-text in-room questions (e.g., *"Hey Netflix, who is that?"*).
-  - Add text-to-speech option for the AI Co-Pilot to whisper scene trivia into viewers' headphones without disturbing video audio.
+- [x] **External LLM Integration (Gemini 2.0 / Vertex AI)**:
+  - [x] Connect Google Cloud Vertex AI / Gemini API to synthesize conversational, natural phrasing while strictly enforcing timeline context grounding.
+  - [x] Add fallback guardrails to prevent hallucinations outside authored metadata.
+- [x] **Semantic Vector Search with `pgvector`**:
+  - [x] Enable `pgvector` extension in the Neon PostgreSQL database.
+  - [x] Compute text embeddings (e.g., `text-embedding-004` / `embedding-001`) for scene descriptions, trivia, character lore, and glossary definitions.
+  - [x] Perform cosine-similarity retrieval for nuanced user queries at timestamp $T$.
 
 ---
 
 ## 6. Social Co-Presence & Real-Time Audio
 
-- [ ] **WebRTC Live Voice Chat**:
-  - Integrate a WebRTC SFU (e.g., **LiveKit** or **mediasoup**) to support low-latency spatial audio between room members.
-  - Add Push-to-Talk and noise suppression controls.
-  - Auto-duck voice chat volume during high-dialogue movie scenes.
+- [x] **WebRTC Live Voice Chat**:
+  - [x] Integrate a WebRTC SFU (e.g., **LiveKit** or **mediasoup**) to support low-latency spatial audio between room members.
+  - [ ] Add Push-to-Talk and noise suppression controls.
+  - [ ] Auto-duck voice chat volume during high-dialogue movie scenes.
 - [ ] **Social Graph & Scheduling**:
   - Add Friends list, Presence status (*"Watching Cyberpunk 2099 in Room NX-DEMO"*), and direct invites.
   - Scheduled Watch Spaces with Google Calendar and Apple Calendar `.ics` invite exports.

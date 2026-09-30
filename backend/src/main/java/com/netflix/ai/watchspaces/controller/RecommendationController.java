@@ -17,7 +17,6 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@SuppressWarnings({"null"})
 public class RecommendationController {
 
     private final RecommendationService recommendationService;

@@ -1,7 +1,9 @@
 package com.netflix.ai.watchspaces.entity;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
@@ -10,7 +12,9 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @Embeddable
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 public class WatchSpaceParticipantId implements Serializable {

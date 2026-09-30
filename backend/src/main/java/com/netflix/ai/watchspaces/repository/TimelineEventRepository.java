@@ -22,4 +22,13 @@ public interface TimelineEventRepository extends JpaRepository<TimelineEvent, UU
     List<TimelineEvent> findAllWithVariationOptionsByTitleId(@Param("titleId") UUID titleId);
 
     void deleteByTitleId(UUID titleId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query(value = "UPDATE timeline_events SET embedding = CAST(:embedding AS vector) WHERE id = :id", nativeQuery = true)
+    void updateEmbedding(@Param("id") UUID id, @Param("embedding") String embeddingArray);
+
+    @Query(value = "SELECT * FROM timeline_events WHERE title_id = :titleId AND ts_seconds <= :ts " +
+                   "ORDER BY embedding <=> CAST(:embedding AS vector) LIMIT :limit", nativeQuery = true)
+    List<TimelineEvent> findSimilarEvents(@Param("titleId") UUID titleId, @Param("ts") Integer ts, 
+                                          @Param("embedding") String embeddingArray, @Param("limit") int limit);
 }

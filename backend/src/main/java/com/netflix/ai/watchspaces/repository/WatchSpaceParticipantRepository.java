@@ -18,6 +18,9 @@ public interface WatchSpaceParticipantRepository extends JpaRepository<WatchSpac
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user"})
     List<WatchSpaceParticipant> findByIdWatchSpaceIdAndLeftAtIsNull(UUID watchSpaceId);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user"})
+    List<WatchSpaceParticipant> findByIdWatchSpaceIdInAndLeftAtIsNull(List<UUID> watchSpaceIds);
+
     long countByIdWatchSpaceIdAndLeftAtIsNull(UUID watchSpaceId);
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"watchSpace", "watchSpace.title", "watchSpace.hostUser"})

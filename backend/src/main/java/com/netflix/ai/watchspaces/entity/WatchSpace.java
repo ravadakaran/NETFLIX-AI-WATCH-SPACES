@@ -2,7 +2,8 @@ package com.netflix.ai.watchspaces.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -15,7 +16,8 @@ import java.util.UUID;
     @Index(name = "idx_watch_spaces_title_status", columnList = "title_id, status"),
     @Index(name = "idx_watch_spaces_invite_code", columnList = "invite_code")
 })
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

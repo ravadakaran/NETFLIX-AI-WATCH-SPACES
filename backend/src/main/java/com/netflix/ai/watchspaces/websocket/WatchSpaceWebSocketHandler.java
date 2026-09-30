@@ -20,6 +20,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import org.slf4j.MDC;
 
 import java.net.URI;
 import java.time.Instant;
@@ -28,7 +29,7 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@SuppressWarnings({"null", "unchecked"})
+@SuppressWarnings({"unchecked"})
 public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
 
     private final RoomSessionManager sessionManager;
@@ -39,10 +40,15 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
     private final ChatMessageRepository chatMessageRepository;
     private final AiCopilotService aiCopilotService;
     private final ObjectMapper objectMapper;
+    private final com.netflix.ai.watchspaces.repository.VariationOptionRepository variationOptionRepository;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        String watchSpaceIdStr = extractWatchSpaceId(session);
+        String correlationId = UUID.randomUUID().toString();
+        session.getAttributes().put("correlationId", correlationId);
+        MDC.put("correlationId", correlationId);
+        try {
+            String watchSpaceIdStr = extractWatchSpaceId(session);
         String token = extractToken(session);
 
         if (token == null || !tokenProvider.validateToken(token)) {
@@ -135,12 +141,18 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
         }
 
         log.info("User {} connected to space {}, total: {}", user.getDisplayName(), watchSpaceIdStr, count);
+        } finally {
+            MDC.remove("correlationId");
+        }
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        String payload = message.getPayload();
-        WsEnvelope envelope;
+        String correlationId = (String) session.getAttributes().get("correlationId");
+        if (correlationId != null) MDC.put("correlationId", correlationId);
+        try {
+            String payload = message.getPayload();
+            WsEnvelope envelope;
         try {
             envelope = objectMapper.readValue(payload, WsEnvelope.class);
         } catch (Exception e) {
@@ -253,6 +265,21 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
 
         } else if ("room.variation.applied".equalsIgnoreCase(event)) {
             if (ctx.isHost) {
+                Map<String, Integer> votes = sessionManager.getVotes(spaceId);
+                if (votes != null && !votes.isEmpty()) {
+                    votes.forEach((optionIdStr, count) -> {
+                        try {
+                            UUID optId = UUID.fromString(optionIdStr);
+                            variationOptionRepository.findById(optId).ifPresent(opt -> {
+                                opt.setVoteCount(opt.getVoteCount() + count);
+                                variationOptionRepository.save(opt);
+                            });
+                        } catch (Exception e) {
+                            log.warn("Failed to persist vote count for option {}: {}", optionIdStr, e.getMessage());
+                        }
+                    });
+                }
+
                 envelope.setTs(now);
                 sessionManager.broadcast(spaceId, envelope);
             }
@@ -337,11 +364,17 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
                 log.error("Error processing AI question over WS: {}", e.getMessage());
             }
         }
+        } finally {
+            MDC.remove("correlationId");
+        }
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        String watchSpaceIdStr = extractWatchSpaceId(session);
+        String correlationId = (String) session.getAttributes().get("correlationId");
+        if (correlationId != null) MDC.put("correlationId", correlationId);
+        try {
+            String watchSpaceIdStr = extractWatchSpaceId(session);
         RoomSessionManager.SessionContext ctx = sessionManager.removeSession(watchSpaceIdStr, session.getId());
 
         if (ctx != null) {
@@ -361,6 +394,9 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
             sessionManager.broadcast(watchSpaceIdStr, presenceEnv);
 
             log.info("User {} disconnected from space {}, remaining: {}", ctx.displayName, watchSpaceIdStr, count);
+        }
+        } finally {
+            MDC.remove("correlationId");
         }
     }
 

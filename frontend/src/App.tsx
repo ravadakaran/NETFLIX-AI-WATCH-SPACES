@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Title, WatchSpace, RecommendationItem, HistoryItem } from './types';
 import { api, setToken, removeToken } from './services/api';
+import { Routes, Route, useNavigate, useLocation, Navigate, useParams } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { HomeCinema } from './components/HomeCinema';
 import { Discover } from './components/Discover';
@@ -14,6 +15,48 @@ import { JoinRoomModal } from './components/JoinRoomModal';
 import { AdminTimelineView } from './components/AdminTimelineView';
 import { ProfileSettingsModal } from './components/ProfileSettingsModal';
 
+const WatchRoomWrapper: React.FC<{
+  activeSpace: WatchSpace | null;
+  setActiveSpace: (s: WatchSpace) => void;
+  currentUser: User;
+  onLeave: () => void;
+}> = ({ activeSpace, setActiveSpace, currentUser, onLeave }) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(!activeSpace);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!activeSpace && id) {
+      api.joinSpaceById(id)
+        .then(s => {
+          setActiveSpace(s);
+          setLoading(false);
+        })
+        .catch(err => {
+          setError(err.message);
+          setLoading(false);
+        });
+    }
+  }, [id, activeSpace, setActiveSpace]);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#050712] text-white">
+        <h2 className="text-xl mb-4">Error loading Watch Space</h2>
+        <p className="text-red-400 mb-6">{error}</p>
+        <button onClick={() => navigate('/spaces')} className="px-6 py-2 bg-pink-500 rounded-full">Go to My Spaces</button>
+      </div>
+    );
+  }
+
+  if (loading || !activeSpace) {
+    return <div className="flex items-center justify-center h-screen text-white bg-[#050712]">Loading Watch Space...</div>;
+  }
+
+  return <WatchRoom space={activeSpace} currentUser={currentUser} onLeave={onLeave} />;
+};
+
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [titles, setTitles] = useState<Title[]>([]);
@@ -21,8 +64,10 @@ export const App: React.FC = () => {
   const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
-  // Navigation: 'home' | 'discover' | 'spaces' | 'room' | 'admin' | 'landing' | 'login' | 'signup'
-  const [activeTab, setActiveTab] = useState<string>(() => localStorage.getItem('netflix_token') ? 'home' : 'landing');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Navigation state managed by React Router now
   const [activeSpace, setActiveSpace] = useState<WatchSpace | null>(null);
 
   // Modals
@@ -47,7 +92,7 @@ export const App: React.FC = () => {
 
     const handleAuthExpired = () => {
       setCurrentUser(null);
-      setActiveTab('login');
+      navigate('/login');
       showToast('Your session expired. Please sign in again.');
     };
     window.addEventListener('auth:expired', handleAuthExpired);
@@ -68,7 +113,7 @@ export const App: React.FC = () => {
           console.warn('Existing session token invalid or expired, resetting:', err.message);
           removeToken();
           setCurrentUser(null);
-          setActiveTab('landing');
+          navigate('/');
         }
       } else {
         setCurrentUser(null);
@@ -211,7 +256,7 @@ export const App: React.FC = () => {
   const handleLogout = () => {
     removeToken();
     setCurrentUser(null);
-    setActiveTab('landing');
+    navigate('/');
     showToast('Signed out of Watch Spaces session.');
   };
 
@@ -227,14 +272,14 @@ export const App: React.FC = () => {
     try {
       const space = await api.joinSpaceById(spaceId);
       setActiveSpace(space);
-      setActiveTab('room');
+      navigate(`/spaces/${space.watchSpaceId}`);
       showToast(`Entered Watch Space: ${space.titleName}`);
     } catch (err: any) {
       // If offline or demo, search activeSpaces
       const match = activeSpaces.find(s => s.watchSpaceId === spaceId);
       if (match) {
         setActiveSpace(match);
-        setActiveTab('room');
+        navigate(`/spaces/${match.watchSpaceId}`);
         showToast(`Entered Watch Space: ${match.titleName}`);
       } else {
         showToast(`Failed to join: ${err.message}`);
@@ -247,14 +292,14 @@ export const App: React.FC = () => {
       const space = await api.joinSpaceByCode(code);
       setIsJoinModalOpen(false);
       setActiveSpace(space);
-      setActiveTab('room');
+      navigate(`/spaces/${space.watchSpaceId}`);
       showToast(`Joined space: ${space.titleName} (${code})!`);
     } catch (err: any) {
       // Check fallback demo code
       if (code.toUpperCase() === 'NX-DEMO' && activeSpaces.length > 0) {
         setIsJoinModalOpen(false);
         setActiveSpace(activeSpaces[0]);
-        setActiveTab('room');
+        navigate(`/spaces/${activeSpaces[0].watchSpaceId}`);
         showToast(`Joined Demo Watch Space: ${activeSpaces[0].titleName}`);
       } else {
         showToast(`Invalid token or room closed: ${err.message}`);
@@ -281,7 +326,7 @@ export const App: React.FC = () => {
       const space = await api.createWatchSpace(titleId, maxParticipants, aiVerbosity, votingEnabled);
       setIsCreateModalOpen(false);
       setActiveSpace(space);
-      setActiveTab('room');
+      navigate(`/spaces/${space.watchSpaceId}`);
       showToast(`Watch Space live! Invite Code: ${space.inviteCode}`);
       // Refresh list
       api.getActiveSpaces().then(setActiveSpaces).catch(() => {});
@@ -318,7 +363,7 @@ export const App: React.FC = () => {
       setIsCreateModalOpen(false);
       setActiveSpaces(prev => [newSpace, ...prev]);
       setActiveSpace(newSpace);
-      setActiveTab('room');
+      navigate(`/spaces/${newSpace.watchSpaceId}`);
       showToast(`Watch Space launched! Invite Code: ${newSpace.inviteCode}`);
     }
   };
@@ -338,7 +383,7 @@ export const App: React.FC = () => {
     }
   };
 
-  const isPublicPage = activeTab === 'landing' || activeTab === 'login' || activeTab === 'signup';
+  const isPublicPage = location.pathname === '/' && !currentUser || location.pathname === '/login' || location.pathname === '/signup';
 
   return (
     <div className="min-h-screen bg-background text-on-surface flex flex-col font-sans">
@@ -346,12 +391,12 @@ export const App: React.FC = () => {
       {!isPublicPage && (
         <Navbar
           currentUser={currentUser}
-          activeTab={activeTab}
+          activeTab={location.pathname.substring(1) || 'home'}
           setActiveTab={(tab) => {
-            setActiveTab(tab);
+            navigate(tab === 'home' ? '/' : `/${tab}`);
           }}
           onOpenCreateModal={() => handleOpenCreateModal()}
-          onOpenLogin={() => setActiveTab('login')}
+          onOpenLogin={() => navigate('/login')}
           onLogout={handleLogout}
           onOpenProfileSettings={() => setIsProfileSettingsOpen(true)}
           hasActiveSpace={!!activeSpace}
@@ -370,75 +415,100 @@ export const App: React.FC = () => {
 
       {/* Main View Router */}
       <main className={`flex-1 w-full ${isPublicPage ? '' : 'pt-20'}`}>
-        {activeTab === 'landing' ? (
-          <LandingPage
-            titles={titles}
-            activeSpaces={activeSpaces}
-            onGetStarted={() => setActiveTab('signup')}
-            onSignIn={() => setActiveTab('login')}
-          />
-        ) : activeTab === 'login' ? (
-          <SignInView
-            onSuccess={(user) => {
-              handleLoginSuccess(user);
-              setActiveTab('home');
-            }}
-            onGoToSignUp={() => setActiveTab('signup')}
-            onGoToLanding={() => setActiveTab('landing')}
-          />
-        ) : activeTab === 'signup' ? (
-          <SignUpView
-            onSuccess={(user) => {
-              handleLoginSuccess(user);
-              setActiveTab('home');
-            }}
-            onGoToSignIn={() => setActiveTab('login')}
-            onGoToLanding={() => setActiveTab('landing')}
-          />
-        ) : activeTab === 'room' && activeSpace && currentUser ? (
-          <WatchRoom
-            space={activeSpace}
-            currentUser={currentUser}
-            onLeave={() => {
-              setActiveTab('spaces');
-              api.getMySpaces().then(setMySpaces).catch(() => {});
-              api.getActiveSpaces().then(setActiveSpaces).catch(() => {});
-            }}
-          />
-        ) : activeTab === 'discover' ? (
-          <Discover
-            currentUser={currentUser}
-            titles={titles}
-            onOpenCreateModal={handleOpenCreateModal}
-            onSelectTitle={handleSelectTitleSolo}
-          />
-        ) : activeTab === 'spaces' ? (
-          <MySpacesHub
-            currentUser={currentUser}
-            activeSpaces={mySpaces.length > 0 ? mySpaces : activeSpaces}
-            history={history}
-            titles={titles}
-            onOpenCreateModal={handleOpenCreateModal}
-            onOpenJoinModal={() => setIsJoinModalOpen(true)}
-            onJoinSpace={handleJoinSpace}
-            onQuickJoinDemo={handleJoinDemo}
-          />
-        ) : activeTab === 'admin' && currentUser?.role === 'ADMIN' ? (
-          <AdminTimelineView titles={titles} />
-        ) : (
-          <HomeCinema
-            currentUser={currentUser}
-            titles={titles}
-            activeSpaces={activeSpaces}
-            recommendations={recommendations}
-            history={history}
-            onOpenCreateModal={handleOpenCreateModal}
-            onJoinSpace={handleJoinSpace}
-            onQuickJoinDemo={handleJoinDemo}
-            onNavigateTab={setActiveTab}
-            onSelectTitle={handleSelectTitleSolo}
-          />
-        )}
+        <Routes>
+          <Route path="/" element={
+            !currentUser ? (
+              <LandingPage
+                titles={titles}
+                activeSpaces={activeSpaces}
+                onGetStarted={() => navigate('/signup')}
+                onSignIn={() => navigate('/login')}
+              />
+            ) : (
+              <HomeCinema
+                currentUser={currentUser}
+                titles={titles}
+                activeSpaces={activeSpaces}
+                recommendations={recommendations}
+                history={history}
+                onOpenCreateModal={handleOpenCreateModal}
+                onJoinSpace={handleJoinSpace}
+                onQuickJoinDemo={handleJoinDemo}
+                onNavigateTab={(path) => navigate(path === 'home' ? '/' : `/${path}`)}
+                onSelectTitle={handleSelectTitleSolo}
+              />
+            )
+          } />
+
+          <Route path="/login" element={
+            <SignInView
+              onSuccess={(user) => {
+                handleLoginSuccess(user);
+                navigate('/');
+              }}
+              onGoToSignUp={() => navigate('/signup')}
+              onGoToLanding={() => navigate('/')}
+            />
+          } />
+
+          <Route path="/signup" element={
+            <SignUpView
+              onSuccess={(user) => {
+                handleLoginSuccess(user);
+                navigate('/');
+              }}
+              onGoToSignIn={() => navigate('/login')}
+              onGoToLanding={() => navigate('/')}
+            />
+          } />
+
+          <Route path="/spaces/:id" element={
+            currentUser ? (
+              <WatchRoomWrapper
+                activeSpace={activeSpace}
+                setActiveSpace={setActiveSpace}
+                currentUser={currentUser}
+                onLeave={() => {
+                  navigate('/spaces');
+                  api.getMySpaces().then(setMySpaces).catch(() => {});
+                  api.getActiveSpaces().then(setActiveSpaces).catch(() => {});
+                }}
+              />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } />
+
+          <Route path="/discover" element={
+            <Discover
+              currentUser={currentUser}
+              titles={titles}
+              onOpenCreateModal={handleOpenCreateModal}
+              onSelectTitle={handleSelectTitleSolo}
+            />
+          } />
+
+          <Route path="/spaces" element={
+            <MySpacesHub
+              currentUser={currentUser}
+              activeSpaces={mySpaces.length > 0 ? mySpaces : activeSpaces}
+              history={history}
+              titles={titles}
+              onOpenCreateModal={handleOpenCreateModal}
+              onOpenJoinModal={() => setIsJoinModalOpen(true)}
+              onJoinSpace={handleJoinSpace}
+              onQuickJoinDemo={handleJoinDemo}
+            />
+          } />
+
+          <Route path="/admin" element={
+            currentUser?.role === 'ADMIN' ? (
+              <AdminTimelineView titles={titles} />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          } />
+        </Routes>
       </main>
 
       {/* Create Room Modal */}

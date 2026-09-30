@@ -23,13 +23,13 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@SuppressWarnings({"null"})
 public class AiCopilotService {
 
     private final WatchSpaceRepository watchSpaceRepository;
     private final TimelineEventRepository timelineEventRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ObjectMapper objectMapper;
+    private final GeminiService geminiService;
 
     @Transactional
     public AiAnswerResponse askQuestion(UUID spaceId, User user, AiQuestionRequest request) {
@@ -47,7 +47,7 @@ public class AiCopilotService {
 
         // 2. Perform grounded retrieval
         String userQuery = request.getQuestion().trim();
-        List<TimelineEvent> matchedEvents = retrieveRelevantEvents(userQuery, pastAndCurrentEvents);
+        List<TimelineEvent> matchedEvents = retrieveRelevantEvents(userQuery, pastAndCurrentEvents, space, currentSec);
 
         List<String> sourceEventIds = new ArrayList<>();
         String answer;
@@ -69,7 +69,7 @@ public class AiCopilotService {
                     .map(e -> "evt_" + e.getId().toString().substring(0, 8))
                     .collect(Collectors.toList());
 
-            answer = synthesizeGroundedAnswer(space.getTitle().getName(), userQuery, currentSec, matchedEvents);
+            answer = synthesizeGroundedAnswer(space.getTitle().getName(), userQuery, currentSec, matchedEvents, space.getId().toString());
         }
 
         long latencyMs = System.currentTimeMillis() - startTime;
@@ -93,65 +93,31 @@ public class AiCopilotService {
                 .build();
     }
 
-    private List<TimelineEvent> retrieveRelevantEvents(String query, List<TimelineEvent> candidates) {
-        String lowerQuery = query.toLowerCase();
-        List<TimelineEvent> relevant = new ArrayList<>();
-
-        for (TimelineEvent event : candidates) {
-            String payload = event.getPayload().toLowerCase();
-            String type = event.getEventType().toLowerCase();
-
-            // Match based on keywords, character mentions, glossary terms, or trivia
-            if (lowerQuery.contains("who") && (type.contains("character") || payload.contains("character") || payload.contains("name"))) {
-                relevant.add(event);
-            } else if ((lowerQuery.contains("what") || lowerQuery.contains("mean") || lowerQuery.contains("explain")) &&
-                    (type.contains("glossary") || payload.contains("term") || payload.contains("definition"))) {
-                relevant.add(event);
-            } else if (lowerQuery.contains("where") || lowerQuery.contains("location") || lowerQuery.contains("scene") || lowerQuery.contains("filmed")) {
-                if (payload.contains("location") || payload.contains("film") || payload.contains("scene") || type.contains("trivia")) {
-                    relevant.add(event);
-                }
-            } else {
-                // General word overlap check
-                String[] words = lowerQuery.split("\\W+");
-                int matchCount = 0;
-                for (String w : words) {
-                    if (w.length() > 3 && payload.contains(w)) {
-                        matchCount++;
-                    }
-                }
-                if (matchCount > 0) {
-                    relevant.add(event);
-                }
-            }
+    private List<TimelineEvent> retrieveRelevantEvents(String query, List<TimelineEvent> candidates, WatchSpace space, int currentSec) {
+        // Compute query embedding
+        List<Double> queryEmbedding = geminiService.getEmbedding(query);
+        if (queryEmbedding != null && !queryEmbedding.isEmpty()) {
+            String embeddingString = queryEmbedding.toString();
+            // Use pgvector cosine similarity search
+            return timelineEventRepository.findSimilarEvents(space.getTitle().getId(), currentSec + 15, embeddingString, 4);
         }
 
-        // If none specifically matched, pick the most recent 2 events before current timestamp
-        if (relevant.isEmpty() && !candidates.isEmpty()) {
-            int start = Math.max(0, candidates.size() - 2);
-            relevant.addAll(candidates.subList(start, candidates.size()));
+        // Fallback to most recent 4 events if embedding fails
+        if (!candidates.isEmpty()) {
+            int start = Math.max(0, candidates.size() - 4);
+            return new ArrayList<>(candidates.subList(start, candidates.size()));
         }
-
-        return relevant.stream().limit(4).collect(Collectors.toList());
+        return new ArrayList<>();
     }
 
-    private String synthesizeGroundedAnswer(String titleName, String query, int currentTs, List<TimelineEvent> matched) {
+    private String synthesizeGroundedAnswer(String titleName, String query, int currentTs, List<TimelineEvent> matched, String spaceId) {
         StringBuilder sb = new StringBuilder();
-        TimelineEvent primary = matched.get(0);
-        String summary = extractSummary(primary);
-
-        sb.append(summary);
-
-        if (matched.size() > 1) {
-            TimelineEvent secondary = matched.get(1);
-            String secSummary = extractSummary(secondary);
-            if (!secSummary.equals(summary)) {
-                sb.append(" Additionally, at ").append(formatTimestamp(secondary.getTsSeconds()))
-                        .append(": ").append(secSummary);
-            }
+        for (TimelineEvent event : matched) {
+            sb.append("[").append(formatTimestamp(event.getTsSeconds())).append("] ")
+              .append(extractSummary(event)).append(" | ");
         }
-
-        return sb.toString();
+        
+        return geminiService.askQuestionWithContext(spaceId, currentTs, query, sb.toString());
     }
 
     private String extractSummary(TimelineEvent event) {

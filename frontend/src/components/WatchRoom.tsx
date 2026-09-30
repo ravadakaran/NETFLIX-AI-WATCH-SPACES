@@ -2,7 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { WatchSpace, User, TimelineEvent, ChatMessage } from '../types';
 import { WatchSpaceSocket } from '../services/websocket';
 import { api } from '../services/api';
-
+import shaka from 'shaka-player';
+import { LiveKitRoom, RoomAudioRenderer, TrackToggle, useLocalParticipant } from '@livekit/components-react';
+import { Track } from 'livekit-client';
+import '@livekit/components-styles';
 interface WatchRoomProps {
   space: WatchSpace;
   currentUser: User;
@@ -32,6 +35,18 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [subtitlesEnabled, setSubtitlesEnabled] = useState<boolean>(true);
   const [spatialAudioEnabled, setSpatialAudioEnabled] = useState<boolean>(true);
+
+  // LiveKit WebRTC state
+  const [liveKitToken, setLiveKitToken] = useState<string | null>(null);
+  const liveKitUrl = "ws://localhost:7880";
+
+  // ABR / Shaka state
+  const playerRef = useRef<shaka.Player | null>(null);
+  const [audioTracks, setAudioTracks] = useState<shaka.extern.Track[]>([]);
+  const [textTracks, setTextTracks] = useState<shaka.extern.Track[]>([]);
+  const [activeAudioLang, setActiveAudioLang] = useState<string>('en');
+  const [activeTextLang, setActiveTextLang] = useState<string>('en');
+  const [showSettings, setShowSettings] = useState<boolean>(false);
 
   // Tabs: 'people' | 'chat' | 'ai'
   const [activeTab, setActiveTab] = useState<'people' | 'chat' | 'ai'>('ai');
@@ -78,11 +93,42 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
       })
       .catch(err => console.warn('Could not load timeline events:', err));
 
+    // Fetch LiveKit Token
+    api.getLiveKitToken(space.watchSpaceId)
+      .then(res => setLiveKitToken(res.token))
+      .catch(err => console.warn('Could not load LiveKit token:', err));
+
     // Connect WebSocket
     const socket = new WatchSpaceSocket(space.watchSpaceId, (drift) => {
       setDriftMs(drift);
     });
     socketRef.current = socket;
+
+    // Initialize Shaka Player
+    if (videoRef.current) {
+      shaka.polyfill.installAll();
+      if (shaka.Player.isBrowserSupported()) {
+        const player = new shaka.Player(videoRef.current);
+        playerRef.current = player;
+        
+        player.addEventListener('trackschanged', () => {
+          setAudioTracks(player.getVariantTracks().filter((t, i, arr) => arr.findIndex(tr => tr.language === t.language) === i));
+          setTextTracks(player.getTextTracks() as any[]);
+        });
+
+        // Use DASH adaptive stream by default
+        const streamUrl = space.videoAssetUrl && space.videoAssetUrl.includes('.mpd') ? space.videoAssetUrl : 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
+        
+        player.load(streamUrl).then(() => {
+          console.log('[Room] Shaka Player loaded stream');
+          // Default track selection
+          const vTracks = player.getVariantTracks();
+          if (vTracks.length > 0) {
+             setActiveAudioLang(vTracks[0].language);
+          }
+        }).catch((err: any) => console.warn('Shaka load error:', err));
+      }
+    }
 
     socket.connect(
       () => {
@@ -305,6 +351,9 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
       }
       clearInterval(typingInterval);
       socket.disconnect();
+      if (playerRef.current) {
+        playerRef.current.destroy();
+      }
     };
   }, [space.watchSpaceId, space.titleId]);
 
@@ -392,6 +441,33 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
     videoRef.current.muted = nextMuted;
+  };
+
+  const handleAudioChange = (lang: string) => {
+    if (!playerRef.current) return;
+    const tracks = playerRef.current.getVariantTracks();
+    const track = tracks.find(t => t.language === lang);
+    if (track) {
+      playerRef.current.selectVariantTrack(track, true);
+      setActiveAudioLang(lang);
+    }
+  };
+
+  const handleTextChange = (lang: string) => {
+    if (!playerRef.current) return;
+    const playerAny = playerRef.current as any;
+    if (lang === 'off') {
+      if (playerAny.setTextTrackVisibility) playerAny.setTextTrackVisibility(false);
+      setActiveTextLang('off');
+      return;
+    }
+    const tracks = playerRef.current.getTextTracks();
+    const track = tracks.find((t: any) => t.language === lang);
+    if (track) {
+      playerRef.current.selectTextTrack(track);
+      if (playerAny.setTextTrackVisibility) playerAny.setTextTrackVisibility(true);
+      setActiveTextLang(lang);
+    }
   };
 
   // 3. Chat and AI Actions
@@ -528,7 +604,15 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
   };
 
   return (
-    <div className="w-full min-h-screen bg-background text-on-surface flex flex-col lg:flex-row relative overflow-hidden select-none">
+    <LiveKitRoom
+      token={liveKitToken || ''}
+      serverUrl={liveKitUrl}
+      connect={!!liveKitToken}
+      audio={true}
+      video={false}
+      className="w-full min-h-screen bg-background text-on-surface flex flex-col lg:flex-row relative overflow-hidden select-none"
+    >
+      <RoomAudioRenderer />
       {/* ======================================================== */}
       {/* LEFT / CENTER: CINEMA VIEWPORT (70-75% on Desktop)        */}
       {/* ======================================================== */}
@@ -624,7 +708,6 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
 
           <video
             ref={videoRef}
-            src={space.videoAssetUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'}
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={() => {
               if (videoRef.current) setDuration(videoRef.current.duration || space.durationSeconds || 600);
@@ -840,6 +923,13 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
 
             {/* Secondary Deck Controls */}
             <div className="flex items-center gap-2 relative">
+              {/* LiveKit Voice Chat Mic Toggle */}
+              <TrackToggle
+                source={Track.Source.Microphone}
+                className="p-1.5 transition-colors flex items-center text-on-surface-variant hover:text-white"
+                showIcon={true}
+              />
+
               {/* Spatial Audio Mode */}
               <button
                 onClick={() => setSpatialAudioEnabled(!spatialAudioEnabled)}
@@ -885,6 +975,61 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
                         {emoji}
                       </button>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              {/* ABR & Tracks Settings */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowSettings(!showSettings)}
+                  className={`p-1.5 transition-colors flex items-center ${
+                    showSettings ? 'text-white' : 'text-on-surface-variant hover:text-white'
+                  }`}
+                  title="Stream Settings"
+                >
+                  <span className="material-symbols-outlined text-[20px]">settings</span>
+                </button>
+
+                {showSettings && (
+                  <div className="absolute bottom-12 right-0 w-48 p-3 rounded-2xl bg-[#080D24]/95 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.8)] flex flex-col gap-3 z-50">
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[10px] text-on-surface-variant font-label-sm uppercase tracking-wider">Audio Track</span>
+                      {audioTracks.map((t, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleAudioChange(t.language)}
+                          className={`text-left text-xs px-2 py-1.5 rounded-lg transition-colors ${
+                            activeAudioLang === t.language ? 'bg-pink-500/20 text-pink-300' : 'hover:bg-white/5 text-on-surface'
+                          }`}
+                        >
+                          {t.language.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="h-px w-full bg-white/10" />
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[10px] text-on-surface-variant font-label-sm uppercase tracking-wider">Subtitles</span>
+                      <button
+                        onClick={() => handleTextChange('off')}
+                        className={`text-left text-xs px-2 py-1.5 rounded-lg transition-colors ${
+                          activeTextLang === 'off' ? 'bg-pink-500/20 text-pink-300' : 'hover:bg-white/5 text-on-surface'
+                        }`}
+                      >
+                        Off
+                      </button>
+                      {textTracks.map((t, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleTextChange(t.language)}
+                          className={`text-left text-xs px-2 py-1.5 rounded-lg transition-colors ${
+                            activeTextLang === t.language ? 'bg-pink-500/20 text-pink-300' : 'hover:bg-white/5 text-on-surface'
+                          }`}
+                        >
+                          {t.language.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1149,7 +1294,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
                     AI Film Scholar
                   </span>
                 </div>
-                <span className="font-label-sm text-[10px] text-cyan-300/80 tracking-wider uppercase font-mono">
+                <span className="font-label-sm text-[10px] text-cyan-300/80 tracking-wider uppercase">
                   Syncing Scene {formatTime(currentTime)}
                 </span>
               </div>
@@ -1277,6 +1422,6 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
           </div>
         )}
       </aside>
-    </div>
+    </LiveKitRoom>
   );
 };

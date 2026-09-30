@@ -20,7 +20,6 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@SuppressWarnings({"null"})
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;

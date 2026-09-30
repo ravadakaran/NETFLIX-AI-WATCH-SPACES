@@ -223,6 +223,10 @@ export const api = {
     return request<WatchSpace[]>('/watch-spaces/me');
   },
 
+  async getLiveKitToken(spaceId: string): Promise<{ token: string }> {
+    return request<{ token: string }>(`/watch-spaces/${spaceId}/livekit-token`);
+  },
+
   // AI Copilot
   async askAi(spaceId: string, currentTs: number, question: string): Promise<{ answer: string; sourceEvents: string[]; latencyMs: number }> {
     return request<{ answer: string; sourceEvents: string[]; latencyMs: number }>(`/watch-spaces/${spaceId}/ai/ask`, {

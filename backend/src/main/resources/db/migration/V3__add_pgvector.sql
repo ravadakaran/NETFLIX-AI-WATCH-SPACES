@@ -1,0 +1,2 @@
+CREATE EXTENSION IF NOT EXISTS vector;
+ALTER TABLE timeline_events ADD COLUMN IF NOT EXISTS embedding vector(3072);

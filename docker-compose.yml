@@ -11,6 +11,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:alpine
+    container_name: netflix-redis
+    ports:
+      - "6379:6379"
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: netflix-pgadmin
@@ -21,6 +27,15 @@ services:
       - "8888:80"
     depends_on:
       - postgres
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: netflix-livekit
+    command: --keys devkey:secret --dev
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
 
 volumes:
   postgres_data:

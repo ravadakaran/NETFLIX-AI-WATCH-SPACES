@@ -17,7 +17,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/watch-spaces/{id}/ai")
 @RequiredArgsConstructor
-@SuppressWarnings({"null"})
 public class AiController {
 
     private final AiCopilotService aiCopilotService;

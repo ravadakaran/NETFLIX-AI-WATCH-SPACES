@@ -11,6 +11,7 @@ import com.netflix.ai.watchspaces.repository.ChatMessageRepository;
 import com.netflix.ai.watchspaces.repository.TimelineEventRepository;
 import com.netflix.ai.watchspaces.repository.WatchSpaceRepository;
 import com.netflix.ai.watchspaces.service.AiCopilotService;
+import com.netflix.ai.watchspaces.service.GeminiService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,10 +22,10 @@ import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({"null"})
 public class AiCopilotServiceTest {
 
     @Mock
@@ -35,6 +36,9 @@ public class AiCopilotServiceTest {
 
     @Mock
     private ChatMessageRepository chatMessageRepository;
+
+    @Mock
+    private GeminiService geminiService;
 
     private AiCopilotService aiCopilotService;
 
@@ -49,7 +53,8 @@ public class AiCopilotServiceTest {
                 watchSpaceRepository,
                 timelineEventRepository,
                 chatMessageRepository,
-                new ObjectMapper()
+                new ObjectMapper(),
+                geminiService
         );
 
         spaceId = UUID.randomUUID();
@@ -74,6 +79,9 @@ public class AiCopilotServiceTest {
 
         when(timelineEventRepository.findByTitleIdAndTsSecondsLessThanEqualOrderByTsSecondsAsc(testTitle.getId(), 55))
                 .thenReturn(Collections.singletonList(characterEv));
+
+        when(geminiService.askQuestionWithContext(anyString(), anyInt(), anyString(), anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(3)); // return the context back
 
         AiQuestionRequest req = new AiQuestionRequest(testUser.getId(), 40.0, "Who is the detective?");
         AiAnswerResponse resp = aiCopilotService.askQuestion(spaceId, testUser, req);

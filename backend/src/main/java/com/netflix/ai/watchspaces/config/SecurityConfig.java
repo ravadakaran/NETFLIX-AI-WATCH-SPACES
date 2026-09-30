@@ -24,7 +24,6 @@ import java.util.Arrays;
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
 @RequiredArgsConstructor
-@SuppressWarnings({"null"})
 public class SecurityConfig {
 
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
@@ -71,7 +70,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         java.util.List<String> origins = Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
+                .map(s -> s != null ? s.trim() : "")
                 .filter(s -> !s.isEmpty())
                 .collect(java.util.stream.Collectors.toList());
         configuration.setAllowedOrigins(origins);

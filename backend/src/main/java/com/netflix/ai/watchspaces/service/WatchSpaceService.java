@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@SuppressWarnings({"null"})
 public class WatchSpaceService {
 
     private final WatchSpaceRepository watchSpaceRepository;
@@ -209,9 +208,8 @@ public class WatchSpaceService {
 
     @Transactional(readOnly = true)
     public List<WatchSpaceDto> getActiveSpaces() {
-        return watchSpaceRepository.findByStatusOrderByCreatedAtDesc(WatchSpaceStatus.LIVE).stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+        List<WatchSpace> spaces = watchSpaceRepository.findByStatusOrderByCreatedAtDesc(WatchSpaceStatus.LIVE);
+        return mapToDto(spaces);
     }
 
     @Transactional(readOnly = true)
@@ -220,26 +218,47 @@ public class WatchSpaceService {
         List<WatchSpace> hostedSpaces = watchSpaceRepository.findByHostUserIdOrderByCreatedAtDesc(userId);
 
         Set<UUID> seenIds = new LinkedHashSet<>();
-        List<WatchSpaceDto> result = new ArrayList<>();
+        List<WatchSpace> resultSpaces = new ArrayList<>();
 
         for (WatchSpace space : hostedSpaces) {
             if (space != null && seenIds.add(space.getId())) {
-                result.add(mapToDto(space));
+                resultSpaces.add(space);
             }
         }
 
         for (WatchSpaceParticipant p : participants) {
             WatchSpace space = p.getWatchSpace();
             if (space != null && seenIds.add(space.getId())) {
-                result.add(mapToDto(space));
+                resultSpaces.add(space);
             }
         }
 
-        return result;
+        return mapToDto(resultSpaces);
+    }
+
+    public List<WatchSpaceDto> mapToDto(List<WatchSpace> spaces) {
+        if (spaces == null || spaces.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<UUID> spaceIds = spaces.stream().map(WatchSpace::getId).collect(Collectors.toList());
+        List<WatchSpaceParticipant> allActiveParticipants = participantRepository.findByIdWatchSpaceIdInAndLeftAtIsNull(spaceIds);
+
+        Map<UUID, List<WatchSpaceParticipant>> participantsBySpaceId = allActiveParticipants.stream()
+                .collect(Collectors.groupingBy(p -> p.getId().getWatchSpaceId()));
+
+        return spaces.stream().map(space -> {
+            List<WatchSpaceParticipant> spaceParticipants = participantsBySpaceId.getOrDefault(space.getId(), Collections.emptyList());
+            return mapToDto(space, spaceParticipants);
+        }).collect(Collectors.toList());
     }
 
     public WatchSpaceDto mapToDto(WatchSpace space) {
         List<WatchSpaceParticipant> activeParticipants = participantRepository.findByIdWatchSpaceIdAndLeftAtIsNull(space.getId());
+        return mapToDto(space, activeParticipants);
+    }
+
+    public WatchSpaceDto mapToDto(WatchSpace space, List<WatchSpaceParticipant> activeParticipants) {
 
         List<ParticipantDto> participantDtos = activeParticipants.stream()
                 .map(p -> ParticipantDto.builder()

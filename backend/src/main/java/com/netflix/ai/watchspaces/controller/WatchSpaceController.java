@@ -17,7 +17,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/watch-spaces")
 @RequiredArgsConstructor
-@SuppressWarnings({"null"})
 public class WatchSpaceController {
 
     private final WatchSpaceService watchSpaceService;
@@ -78,5 +77,32 @@ public class WatchSpaceController {
     @GetMapping
     public ResponseEntity<List<WatchSpaceDto>> getActiveSpaces() {
         return ResponseEntity.ok(watchSpaceService.getActiveSpaces());
+    }
+
+    @GetMapping("/{id}/livekit-token")
+    public ResponseEntity<java.util.Map<String, String>> getLiveKitToken(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        
+        // Ensure user is actually in the space (basic check, could be expanded)
+        User user = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                
+        // Room name is the Watch Space ID string
+        String roomName = id.toString();
+        // Participant name is the User's ID or email (we'll use email for display if needed, or just ID)
+        String participantName = user.getEmail();
+        
+        com.netflix.ai.watchspaces.service.LiveKitService liveKitService = 
+                org.springframework.web.context.support.WebApplicationContextUtils
+                .getRequiredWebApplicationContext(
+                        ((org.springframework.web.context.request.ServletRequestAttributes) 
+                        org.springframework.web.context.request.RequestContextHolder.getRequestAttributes())
+                        .getRequest().getServletContext())
+                .getBean(com.netflix.ai.watchspaces.service.LiveKitService.class);
+                
+        String token = liveKitService.generateToken(roomName, participantName);
+        
+        return ResponseEntity.ok(java.util.Map.of("token", token));
     }
 }

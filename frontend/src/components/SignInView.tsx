@@ -37,9 +37,9 @@ export const SignInView: React.FC<SignInViewProps> = ({
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4 bg-background overflow-hidden font-sans select-none">
       {/* Cinematic Ambient Glow Blooms */}
-      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-electric-blue/15 blur-[150px] pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-[550px] h-[550px] rounded-full bg-violet/20 blur-[160px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-pink/10 blur-[180px] pointer-events-none" />
+      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-electric-blue/15 blur-[150px] pointer-events-none animate-float-slow" />
+      <div className="absolute -bottom-32 -right-32 w-[550px] h-[550px] rounded-full bg-violet/20 blur-[160px] pointer-events-none animate-float-slower" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-pink/10 blur-[180px] pointer-events-none animate-float-slow" />
 
       {/* Back to Landing link */}
       <button
@@ -51,7 +51,7 @@ export const SignInView: React.FC<SignInViewProps> = ({
       </button>
 
       {/* Midnight Blue Glass Authentication Card */}
-      <div className="relative z-10 w-full max-w-md rounded-3xl bg-[#080D24]/85 backdrop-blur-2xl border border-white/10 p-8 sm:p-10 shadow-[0_25px_60px_rgba(0,0,0,0.85)] text-on-surface">
+      <div className="relative z-10 w-full max-w-md rounded-3xl bg-[#080D24]/85 backdrop-blur-2xl border border-white/10 p-8 sm:p-10 shadow-[0_25px_60px_rgba(0,0,0,0.85)] text-on-surface animate-fade-in-up delay-100">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center space-y-2 mb-8">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-electric-blue via-violet to-pink flex items-center justify-center shadow-[0_0_25px_rgba(37,99,235,0.5)] mb-2">
@@ -108,12 +108,12 @@ export const SignInView: React.FC<SignInViewProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary-gradient py-3.5 rounded-xl font-label-md text-xs uppercase tracking-wider font-bold shadow-[0_0_25px_rgba(37,99,235,0.45)] hover:shadow-[0_0_35px_rgba(236,72,153,0.65)] disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+              className="w-full btn-primary-gradient py-3.5 rounded-xl font-label-md text-xs uppercase tracking-wider font-bold shadow-[0_0_25px_rgba(37,99,235,0.45)] hover:shadow-[0_0_40px_rgba(236,72,153,0.7)] disabled:opacity-50 transition-all flex items-center justify-center gap-2 group"
             >
               {loading ? (
                 <span className="animate-spin text-sm">↻</span>
               ) : (
-                <span>SIGN IN</span>
+                <span className="group-hover:scale-105 transition-transform">SIGN IN</span>
               )}
             </button>
           </div>

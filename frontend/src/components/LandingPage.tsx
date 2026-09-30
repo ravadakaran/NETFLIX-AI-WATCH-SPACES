@@ -84,9 +84,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent w-full lg:w-3/4" />
           
           {/* Nocturne Glow Blooms: Electric Blue, Violet, Soft Pink */}
-          <div className="absolute -top-32 -left-32 w-[450px] h-[450px] rounded-full bg-electric-blue/20 blur-[140px] pointer-events-none" />
-          <div className="absolute bottom-1/4 right-10 w-[550px] h-[550px] rounded-full bg-violet/25 blur-[160px] pointer-events-none" />
-          <div className="absolute top-1/3 right-1/4 w-[350px] h-[350px] rounded-full bg-pink/15 blur-[130px] pointer-events-none" />
+          <div className="absolute -top-32 -left-32 w-[450px] h-[450px] rounded-full bg-electric-blue/20 blur-[140px] pointer-events-none animate-float-slow" />
+          <div className="absolute bottom-1/4 right-10 w-[550px] h-[550px] rounded-full bg-violet/25 blur-[160px] pointer-events-none animate-float-slower" />
+          <div className="absolute top-1/3 right-1/4 w-[350px] h-[350px] rounded-full bg-pink/15 blur-[130px] pointer-events-none animate-float-slow" />
         </div>
 
         {/* Hero Content Vessel */}
@@ -107,10 +107,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           {/* Main Headline */}
-          <div className="space-y-2">
+          <div className="space-y-2 animate-fade-in-up delay-100">
             <h1 className="font-display-hero text-4xl sm:text-6xl lg:text-7xl text-white tracking-tight uppercase max-w-4xl drop-shadow-2xl font-bold leading-tight">
               Watch together.<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3B82F6] via-[#8B5CF6] to-[#EC4899]">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3B82F6] via-[#8B5CF6] to-[#EC4899] animate-text-shimmer">
                 Feel every moment.
               </span>
             </h1>
@@ -119,29 +119,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
 
-          <p className="font-body-lg text-sm sm:text-base text-on-surface-variant max-w-2xl leading-relaxed">
+          <p className="font-body-lg text-sm sm:text-base text-on-surface-variant max-w-2xl leading-relaxed animate-fade-in-up delay-200">
             Create private Watch Spaces, invite your friends, stay perfectly synchronized across temporal feeds, chat in real time, and let grounded AI understand what you're watching together.
           </p>
 
           {/* CTA Actions */}
-          <div className="flex flex-wrap items-center gap-4 pt-2">
+          <div className="flex flex-wrap items-center gap-4 pt-2 animate-fade-in-up delay-300">
             <button
               onClick={onGetStarted}
-              className="btn-primary-gradient px-8 py-3.5 rounded-full font-label-md text-xs uppercase tracking-wider font-bold flex items-center gap-2 shadow-[0_0_36px_rgba(37,99,235,0.45)] hover:shadow-[0_0_48px_rgba(236,72,153,0.55)] transition-all"
+              className="btn-primary-gradient px-8 py-3.5 rounded-full font-label-md text-xs uppercase tracking-wider font-bold flex items-center gap-2 shadow-[0_0_36px_rgba(37,99,235,0.45)] hover:shadow-[0_0_48px_rgba(236,72,153,0.55)] transition-all group"
             >
               <span>GET STARTED</span>
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              <span className="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </button>
             <button
               onClick={onSignIn}
-              className="px-8 py-3.5 rounded-full bg-surface-container-high/60 backdrop-blur-xl font-label-md text-xs uppercase tracking-wider text-white hover:bg-surface-bright/70 transition-all border border-white/10"
+              className="px-8 py-3.5 rounded-full bg-surface-container-high/60 backdrop-blur-xl font-label-md text-xs uppercase tracking-wider text-white hover:bg-surface-bright/70 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all border border-white/10"
             >
               SIGN IN
             </button>
           </div>
 
           {/* Realtime Synchronized Telemetry List */}
-          <div className="flex flex-wrap items-center gap-y-2 gap-x-8 text-on-surface-variant font-label-md text-xs pt-4 border-t border-white/5">
+          <div className="flex flex-wrap items-center gap-y-2 gap-x-8 text-on-surface-variant font-label-md text-xs pt-4 border-t border-white/5 animate-fade-in-up delay-400">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-electric-blue" />
               <span>Synchronized playback (±0.8ms)</span>
@@ -176,11 +176,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Card 1 */}
-          <div className="glass-card rounded-3xl p-8 space-y-4 relative overflow-hidden group">
-            <div className="w-12 h-12 rounded-2xl bg-electric-blue/15 border border-electric-blue/30 flex items-center justify-center text-electric-blue group-hover:scale-110 transition-transform">
+          <div className="glass-card rounded-3xl p-8 space-y-4 relative overflow-hidden group hover:scale-[1.02] hover:-translate-y-2 transition-all duration-300">
+            <div className="w-12 h-12 rounded-2xl bg-electric-blue/15 border border-electric-blue/30 flex items-center justify-center text-electric-blue group-hover:bg-electric-blue/30 group-hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all">
               <span className="material-symbols-outlined text-[24px]">sync_saved_locally</span>
             </div>
-            <h3 className="font-title-md text-xl text-white font-bold">
+            <h3 className="font-title-md text-xl text-white font-bold group-hover:text-electric-blue transition-colors">
               Millisecond Playback Lock
             </h3>
             <p className="font-body-md text-xs text-on-surface-variant leading-relaxed">
@@ -189,11 +189,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           {/* Card 2 */}
-          <div className="glass-card rounded-3xl p-8 space-y-4 relative overflow-hidden group">
-            <div className="w-12 h-12 rounded-2xl bg-violet/15 border border-violet/30 flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
+          <div className="glass-card rounded-3xl p-8 space-y-4 relative overflow-hidden group hover:scale-[1.02] hover:-translate-y-2 transition-all duration-300">
+            <div className="w-12 h-12 rounded-2xl bg-violet/15 border border-violet/30 flex items-center justify-center text-secondary group-hover:bg-violet/30 group-hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] transition-all">
               <span className="material-symbols-outlined text-[24px]">auto_awesome</span>
             </div>
-            <h3 className="font-title-md text-xl text-white font-bold">
+            <h3 className="font-title-md text-xl text-white font-bold group-hover:text-violet transition-colors">
               Grounded AI Film Scholar
             </h3>
             <p className="font-body-md text-xs text-on-surface-variant leading-relaxed">
@@ -202,11 +202,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           {/* Card 3 */}
-          <div className="glass-card rounded-3xl p-8 space-y-4 relative overflow-hidden group">
-            <div className="w-12 h-12 rounded-2xl bg-pink/15 border border-pink/30 flex items-center justify-center text-pink group-hover:scale-110 transition-transform">
+          <div className="glass-card rounded-3xl p-8 space-y-4 relative overflow-hidden group hover:scale-[1.02] hover:-translate-y-2 transition-all duration-300">
+            <div className="w-12 h-12 rounded-2xl bg-pink/15 border border-pink/30 flex items-center justify-center text-pink group-hover:bg-pink/30 group-hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] transition-all">
               <span className="material-symbols-outlined text-[24px]">alt_route</span>
             </div>
-            <h3 className="font-title-md text-xl text-white font-bold">
+            <h3 className="font-title-md text-xl text-white font-bold group-hover:text-pink transition-colors">
               Interactive Story Branching
             </h3>
             <p className="font-body-md text-xs text-on-surface-variant leading-relaxed">
