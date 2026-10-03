@@ -27,3 +27,10 @@ yarn-error.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# Archives & Temporary / Test Artifacts
+backend.zip
+*.tsbuildinfo
+frontend/playwright-report/
+frontend/test-results/
+__agent__/

@@ -101,11 +101,15 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- LiveKit Server SDK -->
 		<dependency>
 			<groupId>io.livekit</groupId>
 			<artifactId>livekit-server</artifactId>
 			<version>0.16.0</version> <!-- using stable version, can upgrade if needed -->
+		</dependency>
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j-core</artifactId>
+			<version>8.1.1</version>
 		</dependency>
 	</dependencies>
 

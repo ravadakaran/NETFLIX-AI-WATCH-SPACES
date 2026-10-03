@@ -1,4 +1,4 @@
-import { User, Title, TimelineEvent, WatchSpace, RecommendationItem, HistoryItem, Analytics } from '../types';
+import { User, Title, TimelineEvent, WatchSpace, RecommendationItem, HistoryItem, Analytics, NarrativeState, NarrativeActionInput } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -213,6 +213,18 @@ export const api = {
 
   async getAnalytics(spaceId: string): Promise<Analytics> {
     return request<Analytics>(`/watch-spaces/${spaceId}/analytics`);
+  },
+
+  // Authoritative narrative state and actions
+  async getNarrativeState(spaceId: string): Promise<NarrativeState> {
+    return request<NarrativeState>(`/watch-spaces/${spaceId}/narrative`);
+  },
+
+  async narrativeAction(spaceId: string, input: NarrativeActionInput): Promise<NarrativeState> {
+    return request<NarrativeState>(`/watch-spaces/${spaceId}/narrative/actions`, {
+      method: 'POST',
+      body: JSON.stringify(input)
+    });
   },
 
   async getActiveSpaces(): Promise<WatchSpace[]> {

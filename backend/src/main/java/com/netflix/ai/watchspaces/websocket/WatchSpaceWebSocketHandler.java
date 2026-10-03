@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.ai.watchspaces.dto.AiDtos.AiAnswerResponse;
 import com.netflix.ai.watchspaces.dto.AiDtos.AiQuestionRequest;
 import com.netflix.ai.watchspaces.dto.WsDtos.*;
+import com.netflix.ai.watchspaces.dto.NarrativeDtos.ActionRequest;
+import com.netflix.ai.watchspaces.dto.NarrativeDtos.StateDto;
 import com.netflix.ai.watchspaces.entity.ChatMessage;
 import com.netflix.ai.watchspaces.entity.User;
 import com.netflix.ai.watchspaces.entity.WatchSpace;
@@ -41,6 +43,9 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
     private final AiCopilotService aiCopilotService;
     private final ObjectMapper objectMapper;
     private final com.netflix.ai.watchspaces.repository.VariationOptionRepository variationOptionRepository;
+    private final com.netflix.ai.watchspaces.service.RateLimitingService rateLimitingService;
+    private final com.netflix.ai.watchspaces.service.ChatModerationService chatModerationService;
+    private final com.netflix.ai.watchspaces.service.NarrativeService narrativeService;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -111,6 +116,19 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
                 .ts(System.currentTimeMillis())
                 .build();
         sessionManager.sendToSession(session, currentPlayback);
+
+        // Rehydrate the authoritative branch, active prediction, and leaderboard on reconnect.
+        try {
+            StateDto narrativeState = narrativeService.getState(spaceId, user.getId());
+            sessionManager.sendToSession(session, WsEnvelope.builder()
+                    .event("room.narrative.state")
+                    .watchSpaceId(watchSpaceIdStr)
+                    .payload(narrativeState)
+                    .ts(System.currentTimeMillis())
+                    .build());
+        } catch (Exception e) {
+            log.warn("Could not send narrative state for {}: {}", watchSpaceIdStr, e.getMessage());
+        }
 
         // Send recent chat history (up to 50 messages) to newly connected client
         try {
@@ -199,7 +217,20 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
                 return; // User is muted
             }
 
+            io.github.bucket4j.Bucket bucket = rateLimitingService.resolveChatBucket(ctx.userId);
+            if (!bucket.tryConsume(1)) {
+                log.warn("User {} exceeded chat rate limit", ctx.userId);
+                return; // Rate limit exceeded, drop message
+            }
+
             ChatPayload chat = objectMapper.convertValue(envelope.getPayload(), ChatPayload.class);
+            if (!chatModerationService.isClean(chat.getBody())) {
+                log.warn("User {} sent profanity or spam", ctx.userId);
+                // Optionally mask it instead of dropping:
+                // chat.setBody(chatModerationService.maskProfanity(chat.getBody()));
+                return; // For now, just drop the message
+            }
+
             chat.setUserId(ctx.userId.toString());
             chat.setDisplayName(ctx.displayName);
             if (chat.getMessageId() == null) {
@@ -251,6 +282,14 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
                     .ts(now)
                     .build();
             sessionManager.sendToSession(session, pongEnv);
+
+        } else if ("room.narrative.action".equalsIgnoreCase(event)) {
+            ActionRequest action = objectMapper.convertValue(envelope.getPayload(), ActionRequest.class);
+            try {
+                narrativeService.handleAction(UUID.fromString(spaceId), ctx.userId, action);
+            } catch (Exception e) {
+                log.warn("Narrative action rejected in {}: {}", spaceId, e.getMessage());
+            }
 
         } else if ("room.variation.vote".equalsIgnoreCase(event)) {
             VoteCastPayload vote = objectMapper.convertValue(envelope.getPayload(), VoteCastPayload.class);
@@ -339,6 +378,12 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
             sessionManager.broadcast(spaceId, envelope);
 
         } else if ("room.ai.ask".equalsIgnoreCase(event)) {
+            io.github.bucket4j.Bucket aiBucket = rateLimitingService.resolveAiAskBucket(ctx.userId);
+            if (!aiBucket.tryConsume(1)) {
+                log.warn("User {} exceeded AI ask rate limit over WS", ctx.userId);
+                return; // Rate limit exceeded
+            }
+
             AiQuestionRequest req = objectMapper.convertValue(envelope.getPayload(), AiQuestionRequest.class);
             try {
                 User user = userRepository.findById(ctx.userId).orElse(null);

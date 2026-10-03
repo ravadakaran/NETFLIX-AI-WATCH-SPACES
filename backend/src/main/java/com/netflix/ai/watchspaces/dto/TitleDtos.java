@@ -34,8 +34,13 @@ public class TitleDtos {
     @AllArgsConstructor
     public static class VariationOptionDto {
         private UUID id;
+        private String optionKey;
         private String label;
         private String assetRef;
+        private String nextVariationId;
+        private Integer segmentStartSeconds;
+        private Integer segmentEndSeconds;
+        private Integer resumeSeconds;
         private Integer voteCount;
     }
 
@@ -96,11 +101,32 @@ public class TitleDtos {
 
     @Data
     @NoArgsConstructor
-    @AllArgsConstructor
     public static class VariationOptionUploadDto {
         private String id;
         private String label;
         private String assetRef;
+        private String nextVariationId;
+        private Integer segmentStartSeconds;
+        private Integer segmentEndSeconds;
+        private Integer resumeSeconds;
+
+        public VariationOptionUploadDto(String id, String label, String assetRef) {
+            this.id = id;
+            this.label = label;
+            this.assetRef = assetRef;
+        }
+
+        public VariationOptionUploadDto(String id, String label, String assetRef,
+                                        String nextVariationId, Integer segmentStartSeconds,
+                                        Integer segmentEndSeconds, Integer resumeSeconds) {
+            this.id = id;
+            this.label = label;
+            this.assetRef = assetRef;
+            this.nextVariationId = nextVariationId;
+            this.segmentStartSeconds = segmentStartSeconds;
+            this.segmentEndSeconds = segmentEndSeconds;
+            this.resumeSeconds = resumeSeconds;
+        }
     }
 
     @Data

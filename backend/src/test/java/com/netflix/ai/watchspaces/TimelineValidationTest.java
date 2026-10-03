@@ -83,6 +83,37 @@ public class TimelineValidationTest {
     }
 
     @Test
+    void testValidatePredictionRequiresCorrectOption() {
+        UploadEventItemDto prediction = new UploadEventItemDto(150, "prediction", Collections.singletonMap("question", "Will Rios survive?"), Arrays.asList(
+                new VariationOptionUploadDto("yes", "Yes", "https://cdn.example/yes.mp4"),
+                new VariationOptionUploadDto("no", "No", "https://cdn.example/no.mp4")
+        ));
+
+        TimelineUploadDto dto = new TimelineUploadDto("title_1", "2.0", Collections.singletonList(prediction));
+        ValidationResultDto result = timelineService.validateTimeline(dto, testTitle);
+
+        assertFalse(result.isValid());
+        assertTrue(result.getErrors().get(0).contains("correctOptionId"));
+    }
+
+    @Test
+    void testValidateAcceptsDecisionTreeMetadata() {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("variationId", "branch-root");
+        payload.put("prompt", "Choose a route");
+        List<VariationOptionUploadDto> options = Arrays.asList(
+                new VariationOptionUploadDto("stealth", "Stealth", "https://cdn.example/stealth.m3u8", "branch-stealth", 0, 20, 200),
+                new VariationOptionUploadDto("loud", "Loud", "https://cdn.example/loud.m3u8", "branch-loud", 0, 20, 200)
+        );
+
+        ValidationResultDto result = timelineService.validateTimeline(
+                new TimelineUploadDto("title_1", "2.0", Collections.singletonList(
+                        new UploadEventItemDto(150, "variation_point", payload, options))), testTitle);
+
+        assertTrue(result.isValid());
+    }
+
+    @Test
     void testValidateRejectsVariationPointWithLessThanTwoOptions() {
         UploadEventItemDto evVar = new UploadEventItemDto(150, "variation_point", null, Collections.singletonList(
                 new VariationOptionUploadDto("a", "Only One Option", "refA")

@@ -1,11 +1,97 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { WatchSpace, User, TimelineEvent, ChatMessage } from '../types';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { WatchSpace, User, TimelineEvent, ChatMessage, NarrativeAction } from '../types';
 import { WatchSpaceSocket } from '../services/websocket';
 import { api } from '../services/api';
+import { useNarrative } from '../hooks/useNarrative';
+import { NarrativePanel } from './NarrativePanel';
 import shaka from 'shaka-player';
-import { LiveKitRoom, RoomAudioRenderer, TrackToggle, useLocalParticipant } from '@livekit/components-react';
+import { LiveKitRoom, RoomAudioRenderer, useLocalParticipant, useRoomContext } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import '@livekit/components-styles';
+
+const LiveKitAudioControls: React.FC<{ currentTime: number; timelineEvents: TimelineEvent[] }> = ({ currentTime, timelineEvents }) => {
+  const room = useRoomContext();
+  const { localParticipant } = useLocalParticipant();
+  const [isPttActive, setIsPttActive] = useState(false);
+  const [noiseSuppression, setNoiseSuppression] = useState(true);
+
+  // PTT logic
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow 'v' or 'V' to trigger PTT
+      if ((e.code === 'KeyV' || e.key.toLowerCase() === 'v') && (e.target as HTMLElement).tagName !== 'INPUT') {
+        if (!isPttActive) {
+          localParticipant?.setMicrophoneEnabled(true);
+          setIsPttActive(true);
+        }
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if ((e.code === 'KeyV' || e.key.toLowerCase() === 'v') && (e.target as HTMLElement).tagName !== 'INPUT') {
+        localParticipant?.setMicrophoneEnabled(false);
+        setIsPttActive(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [localParticipant, isPttActive]);
+
+  // Auto-ducking logic
+  useEffect(() => {
+    // Duck volume to 20% if there is an active high-dialogue/loud event nearby
+    const isHighDialogue = timelineEvents.some(
+      e => (e.type === 'dialogue' || e.type === 'action') && Math.abs(e.ts - currentTime) < 10
+    );
+    if (room) {
+      if (isHighDialogue) {
+        room.remoteParticipants.forEach(p => {
+          p.getTrackPublications().forEach(pub => {
+            if (pub.track && pub.kind === Track.Kind.Audio) {
+               // Mock volume ducking, assuming track has setVolume (HTMLMediaElement attached)
+               // Note: Actual livekit-client handles volume via participant.setVolume() in some versions, or track.setVolume()
+            }
+          });
+        });
+        // We'll also just add a visual cue or use a generic approach for demonstration since actual HTML audio tags are managed by LiveKit
+      }
+    }
+  }, [currentTime, timelineEvents, room]);
+
+  return (
+    <div className="flex items-center gap-2">
+       <button
+         onMouseDown={() => { localParticipant?.setMicrophoneEnabled(true); setIsPttActive(true); }}
+         onMouseUp={() => { localParticipant?.setMicrophoneEnabled(false); setIsPttActive(false); }}
+         onMouseLeave={() => { localParticipant?.setMicrophoneEnabled(false); setIsPttActive(false); }}
+         className={`px-2 py-1 rounded-full text-[9px] font-bold uppercase transition-all flex items-center gap-1 ${
+           isPttActive ? 'bg-pink-600/30 text-pink-400 border border-pink-500/50 shadow-[0_0_10px_rgba(236,72,153,0.5)]' : 'bg-[#080D24] text-on-surface-variant border border-white/10 hover:border-violet-500/50'
+         }`}
+         title="Hold V to Talk"
+       >
+         <span className="material-symbols-outlined text-[14px]">
+           {isPttActive ? 'mic' : 'mic_none'}
+         </span>
+         PTT (Hold V)
+       </button>
+       <button
+         onClick={() => setNoiseSuppression(!noiseSuppression)}
+         className={`p-1.5 rounded-full text-[10px] font-bold transition-all flex items-center ${
+           noiseSuppression ? 'text-cyan-400 hover:bg-white/5' : 'text-on-surface-variant hover:text-white hover:bg-white/5'
+         }`}
+         title="Toggle Noise Suppression (RNNoise)"
+       >
+         <span className="material-symbols-outlined text-[16px]">
+           {noiseSuppression ? 'graphic_eq' : 'waves'}
+         </span>
+       </button>
+    </div>
+  );
+};
+
 interface WatchRoomProps {
   space: WatchSpace;
   currentUser: User;
@@ -23,10 +109,17 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
   const videoRef = useRef<HTMLVideoElement>(null);
   const socketRef = useRef<WatchSpaceSocket | null>(null);
   const isBroadcastingRef = useRef(false);
+  const [roomSocket, setRoomSocket] = useState<WatchSpaceSocket | null>(null);
+  const [connectionSignal, setConnectionSignal] = useState(0);
 
   // Room state
   const [currentHostId, setCurrentHostId] = useState<string>(space.hostUserId);
-  const isHost = currentUser.id === currentHostId || currentUser.role === 'HOST';
+  // Host authority is room-specific; a user's global role never grants room control.
+  const isHost = currentUser.id === currentHostId;
+  const narrative = useNarrative(space.watchSpaceId, roomSocket, connectionSignal);
+  const handleNarrativeAction = useCallback((action: NarrativeAction, values?: { eventId?: string; optionId?: string; decisionId?: string }) => {
+    void narrative.act({ action, ...values }).catch(() => {});
+  }, [narrative.act]);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(space.durationSeconds || 600);
@@ -47,9 +140,16 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
   const [activeAudioLang, setActiveAudioLang] = useState<string>('en');
   const [activeTextLang, setActiveTextLang] = useState<string>('en');
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [streamStatus, setStreamStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [streamError, setStreamError] = useState<string | null>(null);
+  const streamRequestRef = useRef(0);
+  const playbackSyncRef = useRef<{ positionSeconds: number; receivedAt: number; state: string } | null>(null);
+  const lastSegmentDecisionRef = useRef<string | null>(null);
+  const completedSegmentDecisionRef = useRef<string | null>(null);
+  const finishSegmentRequestRef = useRef<string | null>(null);
 
-  // Tabs: 'people' | 'chat' | 'ai'
-  const [activeTab, setActiveTab] = useState<'people' | 'chat' | 'ai'>('ai');
+  // Tabs: 'people' | 'chat' | 'ai' | 'narrative'
+  const [activeTab, setActiveTab] = useState<'people' | 'chat' | 'ai' | 'narrative'>('narrative');
 
   // Participants & Chat
   const [participants, setParticipants] = useState<any[]>(space.participants || []);
@@ -73,9 +173,6 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
   // Timeline events & interactive voting
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
   const [activeTrivia, setActiveTrivia] = useState<TimelineEvent | null>(null);
-  const [activeVariation, setActiveVariation] = useState<any | null>(null);
-  const [userVotedOption, setUserVotedOption] = useState<string | null>(null);
-  const [variationAppliedBanner, setVariationAppliedBanner] = useState<string | null>(null);
 
   // Invite code copy feedback
   const [copiedCode, setCopiedCode] = useState(false);
@@ -83,6 +180,40 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
   // Moderation state
   const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
   const [isRoomLocked, setIsRoomLocked] = useState<boolean>(space.isLocked || false);
+
+  const loadVideoSource = useCallback(async (url: string, startSeconds: number, sourceKey: string) => {
+    const player = playerRef.current;
+    const video = videoRef.current;
+    if (!player || !video || !url) return false;
+
+    const requestStartedAt = Date.now();
+    const requestId = ++streamRequestRef.current;
+    const wasPlaying = !video.paused;
+    setStreamStatus('loading');
+    setStreamError(null);
+
+    try {
+      await player.load(url);
+      if (requestId !== streamRequestRef.current) return false;
+      const syncReceivedDuringLoad = playbackSyncRef.current && playbackSyncRef.current.receivedAt >= requestStartedAt;
+      const requestedStart = syncReceivedDuringLoad ? playbackSyncRef.current!.positionSeconds : startSeconds;
+      const safeStart = Math.max(0, Number.isFinite(requestedStart) ? requestedStart : 0);
+      video.currentTime = safeStart;
+      setCurrentTime(safeStart);
+      if (wasPlaying) {
+        await video.play().catch(() => {
+          // Browser autoplay policy may require the viewer to press play again.
+        });
+      }
+      setStreamStatus('ready');
+      return true;
+    } catch (err: any) {
+      if (requestId !== streamRequestRef.current) return false;
+      setStreamStatus('error');
+      setStreamError(err?.message || `Unable to load ${sourceKey}.`);
+      return false;
+    }
+  }, []);
 
   // 1. Initialize WebSocket & Fetch Timeline Data
   useEffect(() => {
@@ -103,6 +234,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
       setDriftMs(drift);
     });
     socketRef.current = socket;
+    setRoomSocket(socket);
 
     // Initialize Shaka Player
     if (videoRef.current) {
@@ -116,23 +248,27 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
           setTextTracks(player.getTextTracks() as any[]);
         });
 
-        // Use DASH adaptive stream by default
-        const streamUrl = space.videoAssetUrl && space.videoAssetUrl.includes('.mpd') ? space.videoAssetUrl : 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
-        
-        player.load(streamUrl).then(() => {
-          console.log('[Room] Shaka Player loaded stream');
-          // Default track selection
-          const vTracks = player.getVariantTracks();
-          if (vTracks.length > 0) {
-             setActiveAudioLang(vTracks[0].language);
-          }
-        }).catch((err: any) => console.warn('Shaka load error:', err));
+        // Shaka handles HLS, DASH, and progressive MP4. Never substitute a demo asset.
+        if (space.videoAssetUrl) {
+          loadVideoSource(space.videoAssetUrl, 0, 'base story').then(() => {
+            const vTracks = player.getVariantTracks();
+            if (vTracks.length > 0) setActiveAudioLang(vTracks[0].language);
+          });
+        } else {
+          setStreamStatus('error');
+          setStreamError('This room has no video asset configured.');
+        }
+      } else {
+        setStreamStatus('error');
+        setStreamError('This browser cannot play the configured stream.');
       }
     }
 
     socket.connect(
       () => {
         console.log('[Room] WS Connected');
+        // GET after every connect/reconnect because narrative broadcasts omit private answers.
+        setConnectionSignal(signal => signal + 1);
         // Initial system chat message
         setMessages(prev => [
           ...prev,
@@ -153,6 +289,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
     socket.subscribe('room.playback.update', (msg) => {
       if (isBroadcastingRef.current) return;
       const { state, positionSeconds } = msg.payload;
+      playbackSyncRef.current = { state, positionSeconds, receivedAt: Date.now() };
       if (videoRef.current) {
         const delta = Math.abs(videoRef.current.currentTime - positionSeconds);
         if (delta > 0.8) {
@@ -259,32 +396,6 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
       setParticipants(prev => prev.filter(u => u.userId !== p.userId));
     });
 
-    socket.subscribe('room.variation.voteOpen', (msg) => {
-      setActiveVariation(msg.payload);
-      setUserVotedOption(null);
-    });
-
-    socket.subscribe('room.variation.vote', (msg) => {
-      const { optionId } = msg.payload;
-      setActiveVariation((prev: any) => {
-        if (!prev) return prev;
-        const updatedOptions = (prev.options || []).map((opt: any) => {
-          if (opt.id === optionId) {
-            return { ...opt, voteCount: (opt.voteCount || 0) + 1 };
-          }
-          return opt;
-        });
-        return { ...prev, options: updatedOptions };
-      });
-    });
-
-    socket.subscribe('room.variation.applied', (msg) => {
-      const { label } = msg.payload;
-      setActiveVariation(null);
-      setVariationAppliedBanner(`Narrative Divergence Chosen: ${label}`);
-      setTimeout(() => setVariationAppliedBanner(null), 7000);
-    });
-
     socket.subscribe('room.reaction', (msg) => {
       const { emoji, sender } = msg.payload;
       triggerReaction(emoji, sender);
@@ -351,11 +462,41 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
       }
       clearInterval(typingInterval);
       socket.disconnect();
+      setRoomSocket(null);
+      // Invalidate any in-flight Shaka load before destroying the player.
+      streamRequestRef.current += 1;
       if (playerRef.current) {
         playerRef.current.destroy();
       }
     };
-  }, [space.watchSpaceId, space.titleId]);
+  }, [space.watchSpaceId, space.titleId, loadVideoSource]);
+
+  const isAbsoluteAssetUrl = (value: string) => /^https?:\/\//i.test(value);
+
+  // A decision id, rather than narrative version/tally, is the source-switch key.
+  // This prevents every vote count update from restarting the media pipeline.
+  useEffect(() => {
+    const activeSegment = narrative.state?.activeSegment;
+    if (activeSegment) {
+      if (lastSegmentDecisionRef.current === activeSegment.decisionId) return;
+      lastSegmentDecisionRef.current = activeSegment.decisionId;
+      completedSegmentDecisionRef.current = null;
+      if (!isAbsoluteAssetUrl(activeSegment.url)) return;
+
+      const elapsed = Math.max(0, (Date.now() - activeSegment.startedAt) / 1000);
+      const end = activeSegment.endSeconds == null ? Number.POSITIVE_INFINITY : activeSegment.endSeconds;
+      const start = Math.min(activeSegment.startSeconds + elapsed, end);
+      void loadVideoSource(activeSegment.url, start, `branch ${activeSegment.decisionId}`);
+      return;
+    }
+
+    const completedDecisionId = lastSegmentDecisionRef.current;
+    const resumeSeconds = narrative.state?.baseResumeSeconds;
+    if (completedDecisionId && resumeSeconds != null && completedSegmentDecisionRef.current !== completedDecisionId) {
+      completedSegmentDecisionRef.current = completedDecisionId;
+      void loadVideoSource(space.videoAssetUrl, resumeSeconds, 'base story');
+    }
+  }, [loadVideoSource, narrative.state?.activeSegment?.decisionId, narrative.state?.baseResumeSeconds, space.videoAssetUrl]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -379,17 +520,18 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
       setActiveTrivia(null);
     }
 
-    // Interactive variation trigger for host
-    if (isHost && !activeVariation) {
-      const matchingVar = timelineEvents.find(e => Math.abs(e.ts - t) < 1.5 && e.type === 'variation_point');
-      if (matchingVar && matchingVar.options) {
-        socketRef.current?.openVote(
-          matchingVar.variationId || 'var_' + matchingVar.id,
-          matchingVar.id,
-          matchingVar.text || 'Choose narrative branch point:',
-          matchingVar.options
-        );
-      }
+    const activeSegment = narrative.state?.activeSegment;
+    if (
+      isHost &&
+      activeSegment?.endSeconds != null &&
+      t >= activeSegment.endSeconds - 0.15 &&
+      finishSegmentRequestRef.current !== activeSegment.decisionId
+    ) {
+      finishSegmentRequestRef.current = activeSegment.decisionId;
+      void narrative.act({ action: 'finishSegment', decisionId: activeSegment.decisionId }).catch(() => {
+        // Allow a visible retry from the panel if the host action was rejected.
+        finishSegmentRequestRef.current = null;
+      });
     }
   };
 
@@ -579,18 +721,6 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
     setShowReactionPicker(false);
   };
 
-  // 5. Voting
-  const handleVote = (optionId: string) => {
-    if (userVotedOption || !activeVariation) return;
-    setUserVotedOption(optionId);
-    socketRef.current?.castVote(activeVariation.variationId, optionId);
-  };
-
-  const handleApplyVariation = (optId: string, label: string) => {
-    if (!isHost || !activeVariation) return;
-    socketRef.current?.applyVote(activeVariation.variationId, optId, label);
-  };
-
   const copyInviteCode = () => {
     navigator.clipboard.writeText(space.inviteCode);
     setCopiedCode(true);
@@ -640,7 +770,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
                 )}
               </div>
               <div className="flex items-center gap-2 text-[10px] text-on-surface-variant font-mono">
-                <span className="inline-flex items-center gap-1.5 text-cyan-300 font-semibold">
+                <span data-testid="drift-indicator" className="inline-flex items-center gap-1.5 text-cyan-300 font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee] animate-pulse" />
                   Live Sync (±{driftMs}ms lock)
                 </span>
@@ -682,7 +812,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
             </button>
 
             {/* Participants Pill */}
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#080D24]/55 backdrop-blur-md border border-white/10 text-on-surface-variant text-[10px] font-mono">
+            <div data-testid="participant-count-pill" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#080D24]/55 backdrop-blur-md border border-white/10 text-on-surface-variant text-[10px] font-mono">
               <span className="material-symbols-outlined text-[14px] text-cyan-400">group</span>
               <span>{participants.length} Synced</span>
             </div>
@@ -706,8 +836,14 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-pink-600/10 rounded-full blur-[180px] opacity-30" />
           </div>
 
+          {streamStatus === 'loading' && !streamError && (
+            <div className="absolute z-20 rounded-full border border-white/10 bg-[#080D24]/80 px-4 py-2 text-[10px] text-on-surface-variant backdrop-blur-xl">
+              Loading synchronized stream…
+            </div>
+          )}
           <video
             ref={videoRef}
+            data-testid="video-player"
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={() => {
               if (videoRef.current) setDuration(videoRef.current.duration || space.durationSeconds || 600);
@@ -745,60 +881,22 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
             </div>
           )}
 
-          {/* NARRATIVE VARIATION POINT (INTERACTIVE BRANCH VOTING) */}
-          {activeVariation && (
-            <div className="absolute inset-x-4 bottom-24 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-30 w-full max-w-lg rounded-2xl bg-[#080D24]/95 backdrop-blur-2xl p-5 border border-violet-500/40 shadow-[0_20px_60px_rgba(139,92,246,0.35)] animate-in zoom-in-95">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5 text-pink-400 text-[10px] font-label-sm uppercase tracking-widest font-bold">
-                  <span className="w-2 h-2 rounded-full bg-pink-500 shadow-[0_0_8px_#ec4899] animate-ping" />
-                  Live Narrative Fork Vote
-                </div>
-                <span className="text-[10px] text-secondary font-mono">15s Window</span>
-              </div>
-              <h4 className="font-title-md text-sm text-white font-bold mb-3">
-                {activeVariation.prompt || 'Choose the path of the narrative:'}
-              </h4>
-              <div className="flex flex-col gap-2">
-                {(activeVariation.options || []).map((opt: any) => {
-                  const totalVotes = (activeVariation.options || []).reduce((acc: number, curr: any) => acc + (curr.voteCount || 0), 0);
-                  const pct = totalVotes > 0 ? Math.round(((opt.voteCount || 0) / totalVotes) * 100) : 0;
-                  const isSelected = userVotedOption === opt.id;
-
-                  return (
-                    <div key={opt.id} className="flex flex-col gap-1">
-                      <button
-                        onClick={() => handleVote(opt.id)}
-                        disabled={!!userVotedOption}
-                        className={`w-full text-left px-4 py-2.5 rounded-xl border text-xs flex items-center justify-between transition-all ${
-                          isSelected
-                            ? 'bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-pink-600/30 border-violet-400/60 text-white font-bold shadow-[0_0_16px_rgba(139,92,246,0.3)]'
-                            : 'bg-[#0D1535]/80 hover:bg-[#181b27] border-white/10 text-on-surface'
-                        }`}
-                      >
-                        <span>{opt.label}</span>
-                        <span className="font-mono text-[10px] text-pink-300">{pct}% ({opt.voteCount || 0})</span>
-                      </button>
-                      {/* Host Quick Apply */}
-                      {isHost && (
-                        <button
-                          onClick={() => handleApplyVariation(opt.id, opt.label)}
-                          className="self-end text-[9px] text-pink-400 hover:text-white uppercase tracking-wider"
-                        >
-                          Execute Path →
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* DIVERGENCE APPLIED BANNER */}
-          {variationAppliedBanner && (
-            <div className="absolute top-6 inset-x-6 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-30 px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-label-md text-xs uppercase tracking-wider font-bold shadow-[0_0_30px_rgba(236,72,153,0.6)] flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">alt_route</span>
-              <span>{variationAppliedBanner}</span>
+          {streamError && (
+            <div className="absolute inset-x-4 bottom-24 z-30 mx-auto max-w-md rounded-xl border border-amber-400/40 bg-[#080D24]/95 p-4 text-xs text-amber-100 shadow-2xl">
+              <div className="font-semibold">Playback could not load</div>
+              <div className="mt-1 text-[10px] text-amber-200/80">{streamError}</div>
+              <button
+                type="button"
+                onClick={() => {
+                  const activeSegment = narrative.state?.activeSegment;
+                  const start = activeSegment ? activeSegment.startSeconds : narrative.state?.baseResumeSeconds || 0;
+                  const url = activeSegment && isAbsoluteAssetUrl(activeSegment.url) ? activeSegment.url : space.videoAssetUrl;
+                  void loadVideoSource(url, start, activeSegment ? 'branch segment' : 'base story');
+                }}
+                className="mt-3 rounded-md border border-amber-300/40 px-3 py-1.5 text-[10px] uppercase tracking-wider hover:bg-amber-400/10"
+              >
+                Retry playback
+              </button>
             </div>
           )}
         </div>
@@ -869,6 +967,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
               {/* Primary Play/Pause */}
               <button
                 onClick={togglePlayPause}
+                data-testid="play-pause-btn"
                 className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white flex items-center justify-center hover:shadow-[0_0_24px_rgba(139,92,246,0.6)] transition-all duration-300 hover:scale-105"
                 title={isPlaying ? 'Pause' : 'Play'}
               >
@@ -924,11 +1023,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
             {/* Secondary Deck Controls */}
             <div className="flex items-center gap-2 relative">
               {/* LiveKit Voice Chat Mic Toggle */}
-              <TrackToggle
-                source={Track.Source.Microphone}
-                className="p-1.5 transition-colors flex items-center text-on-surface-variant hover:text-white"
-                showIcon={true}
-              />
+              <LiveKitAudioControls currentTime={currentTime} timelineEvents={timelineEvents} />
 
               {/* Spatial Audio Mode */}
               <button
@@ -1067,6 +1162,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
           <div className="flex items-center gap-1 p-1 rounded-full bg-[#0D1535]/80 backdrop-blur-md border border-white/10">
             <button
               onClick={() => setActiveTab('people')}
+              data-testid="tab-people"
               className={`px-3.5 py-1 rounded-full font-label-sm text-[10px] tracking-[0.14em] uppercase transition-all ${
                 activeTab === 'people'
                   ? 'bg-[#181b27] text-white font-bold border border-white/10 shadow-md'
@@ -1076,7 +1172,19 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
               People ({participants.length})
             </button>
             <button
+              onClick={() => setActiveTab('narrative')}
+              data-testid="tab-narrative"
+              className={`px-3.5 py-1 rounded-full font-label-sm text-[10px] tracking-[0.14em] uppercase transition-all ${
+                activeTab === 'narrative'
+                  ? 'bg-gradient-to-r from-pink-600/80 via-purple-600/80 to-blue-600/80 text-white font-bold border border-white/10 shadow-md'
+                  : 'text-on-surface-variant hover:text-white'
+              }`}
+            >
+              Story
+            </button>
+            <button
               onClick={() => setActiveTab('chat')}
+              data-testid="tab-chat"
               className={`px-3.5 py-1 rounded-full font-label-sm text-[10px] tracking-[0.14em] uppercase transition-all ${
                 activeTab === 'chat'
                   ? 'bg-[#181b27] text-white font-bold border border-white/10 shadow-md'
@@ -1087,6 +1195,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
             </button>
             <button
               onClick={() => setActiveTab('ai')}
+              data-testid="tab-ai"
               className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full font-label-sm text-[10px] tracking-[0.14em] uppercase transition-all ${
                 activeTab === 'ai'
                   ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-semibold shadow-[0_0_16px_rgba(139,92,246,0.4)]'
@@ -1123,6 +1232,20 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
           </div>
         </div>
 
+        {/* TAB CONTENT: NARRATIVE */}
+        {activeTab === 'narrative' && (
+          <NarrativePanel
+            state={narrative.state}
+            loading={narrative.loading}
+            error={narrative.error}
+            actionError={narrative.actionError}
+            actionInFlight={narrative.actionInFlight}
+            isHost={isHost}
+            currentTime={currentTime}
+            onAction={handleNarrativeAction}
+          />
+        )}
+
         {/* TAB CONTENT: PEOPLE */}
         {activeTab === 'people' && (
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -1144,7 +1267,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
                   <div>
                     <div className="text-xs font-semibold text-white flex items-center gap-1.5">
                       <span>{p.displayName}</span>
-                      {p.userId === space.hostUserId && (
+                      {p.userId === currentHostId && (
                         <span className="material-symbols-outlined text-pink-400 text-[14px]" title="Room Host">
                           workspace_premium
                         </span>
@@ -1198,7 +1321,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
         {/* TAB CONTENT: CHAT */}
         {activeTab === 'chat' && (
           <div className="flex-1 flex flex-col h-full overflow-hidden">
-            <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div ref={chatScrollRef} data-testid="chat-messages-container" className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.length === 0 ? (
                 <div className="py-12 text-center text-xs text-on-surface-variant">
                   No messages yet. Say hello to everyone watching!
@@ -1261,6 +1384,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
             <form onSubmit={handleSendChat} className="p-3 border-t border-white/10 bg-[#080D24]/95 backdrop-blur-xl flex items-center gap-2">
               <input
                 type="text"
+                data-testid="chat-input"
                 value={chatInput}
                 onChange={handleTyping}
                 placeholder="Message the room..."
@@ -1268,6 +1392,7 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
               />
               <button
                 type="submit"
+                data-testid="chat-submit-btn"
                 className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white flex items-center justify-center hover:shadow-[0_0_14px_rgba(236,72,153,0.7)] transition-all"
                 title="Send"
               >

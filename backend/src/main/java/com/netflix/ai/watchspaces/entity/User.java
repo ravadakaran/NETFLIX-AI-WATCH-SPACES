@@ -45,6 +45,18 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(name = "presence_status")
+    private String presenceStatus;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "user_friends",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "friend_id")
+    )
+    @Builder.Default
+    private java.util.Set<User> friends = new java.util.HashSet<>();
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {

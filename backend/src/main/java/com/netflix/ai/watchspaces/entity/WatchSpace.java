@@ -74,6 +74,31 @@ public class WatchSpace {
     @Column(name = "ended_at")
     private Instant endedAt;
 
+    @Column(name = "narrative_version")
+    @Builder.Default
+    private Long narrativeVersion = 0L;
+
+    @Column(name = "narrative_base_resume_seconds")
+    private Double narrativeBaseResumeSeconds;
+
+    @Column(name = "active_segment_decision_id")
+    private UUID activeSegmentDecisionId;
+
+    @Column(name = "active_segment_url", columnDefinition = "TEXT")
+    private String activeSegmentUrl;
+
+    @Column(name = "active_segment_start_seconds")
+    private Integer activeSegmentStartSeconds;
+
+    @Column(name = "active_segment_end_seconds")
+    private Integer activeSegmentEndSeconds;
+
+    @Column(name = "active_segment_resume_seconds")
+    private Integer activeSegmentResumeSeconds;
+
+    @Column(name = "active_segment_started_at")
+    private Instant activeSegmentStartedAt;
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {
@@ -99,6 +124,9 @@ public class WatchSpace {
         }
         if (isLocked == null) {
             isLocked = false;
+        }
+        if (narrativeVersion == null) {
+            narrativeVersion = 0L;
         }
     }
 }

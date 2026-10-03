@@ -1,0 +1,81 @@
+config:
+  target: "ws://localhost:8081"
+  processor: "./artillery-processor.cjs"
+  phases:
+    - name: "Phase 1: Warmup & Ramp Up"
+      duration: 20
+      arrivalRate: 10
+      rampTo: 30
+    - name: "Phase 2: High Concurrency (Simulating 500 concurrent WebSocket clients)"
+      duration: 40
+      arrivalRate: 35
+      rampTo: 50
+    - name: "Phase 3: Sustained Synchronized Peak"
+      duration: 30
+      arrivalRate: 50
+  ws:
+    subprotocols: []
+    rejectUnauthorized: false
+  plugins:
+    expect: {}
+  ensure:
+    thresholds:
+      - "ws.sync.drift_ms.p95": 250
+      - "ws.fanout.latency_ms.p95": 250
+
+scenarios:
+  # Host Controller Scenario (1 in 50 users acts as room host)
+  - name: "Watch Space Host Controller"
+    weight: 2
+    engine: ws
+    flow:
+      - function: "setupHostSession"
+      - connect:
+          url: "/ws/watch-spaces/{{ watchSpaceId }}?token={{ token }}"
+      - think: 2
+      # Host issues PLAY update
+      - send:
+          text: "{{ playPayload }}"
+      - think: 5
+      # Host issues PAUSE update
+      - send:
+          text: "{{ pausePayload }}"
+      - think: 5
+      # Host issues PLAY update again
+      - send:
+          text: "{{ playPayload }}"
+      - think: 10
+
+  # Viewer Audience Scenario (49 in 50 users act as synchronized viewers)
+  - name: "Watch Space Synchronized Viewer"
+    weight: 98
+    engine: ws
+    flow:
+      - function: "setupViewerSession"
+      - connect:
+          url: "/ws/watch-spaces/{{ watchSpaceId }}?token={{ token }}"
+      - think: 1
+      # Initial sync ping
+      - send:
+          text: "{{ syncPingPayload }}"
+      - think: 3
+      # Chat participation
+      - send:
+          text: "{{ chatPayload }}"
+      - think: 4
+      # Narrative branch prediction / variation voting
+      - send:
+          text: "{{ votePayload }}"
+      - think: 4
+      # Periodic sync ping to measure drift under load
+      - send:
+          text: "{{ syncPingPayload }}"
+      - think: 5
+      # Second chat message
+      - send:
+          text: "{{ chatPayload }}"
+      - think: 5
+      # Final drift verification
+      - send:
+          text: "{{ syncPingPayload }}"
+      - think: 5

@@ -159,18 +159,53 @@ public class DataSeeder implements CommandLineRunner {
 
         VariationOption optA = VariationOption.builder()
                 .timelineEvent(vp1)
+                .optionKey("overload")
+                .optionOrder(0)
                 .label("Aggressive Neural Overload (High Risk)")
-                .assetRef("subtitle-alt-overload")
+                .assetRef("https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd")
+                .nextVariationId("v_01_overload")
+                .segmentStartSeconds(0)
+                .segmentEndSeconds(30)
+                .resumeSeconds(190)
                 .voteCount(0)
                 .build();
         VariationOption optB = VariationOption.builder()
                 .timelineEvent(vp1)
+                .optionKey("stealth")
+                .optionOrder(1)
                 .label("Stealth Quantum Bypass (Careful)")
-                .assetRef("subtitle-alt-stealth")
+                .assetRef("https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd")
+                .nextVariationId("v_01_stealth")
+                .segmentStartSeconds(30)
+                .segmentEndSeconds(60)
+                .resumeSeconds(190)
                 .voteCount(0)
                 .build();
         variationOptionRepository.save(optA);
         variationOptionRepository.save(optB);
+
+        Map<String, Object> overloadPayload = new HashMap<>();
+        overloadPayload.put("variationId", "v_01_overload");
+        overloadPayload.put("parentVariationId", "v_01");
+        overloadPayload.put("prompt", "The overload exposes a hidden signal. Choose how to decode it:");
+        TimelineEvent overloadBranch = createTimelineEvent(cyberpunk, 205, "variation_point", overloadPayload);
+        if (overloadBranch != null) {
+            variationOptionRepository.save(VariationOption.builder().timelineEvent(overloadBranch)
+                    .optionKey("trace").optionOrder(0).label("Trace the signal").assetRef("subtitle-trace").voteCount(0).build());
+            variationOptionRepository.save(VariationOption.builder().timelineEvent(overloadBranch)
+                    .optionKey("burn").optionOrder(1).label("Burn the evidence").assetRef("subtitle-burn").voteCount(0).build());
+        }
+
+        Map<String, Object> predictionPayload = new HashMap<>();
+        predictionPayload.put("question", "Will Detective Rios survive the next five minutes?");
+        predictionPayload.put("correctOptionId", "survive_yes");
+        TimelineEvent prediction = createTimelineEvent(cyberpunk, 240, "prediction_point", predictionPayload);
+        if (prediction != null) {
+            variationOptionRepository.save(VariationOption.builder().timelineEvent(prediction)
+                    .optionKey("survive_yes").optionOrder(0).label("Yes — Rios makes it out").voteCount(0).build());
+            variationOptionRepository.save(VariationOption.builder().timelineEvent(prediction)
+                    .optionKey("survive_no").optionOrder(1).label("No — the protocol catches up").voteCount(0).build());
+        }
 
         // Trivia 2
         Map<String, Object> tr2Payload = new HashMap<>();

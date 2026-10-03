@@ -83,21 +83,21 @@ This document tracks upcoming architectural enhancements, scalability tasks, fea
 
 - [x] **WebRTC Live Voice Chat**:
   - [x] Integrate a WebRTC SFU (e.g., **LiveKit** or **mediasoup**) to support low-latency spatial audio between room members.
-  - [ ] Add Push-to-Talk and noise suppression controls.
-  - [ ] Auto-duck voice chat volume during high-dialogue movie scenes.
-- [ ] **Social Graph & Scheduling**:
-  - Add Friends list, Presence status (*"Watching Cyberpunk 2099 in Room NX-DEMO"*), and direct invites.
-  - Scheduled Watch Spaces with Google Calendar and Apple Calendar `.ics` invite exports.
-  - Automated push notifications or email reminders 15 minutes before scheduled room start.
+  - [x] Add Push-to-Talk and noise suppression controls.
+  - [x] Auto-duck voice chat volume during high-dialogue movie scenes.
+- [x] **Social Graph & Scheduling**:
+  - [x] Add Friends list, Presence status (*"Watching Cyberpunk 2099 in Room NX-DEMO"*), and direct invites.
+  - [x] Scheduled Watch Spaces with Google Calendar and Apple Calendar `.ics` invite exports.
+  - [x] Automated push notifications or email reminders 15 minutes before scheduled room start.
 
 ---
 
 ## 7. Advanced Narrative Personalization & Voting
 
-- [ ] **Complex Multi-Branch Story Trees**:
+- [x] **Complex Multi-Branch Story Trees**:
   - Expand variation points from binary options to full decision trees with branch history tracking.
   - Dynamically load and stitch alternate video segments based on majority vote outcomes.
-- [ ] **Audience Prediction Minigames**:
+- [x] **Audience Prediction Minigames**:
   - Live prediction cards (e.g., *"Will Detective Rios survive the next 5 minutes?"*).
   - Point leaderboard and viewer badges based on trivia accuracy and predictions.
 
@@ -105,11 +105,21 @@ This document tracks upcoming architectural enhancements, scalability tasks, fea
 
 ## 8. Security, Hardening & Load Testing
 
-- [ ] **API Rate Limiting & Abuse Prevention**:
+- [x] **API Rate Limiting & Abuse Prevention**:
   - Configure **Bucket4j** / Redis token bucket rate limiting on `/api/v1/watch-spaces/*/ai/ask` (e.g., max 10 queries per minute per user).
   - Add chat message spam filtering and profanity moderation.
-- [ ] **Load & Stress Testing**:
-  - Develop **Artillery / Locust** test scripts simulating 500 concurrent WebSocket clients in a single room performing synchronized playback, chatting, and voting.
-  - Measure fan-out latency and verify sync drift remains $< 250\text{ms}$ under load.
-- [ ] **End-to-End Browser Automation**:
-  - Write multi-browser Playwright test suite validating two real browser sessions synchronizing play/pause states in real time.
+- [x] **Load & Stress Testing**:
+  - [x] Develop **Artillery / Locust** test scripts simulating 500 concurrent WebSocket clients in a single room performing synchronized playback, chatting, and voting.
+  - [x] Measure fan-out latency and verify sync drift remains $< 250\text{ms}$ under load.
+- [x] **End-to-End Browser Automation**:
+  - [x] Write multi-browser Playwright test suite validating two real browser sessions synchronizing play/pause states in real time.
+
+---
+
+## 9. New Feature Proposals (Phase 9)
+
+- [ ] **Build an Admin Content Management System (CMS)**:
+  - Build a fully-functional Admin Dashboard.
+  - Upload new `.mp4` files directly to Cloud Storage.
+  - Create new movie titles and upload poster thumbnails.
+  - Edit timelines and interactive events dynamically without touching `DataSeeder.java`.

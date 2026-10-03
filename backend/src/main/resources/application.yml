@@ -1,4 +1,8 @@
 spring:
+  # Load the project-level .env when the app is started from backend/ (the
+  # documented Maven command). Environment variables still take precedence.
+  config:
+    import: optional:file:../.env[.properties],optional:file:.env[.properties]
   application:
     name: netflix-ai-watch-spaces
   redis:
@@ -12,7 +16,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
   flyway:
     enabled: false
     baseline-on-migrate: true

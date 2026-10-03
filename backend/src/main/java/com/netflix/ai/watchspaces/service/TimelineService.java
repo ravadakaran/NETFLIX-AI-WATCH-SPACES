@@ -29,7 +29,8 @@ public class TimelineService {
     private final ObjectMapper objectMapper;
 
     private static final Set<String> SUPPORTED_EVENT_TYPES = new HashSet<>(Arrays.asList(
-            "trivia", "character", "glossary", "variation_point", "variationpoint"
+            "trivia", "character", "glossary", "variation_point", "variationpoint",
+            "prediction", "prediction_point", "trivia_question"
     ));
 
     @Transactional(readOnly = true)
@@ -92,10 +93,22 @@ public class TimelineService {
             } else {
                 String normalizedType = event.getType().trim().toLowerCase().replace("-", "_");
                 if (!SUPPORTED_EVENT_TYPES.contains(normalizedType)) {
-                    errors.add("Event #" + index + ": unsupported event type '" + event.getType() + "'. Allowed: trivia, character, glossary, variation_point");
-                } else if (normalizedType.equals("variation_point") || normalizedType.equals("variationpoint")) {
+                    errors.add("Event #" + index + ": unsupported event type '" + event.getType() + "'. Allowed: trivia, character, glossary, variation_point, prediction");
+                } else if (normalizedType.equals("variation_point") || normalizedType.equals("variationpoint")
+                        || normalizedType.equals("prediction") || normalizedType.equals("prediction_point")
+                        || normalizedType.equals("trivia_question")) {
                     if (event.getOptions() == null || event.getOptions().size() < 2) {
-                        errors.add("Event #" + index + " (variation_point): requires at least 2 approved options");
+                        errors.add("Event #" + index + " (" + normalizedType + "): requires at least 2 approved options");
+                    }
+                    if (event.getPayload() instanceof Map) {
+                        Object correct = ((Map<?, ?>) event.getPayload()).get("correctOptionId");
+                        if ((normalizedType.equals("prediction") || normalizedType.equals("prediction_point")
+                                || normalizedType.equals("trivia_question")) && correct == null) {
+                            errors.add("Event #" + index + " (" + normalizedType + "): payload.correctOptionId is required");
+                        } else if (correct != null && event.getOptions() != null
+                                && event.getOptions().stream().noneMatch(option -> correct.toString().equals(option.getId()))) {
+                            errors.add("Event #" + index + " (" + normalizedType + "): correctOptionId must match an option id");
+                        }
                     }
                 }
             }
@@ -144,11 +157,19 @@ public class TimelineService {
             event = timelineEventRepository.save(event);
 
             if (item.getOptions() != null && !item.getOptions().isEmpty()) {
+                int optionOrder = 0;
                 for (VariationOptionUploadDto opt : item.getOptions()) {
                     VariationOption vo = VariationOption.builder()
                             .timelineEvent(event)
+                            .optionKey(opt.getId() != null && !opt.getId().trim().isEmpty()
+                                    ? opt.getId() : "option-" + UUID.randomUUID())
+                            .optionOrder(optionOrder++)
                             .label(opt.getLabel())
                             .assetRef(opt.getAssetRef())
+                            .nextVariationId(opt.getNextVariationId())
+                            .segmentStartSeconds(opt.getSegmentStartSeconds())
+                            .segmentEndSeconds(opt.getSegmentEndSeconds())
+                            .resumeSeconds(opt.getResumeSeconds())
                             .voteCount(0)
                             .build();
                     variationOptionRepository.save(vo);
@@ -187,8 +208,13 @@ public class TimelineService {
             builder.options(event.getVariationOptions().stream()
                     .map(vo -> VariationOptionDto.builder()
                             .id(vo.getId())
+                            .optionKey(vo.getOptionKey())
                             .label(vo.getLabel())
                             .assetRef(vo.getAssetRef())
+                            .nextVariationId(vo.getNextVariationId())
+                            .segmentStartSeconds(vo.getSegmentStartSeconds())
+                            .segmentEndSeconds(vo.getSegmentEndSeconds())
+                            .resumeSeconds(vo.getResumeSeconds())
                             .voteCount(vo.getVoteCount())
                             .build())
                     .collect(Collectors.toList()));

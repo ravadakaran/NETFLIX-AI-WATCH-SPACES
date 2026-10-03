@@ -55,6 +55,7 @@ export const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ onClose, onJoin })
             <div className="relative flex items-center">
               <input
                 type="text"
+                data-testid="join-code-input"
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 placeholder="e.g. NX-DEMO or A1B2C3"
@@ -75,6 +76,7 @@ export const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ onClose, onJoin })
             <span className="text-on-surface-variant">Don't have a code?</span>
             <button
               type="button"
+              data-testid="demo-code-btn"
               onClick={() => onJoin('NX-DEMO')}
               className="text-pink-300 hover:text-white uppercase font-bold text-[11px]"
             >
@@ -85,6 +87,7 @@ export const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ onClose, onJoin })
           <div className="pt-2">
             <button
               type="submit"
+              data-testid="join-submit-btn"
               disabled={!code.trim()}
               className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#7C3AED] to-[#EC4899] text-white font-label-md text-xs uppercase tracking-wider font-bold shadow-[0_0_25px_rgba(139,92,246,0.5)] hover:shadow-[0_0_35px_rgba(236,72,153,0.7)] disabled:opacity-50 transition-all flex items-center justify-center gap-2"
             >

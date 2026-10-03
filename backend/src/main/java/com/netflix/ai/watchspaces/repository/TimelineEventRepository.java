@@ -18,7 +18,7 @@ public interface TimelineEventRepository extends JpaRepository<TimelineEvent, UU
 
     List<TimelineEvent> findByTitleIdAndTsSecondsLessThanEqualOrderByTsSecondsAsc(UUID titleId, Integer ts);
 
-    @Query("SELECT e FROM TimelineEvent e LEFT JOIN FETCH e.variationOptions WHERE e.title.id = :titleId ORDER BY e.tsSeconds ASC")
+    @Query("SELECT DISTINCT e FROM TimelineEvent e LEFT JOIN FETCH e.variationOptions WHERE e.title.id = :titleId ORDER BY e.tsSeconds ASC")
     List<TimelineEvent> findAllWithVariationOptionsByTitleId(@Param("titleId") UUID titleId);
 
     void deleteByTitleId(UUID titleId);

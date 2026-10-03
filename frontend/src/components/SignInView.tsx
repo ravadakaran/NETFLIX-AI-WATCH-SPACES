@@ -81,6 +81,7 @@ export const SignInView: React.FC<SignInViewProps> = ({
             <input
               type="email"
               required
+              data-testid="login-email-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="user@example.com"
@@ -97,6 +98,7 @@ export const SignInView: React.FC<SignInViewProps> = ({
             <input
               type="password"
               required
+              data-testid="login-password-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
@@ -108,6 +110,7 @@ export const SignInView: React.FC<SignInViewProps> = ({
             <button
               type="submit"
               disabled={loading}
+              data-testid="login-submit-btn"
               className="w-full btn-primary-gradient py-3.5 rounded-xl font-label-md text-xs uppercase tracking-wider font-bold shadow-[0_0_25px_rgba(37,99,235,0.45)] hover:shadow-[0_0_40px_rgba(236,72,153,0.7)] disabled:opacity-50 transition-all flex items-center justify-center gap-2 group"
             >
               {loading ? (

@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-10-03T04:06:30.560Z",
+  "concurrency": 100,
+  "durationSeconds": 5,
+  "spaceId": "11111111-1111-1111-1111-111111111111",
+  "slaTargetMs": 250,
+  "passed": true,
+  "metrics": {
+    "syncDrift": {
+      "min": 8,
+      "max": 51,
+      "mean": 20.53,
+      "p50": 20,
+      "p95": 35,
+      "p99": 46
+    },
+    "fanoutLatency": {
+      "min": 10,
+      "max": 73,
+      "mean": 28.95,
+      "p50": 29,
+      "p95": 44,
+      "p99": 64
+    },
+    "totalMessagesSent": 1000,
+    "totalMessagesReceived": 50000,
+    "playbacksBroadcast": 12,
+    "chatsBroadcast": 85,
+    "votesCast": 420
+  }
+}
