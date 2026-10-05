@@ -29,6 +29,23 @@ public class TitleDtos {
     }
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CreateTitleDto {
+        @NotBlank
+        private String name;
+        @NotNull
+        private Integer durationSeconds;
+        @NotBlank
+        private String videoAssetUrl;
+        @NotBlank
+        private String description;
+        private String genre;
+        private String thumbnailUrl;
+    }
+
+
+    @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor

@@ -12,7 +12,7 @@ import { SignInView } from './components/SignInView';
 import { SignUpView } from './components/SignUpView';
 import { CreateRoomModal } from './components/CreateRoomModal';
 import { JoinRoomModal } from './components/JoinRoomModal';
-import { AdminTimelineView } from './components/AdminTimelineView';
+import { AdminDashboard } from './components/AdminDashboard';
 import { ProfileSettingsModal } from './components/ProfileSettingsModal';
 
 const WatchRoomWrapper: React.FC<{
@@ -503,7 +503,7 @@ export const App: React.FC = () => {
 
           <Route path="/admin" element={
             currentUser?.role === 'ADMIN' ? (
-              <AdminTimelineView titles={titles} />
+              <AdminDashboard titles={titles} onTitleCreated={() => api.getTitles().then(setTitles).catch(() => {})} />
             ) : (
               <Navigate to="/" replace />
             )

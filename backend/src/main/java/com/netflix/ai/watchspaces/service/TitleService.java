@@ -1,5 +1,6 @@
 package com.netflix.ai.watchspaces.service;
 
+import com.netflix.ai.watchspaces.dto.TitleDtos.CreateTitleDto;
 import com.netflix.ai.watchspaces.dto.TitleDtos.TitleSummaryDto;
 import com.netflix.ai.watchspaces.entity.Title;
 import com.netflix.ai.watchspaces.repository.TitleRepository;
@@ -35,6 +36,20 @@ public class TitleService {
     public Title getEntity(UUID titleId) {
         return titleRepository.findById(titleId)
                 .orElseThrow(() -> new IllegalArgumentException("Title not found with id: " + titleId));
+    }
+
+    @Transactional
+    public TitleSummaryDto createTitle(CreateTitleDto dto) {
+        Title title = Title.builder()
+                .name(dto.getName())
+                .durationSeconds(dto.getDurationSeconds())
+                .videoAssetUrl(dto.getVideoAssetUrl())
+                .description(dto.getDescription())
+                .genre(dto.getGenre())
+                .thumbnailUrl(dto.getThumbnailUrl())
+                .build();
+        Title saved = titleRepository.save(title);
+        return mapToDto(saved);
     }
 
     public TitleSummaryDto mapToDto(Title title) {

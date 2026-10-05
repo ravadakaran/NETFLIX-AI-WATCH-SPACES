@@ -118,8 +118,8 @@ This document tracks upcoming architectural enhancements, scalability tasks, fea
 
 ## 9. New Feature Proposals (Phase 9)
 
-- [ ] **Build an Admin Content Management System (CMS)**:
-  - Build a fully-functional Admin Dashboard.
-  - Upload new `.mp4` files directly to Cloud Storage.
-  - Create new movie titles and upload poster thumbnails.
-  - Edit timelines and interactive events dynamically without touching `DataSeeder.java`.
+- [x] **Build an Admin Content Management System (CMS)**:
+  - [x] Build a fully-functional Admin Dashboard.
+  - [x] Upload new `.mp4` files directly to Cloud Storage.
+  - [x] Create new movie titles and upload poster thumbnails.
+  - [x] Edit timelines and interactive events dynamically without touching `DataSeeder.java`.

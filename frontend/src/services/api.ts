@@ -179,6 +179,13 @@ export const api = {
     return request<Title>(`/titles/${titleId}`);
   },
 
+  async createTitle(data: { name: string; durationSeconds: number; videoAssetUrl: string; description: string; genre?: string; thumbnailUrl?: string; }): Promise<Title> {
+    return request<Title>('/titles', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
   async getTimeline(titleId: string, from?: number, to?: number): Promise<{ titleId: string; events: TimelineEvent[] }> {
     const query = from !== undefined && to !== undefined ? `?from=${from}&to=${to}` : '';
     return request<{ titleId: string; events: TimelineEvent[] }>(`/titles/${titleId}/timeline${query}`);
@@ -276,5 +283,9 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(uploadData)
     });
+  },
+
+  async getUploadUrl(filename: string, contentType: string): Promise<{ uploadUrl: string; objectKey: string; cdnUrl: string; }> {
+    return request<{ uploadUrl: string; objectKey: string; cdnUrl: string; }>(`/storage/upload-url?filename=${encodeURIComponent(filename)}&contentType=${encodeURIComponent(contentType)}`);
   }
 };
