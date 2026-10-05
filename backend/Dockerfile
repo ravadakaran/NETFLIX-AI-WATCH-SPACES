@@ -10,7 +10,7 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:11-jre-focal
 WORKDIR /app
 # Copy the built JAR from the build stage
-COPY --from=build /app/target/netflix-ai-watch-spaces-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/watch-spaces-0.0.1-SNAPSHOT.jar app.jar
 
 # Render dynamic port binding
 EXPOSE 8080
