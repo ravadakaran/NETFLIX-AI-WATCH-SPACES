@@ -22,7 +22,7 @@ const CONCURRENCY = parseInt(args.concurrency || '500', 10);
 const DURATION_SECONDS = parseInt(args.duration || '30', 10);
 const TARGET_HOST = args.host || 'localhost:8081';
 const SPACE_ID = args.spaceId || '11111111-1111-1111-1111-111111111111';
-const JWT_SECRET = process.env.JWT_SECRET || '404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970';
+const JWT_SECRET = process.env.JWT_SECRET;
 const DRIFT_THRESHOLD_MS = 250;
 
 function base64UrlEncode(str) {
@@ -47,9 +47,7 @@ function createToken(userId, email, role = 'VIEWER') {
   const encodedPayload = base64UrlEncode(JSON.stringify(payload));
   const signatureInput = `${encodedHeader}.${encodedPayload}`;
 
-  const keyBuffer = /^[0-9a-fA-F]{64}$/.test(JWT_SECRET)
-    ? Buffer.from(JWT_SECRET, 'hex')
-    : Buffer.from(JWT_SECRET, 'utf-8');
+  const keyBuffer = Buffer.from(JWT_SECRET, 'utf-8');
 
   const hmac = crypto.createHmac('sha256', keyBuffer);
   hmac.update(signatureInput);
@@ -76,6 +74,9 @@ function computePercentiles(arr) {
 }
 
 async function runStressTest() {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is required; the stress runner never uses a fallback signing key.');
+  }
   console.log(`\n===============================================================`);
   console.log(`🎬 NETFLIX AI WATCH SPACES: WEBSOCKET LOAD & STRESS TEST BENCHMARK`);
   console.log(`===============================================================`);
@@ -103,7 +104,7 @@ async function runStressTest() {
   }
 
   // 1. Establish Host Connection
-  const hostId = crypto.randomUUID();
+  const hostId = '00000000-0000-0000-0000-000000000000';
   const hostToken = createToken(hostId, 'host_admin@netflix-spaces.test', 'HOST');
   const hostUrl = `ws://${TARGET_HOST}/ws/watch-spaces/${SPACE_ID}?token=${encodeURIComponent(hostToken)}`;
   
@@ -130,7 +131,7 @@ async function runStressTest() {
   const rampStartTime = Date.now();
 
   for (let i = 0; i < CONCURRENCY; i++) {
-    const viewerId = crypto.randomUUID();
+    const viewerId = `10000000-0000-0000-0000-${String(i).padStart(12, '0')}`;
     const token = createToken(viewerId, `viewer_${i}@netflix-spaces.test`, 'VIEWER');
     const wsUrl = `ws://${TARGET_HOST}/ws/watch-spaces/${SPACE_ID}?token=${encodeURIComponent(token)}`;
 
@@ -192,27 +193,21 @@ async function runStressTest() {
   }
 
   // Allow ramp up to settle
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise(r => setTimeout(r, 10000));
   console.log(`\n[Ramp Complete] Active viewers: ${connectedViewers.length} / ${CONCURRENCY} in ${(Date.now() - rampStartTime) / 1000}s`);
 
-  // If backend wasn't running, generate realistic simulated benchmark metrics for reporting
-  const isSimulated = connectedViewers.length === 0;
-  if (isSimulated) {
-    console.log(`\n[Notice] Generating authoritative simulation model for ${CONCURRENCY} clients under load.`);
-    for (let s = 0; s < CONCURRENCY * 5; s++) {
-      // Base network latency + jitter under high load (normally 10-60ms)
-      const simulatedRtt = 15 + Math.random() * 45 + (s % 10 === 0 ? Math.random() * 50 : 0);
-      driftMeasurements.push(Math.round(simulatedRtt / 2));
-      // Fanout delivery across room sessions (normally 12-75ms)
-      const simulatedFanout = 10 + Math.random() * 35 + (s % 25 === 0 ? Math.random() * 40 : 0);
-      fanoutMeasurements.push(Math.round(simulatedFanout));
-      totalMessagesSent += 2;
-      totalMessagesReceived += CONCURRENCY;
+  if (!hostSocket || connectedViewers.length !== CONCURRENCY) {
+    if (hostSocket) try { hostSocket.close(); } catch {}
+    for (const viewer of connectedViewers) {
+      if (viewer.ws) try { viewer.ws.close(); } catch {}
     }
-    playbacksBroadcast = 12;
-    chatsBroadcast = 85;
-    votesCast = 420;
-  } else {
+    throw new Error(
+      `Live load precondition failed: host=${Boolean(hostSocket)}, viewers=${connectedViewers.length}/${CONCURRENCY}. ` +
+      'No simulated metrics were generated.'
+    );
+  }
+
+  {
     // 3. Run Live Traffic Loops during DURATION_SECONDS
     console.log(`[Load Simulation] Executing synchronized playback, chats, and voting for ${DURATION_SECONDS}s...`);
     const testEndTime = Date.now() + DURATION_SECONDS * 1000;
@@ -312,6 +307,7 @@ async function runStressTest() {
     spaceId: SPACE_ID,
     slaTargetMs: DRIFT_THRESHOLD_MS,
     passed: overallSuccess,
+    mode: 'live',
     metrics: {
       syncDrift: driftStats,
       fanoutLatency: fanoutStats,
@@ -323,7 +319,7 @@ async function runStressTest() {
     }
   };
 
-  const reportPath = path.resolve('tests/load/stress-test-report.json');
+  const reportPath = path.resolve(process.cwd(), 'stress-test-report.json');
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   console.log(`Benchmark report written to: ${reportPath}\n`);
 

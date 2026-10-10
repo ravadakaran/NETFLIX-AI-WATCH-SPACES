@@ -3,7 +3,7 @@
 ## Permanent UI/UX Source of Truth
 **Google Stitch** is the **permanent UI/UX source of truth** for this project.
 
-All frontend components, layouts, color palettes, animations, and typography are governed by the **Stitch "Nocturne Luminary" Design System** and the screens stored in `stitch_screens/`:
+All frontend components, layouts, color palettes, animations, and typography are governed by the **Stitch "Nocturne Luminary" Design System** and the screens stored in `screens/`:
 1. `landing_page.html` -> Landing Cinema (`LandingPage.tsx`)
 2. `sign_in.html` -> Sign In (`SignInView.tsx`)
 3. `get_started.html` -> Sign Up / Onboarding (`SignUpView.tsx`)

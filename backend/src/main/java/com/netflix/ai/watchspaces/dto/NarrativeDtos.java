@@ -53,7 +53,18 @@ public final class NarrativeDtos {
         private Integer ts;
         private List<ChoiceDto> options;
         private Long closesAt;
+        private Long resolvesAt;
         private String myOptionId;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PredictionGameDto {
+        private List<CardDto> available;
+        private RoundDto active;
+        private List<PredictionResultDto> completed;
     }
 
     @Data

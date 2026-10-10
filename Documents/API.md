@@ -191,7 +191,40 @@ Validates timeline structure without publishing it.
 
 Admin authorization is enforced server-side.
 
-## 8. Error Format
+## 8. Interactive Narrative
+
+All narrative endpoints require a bearer token. Mutation requests are
+server-authoritative and serialized per watch space.
+
+### GET /watch-spaces/{id}/narrative
+
+Returns the complete live state: available cards, active vote/prediction,
+branch history, resolved predictions, leaderboard, and active branch segment.
+
+### POST /watch-spaces/{id}/narrative/actions
+
+Accepts `{ "action", "eventId", "optionId", "decisionId" }`. Supported actions
+are `openVote`, `castVote`, `resolveVote`, `openPrediction`,
+`answerPrediction`, `resolvePrediction`, and `finishSegment`. Opening,
+resolving, and finishing are host-only.
+
+### GET /watch-spaces/{id}/narrative/branch-history
+
+Returns the ordered, immutable list of resolved narrative decisions.
+
+### GET /watch-spaces/{id}/narrative/predictions
+
+Returns `{ available, active, completed }` for prediction and trivia games.
+
+### GET /watch-spaces/{id}/narrative/scores
+
+Returns the descending room leaderboard with points, correct/answered counts,
+accuracy, and earned badges.
+
+State changes are also published as `room.narrative.state` on the room
+WebSocket channel.
+
+## 9. Error Format
 
 Use a consistent response structure:
 

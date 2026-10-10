@@ -4,8 +4,10 @@
  */
 const crypto = require('crypto');
 
-// Pre-seeded or dynamic JWT signing secret from application.yml
-const JWT_SECRET = process.env.JWT_SECRET || '404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is required; Artillery never uses a fallback signing key.');
+}
 const DEFAULT_SPACE_ID = process.env.WATCH_SPACE_ID || '11111111-1111-1111-1111-111111111111';
 
 // In-memory metrics tracking for the test run

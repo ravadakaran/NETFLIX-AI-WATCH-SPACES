@@ -1,4 +1,4 @@
-import { User, Title, TimelineEvent, WatchSpace, RecommendationItem, HistoryItem, Analytics, NarrativeState, NarrativeActionInput } from '../types';
+import { User, Title, TimelineEvent, WatchSpace, RecommendationItem, HistoryItem, Analytics, NarrativeState, NarrativeActionInput, NarrativeDecision, NarrativeScore, PredictionGameState } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -225,6 +225,18 @@ export const api = {
   // Authoritative narrative state and actions
   async getNarrativeState(spaceId: string): Promise<NarrativeState> {
     return request<NarrativeState>(`/watch-spaces/${spaceId}/narrative`);
+  },
+
+  async getBranchHistory(spaceId: string): Promise<NarrativeDecision[]> {
+    return request<NarrativeDecision[]>(`/watch-spaces/${spaceId}/narrative/branch-history`);
+  },
+
+  async getPredictionGames(spaceId: string): Promise<PredictionGameState> {
+    return request<PredictionGameState>(`/watch-spaces/${spaceId}/narrative/predictions`);
+  },
+
+  async getNarrativeScores(spaceId: string): Promise<NarrativeScore[]> {
+    return request<NarrativeScore[]>(`/watch-spaces/${spaceId}/narrative/scores`);
   },
 
   async narrativeAction(spaceId: string, input: NarrativeActionInput): Promise<NarrativeState> {

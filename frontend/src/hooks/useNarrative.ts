@@ -36,7 +36,8 @@ function normalizeState(value: NarrativeState | null | undefined): NarrativeStat
  */
 function mergePublicState(nextValue: NarrativeState, previous: NarrativeState | null): NarrativeState {
   const next = normalizeState(nextValue);
-  if (!previous || next.version < previous.version) return next;
+  if (!previous) return next;
+  if (next.version < previous.version) return previous;
 
   const activeVote = next.activeVote && previous.activeVote &&
     next.activeVote.eventId === previous.activeVote.eventId

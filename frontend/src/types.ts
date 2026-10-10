@@ -114,6 +114,12 @@ export interface NarrativeState {
   baseResumeSeconds: number | null;
 }
 
+export interface PredictionGameState {
+  available: NarrativeCard[];
+  active: NarrativeRound | null;
+  completed: NarrativeResult[];
+}
+
 // Contract aliases keep the wire names available to feature consumers.
 export type Choice = NarrativeChoice;
 export type Card = NarrativeCard;

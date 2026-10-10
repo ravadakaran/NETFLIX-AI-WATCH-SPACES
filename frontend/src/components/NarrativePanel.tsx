@@ -33,7 +33,7 @@ const CardButton: React.FC<{
 }> = ({ card, currentTime, disabled, onOpen }) => {
   const gated = isTimeGated(card, currentTime);
   return (
-    <div className="rounded-xl bg-[#0D1535]/75 border border-white/10 p-3 space-y-2">
+    <div className="glass-nocturne rounded-xl p-3 space-y-2">
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="text-[9px] uppercase tracking-[0.16em] text-pink-300 font-bold">
@@ -49,7 +49,7 @@ const CardButton: React.FC<{
         type="button"
         disabled={disabled || gated}
         onClick={onOpen}
-        className="w-full rounded-lg px-3 py-2 text-[10px] uppercase tracking-wider font-bold border border-violet-400/30 text-violet-200 hover:bg-violet-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="btn-primary-gradient w-full rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.14em] font-bold disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {gated ? 'Waiting for scene' : 'Open card'}
       </button>
@@ -72,7 +72,8 @@ const LiveRound: React.FC<{
   const countdownTarget = resolutionPending ? round.resolvesAt : round.closesAt;
 
   return (
-    <div className="rounded-xl bg-gradient-to-br from-violet-950/70 to-[#0D1535]/90 border border-pink-500/30 p-3 space-y-3 shadow-[0_8px_26px_rgba(139,92,246,0.15)]">
+    <div className="glass-nocturne rounded-xl p-3 space-y-3 shadow-[0_8px_32px_rgba(37,99,235,0.18)]">
+      <div aria-hidden="true" className="h-px w-full bg-gradient-to-r from-[#2563EB] via-[#7C3AED] to-[#EC4899]" />
       <div className="flex items-center justify-between gap-2">
         <div>
           <div className="text-[9px] uppercase tracking-[0.18em] text-pink-300 font-bold">
@@ -160,10 +161,10 @@ export const NarrativePanel: React.FC<NarrativePanelProps> = ({
   const votes = state.availableVotes;
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 select-text">
+    <div className="flex-1 overflow-y-auto bg-[#050712] p-4 font-sans space-y-4 select-text">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-pink-300 font-bold">Interactive story</div>
+          <div className="bg-gradient-to-r from-[#2563EB] via-[#7C3AED] to-[#EC4899] bg-clip-text text-[10px] uppercase tracking-[0.18em] text-transparent font-bold">Interactive story</div>
           <div className="text-[10px] text-on-surface-variant mt-1">Authoritative state v{state.version}</div>
         </div>
         <span className={`w-2 h-2 rounded-full ${error ? 'bg-amber-400' : 'bg-cyan-400'} shadow-[0_0_8px_currentColor]`} />
@@ -253,7 +254,7 @@ export const NarrativePanel: React.FC<NarrativePanelProps> = ({
         <section className="space-y-2">
           <div className="text-[10px] uppercase tracking-[0.16em] text-on-surface-variant font-bold">Decision history</div>
           {state.history.slice().reverse().slice(0, 8).map(decision => (
-            <div key={decision.id} className="rounded-lg border border-white/10 bg-[#0D1535]/55 p-2.5">
+            <div key={decision.id} className="glass-nocturne rounded-lg p-2.5">
               <div className="text-[10px] text-white">{decision.prompt}</div>
               <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-violet-200">
                 <span>{decision.label}</span>
@@ -271,7 +272,7 @@ export const NarrativePanel: React.FC<NarrativePanelProps> = ({
         <section className="space-y-2">
           <div className="text-[10px] uppercase tracking-[0.16em] text-on-surface-variant font-bold">Leaderboard & badges</div>
           {state.leaderboard.slice(0, 8).map((score, index) => (
-            <div key={score.userId} className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#0D1535]/55 p-2">
+            <div key={score.userId} className="glass-nocturne flex items-center gap-2 rounded-lg p-2">
               <span className="w-5 text-[10px] text-pink-300 font-mono">{index + 1}</span>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[10px] text-white">{score.displayName}</div>

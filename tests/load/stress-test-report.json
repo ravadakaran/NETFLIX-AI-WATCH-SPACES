@@ -1,31 +1,32 @@
 {
-  "timestamp": "2026-10-03T04:06:30.560Z",
-  "concurrency": 100,
-  "durationSeconds": 5,
+  "timestamp": "2026-10-10T07:13:22.216Z",
+  "concurrency": 500,
+  "durationSeconds": 30,
   "spaceId": "11111111-1111-1111-1111-111111111111",
   "slaTargetMs": 250,
   "passed": true,
+  "mode": "live",
   "metrics": {
     "syncDrift": {
-      "min": 8,
-      "max": 51,
-      "mean": 20.53,
-      "p50": 20,
-      "p95": 35,
-      "p99": 46
+      "min": 1,
+      "max": 6,
+      "mean": 1.52,
+      "p50": 1,
+      "p95": 5,
+      "p99": 6
     },
     "fanoutLatency": {
-      "min": 10,
-      "max": 73,
-      "mean": 28.95,
-      "p50": 29,
-      "p95": 44,
-      "p99": 64
+      "min": 3,
+      "max": 5266,
+      "mean": 110.48,
+      "p50": 87,
+      "p95": 142,
+      "p99": 1135
     },
-    "totalMessagesSent": 1000,
-    "totalMessagesReceived": 50000,
-    "playbacksBroadcast": 12,
-    "chatsBroadcast": 85,
-    "votesCast": 420
+    "totalMessagesSent": 230,
+    "totalMessagesReceived": 155734,
+    "playbacksBroadcast": 15,
+    "chatsBroadcast": 37,
+    "votesCast": 28
   }
 }

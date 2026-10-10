@@ -47,17 +47,22 @@ public class NarrativeService {
     @Transactional
     public StateDto getState(UUID watchSpaceId, UUID userId) {
         WatchSpace space = getSpace(watchSpaceId);
-        resolveExpiredRounds(space);
+        // Viewer polling is read-only in the common case. Acquire the room row
+        // only when this request must perform authoritative expiry work.
+        if (hasExpiredRounds(space)) {
+            space = getSpaceForUpdate(watchSpaceId);
+            resolveExpiredRounds(space);
+        }
         return buildState(space, userId);
     }
 
     @Transactional
-    public synchronized StateDto handleAction(UUID watchSpaceId, UUID userId, ActionRequest request) {
+    public StateDto handleAction(UUID watchSpaceId, UUID userId, ActionRequest request) {
         if (request == null || request.getAction() == null) {
             throw new IllegalArgumentException("Narrative action is required");
         }
 
-        WatchSpace space = getSpace(watchSpaceId);
+        WatchSpace space = getSpaceForUpdate(watchSpaceId);
         User user = getUser(userId);
         resolveExpiredRounds(space);
 
@@ -91,8 +96,30 @@ public class NarrativeService {
         space.setNarrativeVersion((space.getNarrativeVersion() == null ? 0L : space.getNarrativeVersion()) + 1L);
         watchSpaceRepository.save(space);
         StateDto state = buildState(space, userId);
-        broadcast(watchSpaceId, state);
+        // The direct HTTP response may include the caller's answer. Room-wide
+        // telemetry must never reveal that private per-user field.
+        broadcast(watchSpaceId, buildState(space, null));
         return state;
+    }
+
+    @Transactional
+    public List<DecisionDto> getBranchHistory(UUID watchSpaceId, UUID userId) {
+        return getState(watchSpaceId, userId).getHistory();
+    }
+
+    @Transactional
+    public PredictionGameDto getPredictionGames(UUID watchSpaceId, UUID userId) {
+        StateDto state = getState(watchSpaceId, userId);
+        return PredictionGameDto.builder()
+                .available(state.getAvailablePredictions())
+                .active(state.getActivePrediction())
+                .completed(state.getCompletedPredictions())
+                .build();
+    }
+
+    @Transactional
+    public List<ScoreDto> getScores(UUID watchSpaceId, UUID userId) {
+        return getState(watchSpaceId, userId).getLeaderboard();
     }
 
     private void openRound(WatchSpace space, User user, ActionRequest request, boolean prediction) {
@@ -178,6 +205,14 @@ public class NarrativeService {
             space.setNarrativeVersion((space.getNarrativeVersion() == null ? 0L : space.getNarrativeVersion()) + 1L);
             watchSpaceRepository.save(space);
         }
+    }
+
+    private boolean hasExpiredRounds(WatchSpace space) {
+        Instant now = Instant.now();
+        return roundRepository.findByWatchSpaceIdAndStatus(space.getId(), OPEN).stream()
+                .anyMatch(round -> isPrediction(round.getKind())
+                        ? !now.isBefore(round.getResolvesAt())
+                        : !now.isBefore(round.getClosesAt()));
     }
 
     private void resolveRound(WatchSpace space, NarrativeRound round) {
@@ -360,7 +395,8 @@ public class NarrativeService {
         List<ChoiceDto> options = round.getEvent().getVariationOptions().stream().map(option -> choice(option, counts.getOrDefault(optionKey(option), 0))).collect(Collectors.toList());
         return RoundDto.builder().eventId(round.getEvent().getId().toString()).variationId(round.getVariationId())
                 .prompt(round.getPrompt()).kind(round.getKind()).ts(round.getEvent().getTsSeconds())
-                .options(options).closesAt(round.getClosesAt().toEpochMilli()).myOptionId(mine).build();
+                .options(options).closesAt(round.getClosesAt().toEpochMilli())
+                .resolvesAt(round.getResolvesAt().toEpochMilli()).myOptionId(mine).build();
     }
 
     private CardDto card(TimelineEvent event, String kind) {
@@ -442,6 +478,11 @@ public class NarrativeService {
 
     private WatchSpace getSpace(UUID id) {
         return watchSpaceRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Watch space not found"));
+    }
+
+    private WatchSpace getSpaceForUpdate(UUID id) {
+        return watchSpaceRepository.findByIdForNarrativeUpdate(id)
+                .orElseThrow(() -> new IllegalArgumentException("Watch space not found"));
     }
 
     private User getUser(UUID id) {

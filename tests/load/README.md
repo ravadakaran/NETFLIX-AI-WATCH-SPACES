@@ -9,6 +9,13 @@ Comprehensive load, stress, and latency testing suite simulating up to **500 con
 ## SLAs & Verification Targets
 - **Clock Sync Drift**: $< 250\text{ms}$ ($p95 < 250\text{ms}$, $p99 < 250\text{ms}$)
 - **Fan-Out Delivery Latency**: $< 250\text{ms}$ under 500 concurrent room members
+- **Room isolation**: narrative actions in one room must not serialize actions in another room
+- **Submission integrity**: one accepted prediction answer per `(round, user)` under concurrent retries
+
+The backend enforces room isolation with a PostgreSQL pessimistic lock on the
+target watch-space row. Run the WebSocket scenario together with repeated
+`POST /api/v1/watch-spaces/{id}/narrative/actions` calls against at least two
+room IDs to validate fan-out latency and cross-room independence.
 
 ---
 
@@ -17,11 +24,15 @@ Uses Node.js native WebSocket client to simulate 500 concurrent connections, cal
 
 ```bash
 # Run 500 concurrent clients for 30 seconds
+$env:JWT_SECRET = '<same test secret used by the backend>'
 node tests/load/run-stress-test.mjs --concurrency=500 --duration=30
 
 # Custom host or space ID
 node tests/load/run-stress-test.mjs --concurrency=500 --host=localhost:8081 --spaceId=NX-DEMO
 ```
+
+The runner is live-only: it exits non-zero when the host or requested viewer
+count cannot connect, and never substitutes simulated latency measurements.
 
 ---
 

@@ -123,7 +123,8 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(space.durationSeconds || 600);
-  const [driftMs, setDriftMs] = useState<number>(12);
+  // Zero is the neutral pre-telemetry value; live ping/pong updates this once connected.
+  const [driftMs, setDriftMs] = useState<number>(0);
   const [volume, setVolume] = useState<number>(1);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [subtitlesEnabled, setSubtitlesEnabled] = useState<boolean>(true);
