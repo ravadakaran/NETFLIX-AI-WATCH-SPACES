@@ -99,7 +99,8 @@ public class WatchSpaceService {
         long activeCount = participantRepository.countByIdWatchSpaceIdAndLeftAtIsNull(space.getId());
         Optional<WatchSpaceParticipant> existing = participantRepository.findByIdWatchSpaceIdAndIdUserId(space.getId(), user.getId());
 
-        if (!existing.isPresent() && activeCount >= space.getMaxParticipants()) {
+        boolean isCurrentlyActive = existing.isPresent() && existing.get().getLeftAt() == null;
+        if (!isCurrentlyActive && activeCount >= space.getMaxParticipants()) {
             throw new IllegalStateException("Watch Space is at maximum capacity (" + space.getMaxParticipants() + ")");
         }
 
@@ -118,6 +119,16 @@ public class WatchSpaceService {
         participantRepository.save(participant);
 
         return mapToDto(space);
+    }
+
+    @Transactional
+    public void leaveWatchSpace(UUID spaceId, UUID userId) {
+        participantRepository.findByIdWatchSpaceIdAndIdUserId(spaceId, userId).ifPresent(p -> {
+            if (p.getLeftAt() == null) {
+                p.setLeftAt(Instant.now());
+                participantRepository.save(p);
+            }
+        });
     }
 
     @Transactional(readOnly = true)

@@ -44,7 +44,11 @@ public class RoomSessionManager implements MessageListener {
         localRoomSessions.computeIfAbsent(watchSpaceId, k -> new ConcurrentHashMap<>())
                 .put(session.getId(), new SessionContext(session, userId, displayName, isHost));
         
-        redisTemplate.opsForSet().add("watchspace:participants:" + watchSpaceId, userId.toString());
+        try {
+            redisTemplate.opsForSet().add("watchspace:participants:" + watchSpaceId, userId.toString());
+        } catch (Exception e) {
+            log.warn("Failed to add user {} to Redis presence set for space {}: {}", userId, watchSpaceId, e.getMessage());
+        }
     }
 
     public SessionContext removeSession(String watchSpaceId, String sessionId) {
@@ -52,7 +56,15 @@ public class RoomSessionManager implements MessageListener {
         if (sessions != null) {
             SessionContext removed = sessions.remove(sessionId);
             if (removed != null) {
-                redisTemplate.opsForSet().remove("watchspace:participants:" + watchSpaceId, removed.userId.toString());
+                boolean hasOtherSessions = sessions.values().stream()
+                        .anyMatch(ctx -> ctx.userId.equals(removed.userId));
+                if (!hasOtherSessions) {
+                    try {
+                        redisTemplate.opsForSet().remove("watchspace:participants:" + watchSpaceId, removed.userId.toString());
+                    } catch (Exception e) {
+                        log.warn("Failed to remove user from redis participants set: {}", e.getMessage());
+                    }
+                }
             }
             if (sessions.isEmpty()) {
                 localRoomSessions.remove(watchSpaceId);
@@ -60,6 +72,14 @@ public class RoomSessionManager implements MessageListener {
             return removed;
         }
         return null;
+    }
+
+    public boolean hasUserSession(String watchSpaceId, UUID userId) {
+        Map<String, SessionContext> sessions = localRoomSessions.get(watchSpaceId);
+        if (sessions == null || sessions.isEmpty()) {
+            return false;
+        }
+        return sessions.values().stream().anyMatch(ctx -> ctx.userId.equals(userId));
     }
 
     public void muteUser(String watchSpaceId, UUID userId) {
@@ -95,8 +115,17 @@ public class RoomSessionManager implements MessageListener {
     }
 
     public int getParticipantCount(String watchSpaceId) {
-        Long size = redisTemplate.opsForSet().size("watchspace:participants:" + watchSpaceId);
-        return size != null ? size.intValue() : 0;
+        try {
+            Long size = redisTemplate.opsForSet().size("watchspace:participants:" + watchSpaceId);
+            if (size != null) {
+                return size.intValue();
+            }
+        } catch (Exception e) {
+            log.warn("Redis error fetching participant count for space {}: {}. Falling back to local count.", watchSpaceId, e.getMessage());
+        }
+        Map<String, SessionContext> sessions = localRoomSessions.get(watchSpaceId);
+        if (sessions == null) return 0;
+        return (int) sessions.values().stream().map(s -> s.userId).distinct().count();
     }
 
     public SessionContext getSessionContext(String watchSpaceId, String sessionId) {
@@ -109,7 +138,32 @@ public class RoomSessionManager implements MessageListener {
             String json = objectMapper.writeValueAsString(envelope);
             redisTemplate.convertAndSend("watchspace:" + watchSpaceId, json);
         } catch (Exception e) {
-            log.error("Error publishing ws message to Redis for space {}: {}", watchSpaceId, e.getMessage());
+            log.warn("Error publishing ws message to Redis for space {}: {}. Falling back to local broadcast.", watchSpaceId, e.getMessage());
+            broadcastLocally(watchSpaceId, envelope);
+        }
+    }
+
+    public void broadcastLocally(String watchSpaceId, WsEnvelope envelope) {
+        Map<String, SessionContext> sessions = localRoomSessions.get(watchSpaceId);
+        if (sessions == null || sessions.isEmpty()) {
+            return;
+        }
+        try {
+            String json = objectMapper.writeValueAsString(envelope);
+            TextMessage textMessage = new TextMessage(json);
+            for (SessionContext context : sessions.values()) {
+                if (context.session.isOpen()) {
+                    try {
+                        synchronized (context.session) {
+                            context.session.sendMessage(textMessage);
+                        }
+                    } catch (IOException e) {
+                        log.warn("Error sending fallback ws message to session {}: {}", context.session.getId(), e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error creating local fallback text message: {}", e.getMessage());
         }
     }
 
@@ -119,12 +173,27 @@ public class RoomSessionManager implements MessageListener {
             String channel = new String(message.getChannel());
             String json = new String(message.getBody());
             
+            if (channel == null || !channel.startsWith("watchspace:") || channel.length() <= "watchspace:".length()) {
+                return;
+            }
             String watchSpaceId = channel.substring("watchspace:".length());
             
             WsEnvelope envelope = objectMapper.readValue(json, WsEnvelope.class);
             if ("internal.cluster.kick".equals(envelope.getEvent())) {
                 handleClusterKick(watchSpaceId, envelope);
                 return;
+            }
+
+            if ("room.mod.transfer".equalsIgnoreCase(envelope.getEvent())) {
+                try {
+                    Map<String, Object> payloadMap = objectMapper.convertValue(envelope.getPayload(), Map.class);
+                    String targetIdStr = (String) payloadMap.get("userId");
+                    if (targetIdStr != null) {
+                        updateHost(watchSpaceId, UUID.fromString(targetIdStr));
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to update host context in onMessage: {}", e.getMessage());
+                }
             }
 
             Map<String, SessionContext> sessions = localRoomSessions.get(watchSpaceId);

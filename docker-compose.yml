@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: netflix-db
     environment:
       POSTGRES_DB: ${DB_NAME:-netflix_ai_watch}
@@ -31,7 +31,7 @@ services:
   livekit:
     image: livekit/livekit-server:latest
     container_name: netflix-livekit
-    command: --keys devkey:secret --dev
+    command: --dev
     ports:
       - "7880:7880"
       - "7881:7881"

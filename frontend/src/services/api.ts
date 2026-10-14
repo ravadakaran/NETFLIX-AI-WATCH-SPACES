@@ -218,6 +218,10 @@ export const api = {
     return request<WatchSpace>(`/watch-spaces/${spaceId}/end`, { method: 'POST' });
   },
 
+  async leaveWatchSpace(spaceId: string): Promise<{ message: string }> {
+    return request<{ message: string }>(`/watch-spaces/${spaceId}/leave`, { method: 'POST' });
+  },
+
   async getAnalytics(spaceId: string): Promise<Analytics> {
     return request<Analytics>(`/watch-spaces/${spaceId}/analytics`);
   },

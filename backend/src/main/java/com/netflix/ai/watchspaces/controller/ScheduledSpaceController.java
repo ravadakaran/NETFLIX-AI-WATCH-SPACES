@@ -15,11 +15,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @RestController
@@ -32,17 +35,41 @@ public class ScheduledSpaceController {
     private final TitleRepository titleRepository;
 
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<List<ScheduledSpace>> getMyScheduledSpaces(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(scheduledSpaceRepository.findByHostUserId(principal.getId()));
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<ScheduledSpace> createScheduledSpace(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestBody Map<String, Object> payload) {
-        User user = userRepository.findById(principal.getId()).orElseThrow();
-        Title title = titleRepository.findById(UUID.fromString(payload.get("titleId").toString())).orElseThrow();
-        Instant startTime = Instant.parse(payload.get("scheduledStartTime").toString());
+        if (payload == null || payload.get("titleId") == null) {
+            throw new IllegalArgumentException("titleId is required");
+        }
+        if (payload.get("scheduledStartTime") == null) {
+            throw new IllegalArgumentException("scheduledStartTime is required");
+        }
+
+        UUID titleId;
+        try {
+            titleId = UUID.fromString(payload.get("titleId").toString());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("titleId must be a valid UUID");
+        }
+
+        Instant startTime;
+        try {
+            startTime = Instant.parse(payload.get("scheduledStartTime").toString());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("scheduledStartTime must be a valid ISO-8601 timestamp");
+        }
+
+        User user = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Title title = titleRepository.findById(titleId)
+                .orElseThrow(() -> new IllegalArgumentException("Title not found with id: " + titleId));
         String name = payload.getOrDefault("name", title.getName() + " Watch Party").toString();
 
         ScheduledSpace space = ScheduledSpace.builder()
@@ -56,8 +83,10 @@ public class ScheduledSpaceController {
     }
 
     @GetMapping("/{id}/ics")
+    @Transactional(readOnly = true)
     public ResponseEntity<String> exportIcs(@PathVariable UUID id) {
-        ScheduledSpace space = scheduledSpaceRepository.findById(id).orElseThrow();
+        ScheduledSpace space = scheduledSpaceRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Scheduled space not found with id: " + id));
         
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
                 .withZone(ZoneId.of("UTC"));

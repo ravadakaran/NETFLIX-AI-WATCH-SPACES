@@ -121,6 +121,19 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
     void narrative.act({ action, ...values }).catch(() => {});
   }, [narrative.act]);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isLeaving, setIsLeaving] = useState<boolean>(false);
+
+  const handleLeaveRoom = useCallback(async () => {
+    if (isLeaving) return;
+    setIsLeaving(true);
+    try {
+      await api.leaveWatchSpace(space.watchSpaceId);
+    } catch (err) {
+      console.warn('Failed to notify backend on room leave:', err);
+    }
+    onLeave();
+  }, [isLeaving, space.watchSpaceId, onLeave]);
+
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(space.durationSeconds || 600);
   // Zero is the neutral pre-telemetry value; live ping/pong updates this once connected.
@@ -820,10 +833,11 @@ export const WatchRoom: React.FC<WatchRoomProps> = ({ space, currentUser, onLeav
 
             {/* Leave Room Trigger */}
             <button
-              onClick={onLeave}
-              className="px-3 py-1.5 rounded-full bg-[#181b27]/80 hover:bg-pink-950/60 border border-white/10 hover:border-pink-500/30 text-on-surface-variant hover:text-pink-300 text-[10px] font-label-md uppercase tracking-wider transition-all"
+              onClick={handleLeaveRoom}
+              disabled={isLeaving}
+              className="px-3 py-1.5 rounded-full bg-[#181b27]/80 hover:bg-pink-950/60 border border-white/10 hover:border-pink-500/30 text-on-surface-variant hover:text-pink-300 text-[10px] font-label-md uppercase tracking-wider transition-all disabled:opacity-50"
             >
-              Exit
+              {isLeaving ? 'Leaving...' : 'Exit'}
             </button>
           </div>
         </div>

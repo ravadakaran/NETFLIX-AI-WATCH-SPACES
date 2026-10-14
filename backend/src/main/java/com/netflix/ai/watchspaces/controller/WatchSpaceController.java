@@ -4,14 +4,17 @@ import com.netflix.ai.watchspaces.dto.WatchSpaceDtos.*;
 import com.netflix.ai.watchspaces.entity.User;
 import com.netflix.ai.watchspaces.repository.UserRepository;
 import com.netflix.ai.watchspaces.security.UserPrincipal;
+import com.netflix.ai.watchspaces.service.LiveKitService;
 import com.netflix.ai.watchspaces.service.WatchSpaceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -21,6 +24,7 @@ public class WatchSpaceController {
 
     private final WatchSpaceService watchSpaceService;
     private final UserRepository userRepository;
+    private final LiveKitService liveKitService;
 
     @PostMapping
     public ResponseEntity<WatchSpaceDto> createWatchSpace(
@@ -60,6 +64,14 @@ public class WatchSpaceController {
         return ResponseEntity.ok(watchSpaceService.getWatchSpace(id));
     }
 
+    @PostMapping("/{id}/leave")
+    public ResponseEntity<Map<String, String>> leaveWatchSpace(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        watchSpaceService.leaveWatchSpace(id, principal.getId());
+        return ResponseEntity.ok(Map.of("message", "Left watch space successfully"));
+    }
+
     @PostMapping("/{id}/end")
     public ResponseEntity<WatchSpaceDto> endWatchSpace(
             @PathVariable UUID id,
@@ -80,10 +92,18 @@ public class WatchSpaceController {
     }
 
     @GetMapping("/{id}/livekit-token")
-    public ResponseEntity<java.util.Map<String, String>> getLiveKitToken(
+    public ResponseEntity<Map<String, String>> getLiveKitToken(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserPrincipal principal) {
         
+        if (!liveKitService.isConfigured()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of(
+                            "error", "LiveKit voice chat is not configured",
+                            "message", "LiveKit voice chat is disabled or credentials are not configured"
+                    ));
+        }
+
         // Ensure user is actually in the space (basic check, could be expanded)
         User user = userRepository.findById(principal.getId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -93,16 +113,8 @@ public class WatchSpaceController {
         // Participant name is the User's ID or email (we'll use email for display if needed, or just ID)
         String participantName = user.getEmail();
         
-        com.netflix.ai.watchspaces.service.LiveKitService liveKitService = 
-                org.springframework.web.context.support.WebApplicationContextUtils
-                .getRequiredWebApplicationContext(
-                        ((org.springframework.web.context.request.ServletRequestAttributes) 
-                        org.springframework.web.context.request.RequestContextHolder.getRequestAttributes())
-                        .getRequest().getServletContext())
-                .getBean(com.netflix.ai.watchspaces.service.LiveKitService.class);
-                
         String token = liveKitService.generateToken(roomName, participantName);
         
-        return ResponseEntity.ok(java.util.Map.of("token", token));
+        return ResponseEntity.ok(Map.of("token", token));
     }
 }

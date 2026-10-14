@@ -94,15 +94,19 @@ public class AiCopilotService {
     }
 
     private List<TimelineEvent> retrieveRelevantEvents(String query, List<TimelineEvent> candidates, WatchSpace space, int currentSec) {
-        // Compute query embedding
-        List<Double> queryEmbedding = geminiService.getEmbedding(query);
-        if (queryEmbedding != null && !queryEmbedding.isEmpty()) {
-            String embeddingString = queryEmbedding.toString();
-            // Use pgvector cosine similarity search
-            return timelineEventRepository.findSimilarEvents(space.getTitle().getId(), currentSec + 15, embeddingString, 4);
+        // Attempt semantic retrieval with pgvector
+        try {
+            List<Double> queryEmbedding = geminiService.getEmbedding(query);
+            if (queryEmbedding != null && !queryEmbedding.isEmpty()) {
+                String embeddingString = queryEmbedding.toString();
+                // Use pgvector cosine similarity search
+                return timelineEventRepository.findSimilarEvents(space.getTitle().getId(), currentSec + 15, embeddingString, 4);
+            }
+        } catch (Exception e) {
+            log.warn("Semantic vector retrieval failed; falling back safely to chronological events: {}", e.getMessage());
         }
 
-        // Fallback to most recent 4 events if embedding fails
+        // Fallback to most recent 4 events if embedding fails or database query encounters an issue
         if (!candidates.isEmpty()) {
             int start = Math.max(0, candidates.size() - 4);
             return new ArrayList<>(candidates.subList(start, candidates.size()));

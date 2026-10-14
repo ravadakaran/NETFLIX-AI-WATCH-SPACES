@@ -4,7 +4,7 @@
 
 PostgreSQL is the persistence layer. The executable schema is versioned in
 `backend/src/main/resources/db/migration`; this document describes the schema
-after migrations V1–V6. Java mappings live in `entity/` and must be changed in
+after migrations V1–V7. Java mappings live in `entity/` and must be changed in
 the same pull request as the corresponding Flyway migration.
 
 `NarrativeDecision` is the persisted branch-history model, `NarrativeRound` is
@@ -46,7 +46,7 @@ referencing `users.id` and a composite primary key.
 ### `timeline_events`
 
 `id UUID PK`, `title_id UUID FK`, `ts_seconds INTEGER`, `event_type VARCHAR`,
-`payload TEXT` (JSON document), `embedding vector(3072)`, `created_at TIMESTAMP`.
+`payload TEXT` (JSON document), `embedding vector(768)`, `created_at TIMESTAMP`.
 
 Supported interactive types include `variation_point`, `prediction`,
 `prediction_point`, and `trivia_question`, in addition to informational

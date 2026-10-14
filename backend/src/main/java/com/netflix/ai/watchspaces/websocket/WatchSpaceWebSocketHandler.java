@@ -46,6 +46,7 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
     private final com.netflix.ai.watchspaces.service.RateLimitingService rateLimitingService;
     private final com.netflix.ai.watchspaces.service.ChatModerationService chatModerationService;
     private final com.netflix.ai.watchspaces.service.NarrativeService narrativeService;
+    private final com.netflix.ai.watchspaces.repository.WatchSpaceParticipantRepository participantRepository;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -87,6 +88,18 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
 
         boolean isHost = space.getHostUser().getId().equals(user.getId());
         sessionManager.addSession(watchSpaceIdStr, session, user.getId(), user.getDisplayName(), isHost);
+
+        // Ensure database participant record is marked active
+        try {
+            participantRepository.findByIdWatchSpaceIdAndIdUserId(space.getId(), user.getId()).ifPresent(p -> {
+                if (p.getLeftAt() != null) {
+                    p.setLeftAt(null);
+                    participantRepository.save(p);
+                }
+            });
+        } catch (Exception e) {
+            log.warn("Could not reactivate participant record on connect: {}", e.getMessage());
+        }
 
         int count = sessionManager.getParticipantCount(watchSpaceIdStr);
 
@@ -423,22 +436,32 @@ public class WatchSpaceWebSocketHandler extends TextWebSocketHandler {
         RoomSessionManager.SessionContext ctx = sessionManager.removeSession(watchSpaceIdStr, session.getId());
 
         if (ctx != null) {
-            int count = sessionManager.getParticipantCount(watchSpaceIdStr);
+            boolean userStillConnected = sessionManager.hasUserSession(watchSpaceIdStr, ctx.userId);
+            if (!userStillConnected) {
+                try {
+                    UUID spaceUuid = UUID.fromString(watchSpaceIdStr);
+                    watchSpaceService.leaveWatchSpace(spaceUuid, ctx.userId);
+                } catch (Exception e) {
+                    log.warn("Failed to mark participant as left in DB for {}: {}", watchSpaceIdStr, e.getMessage());
+                }
 
-            WsEnvelope presenceEnv = WsEnvelope.builder()
-                    .event("room.presence.update")
-                    .watchSpaceId(watchSpaceIdStr)
-                    .payload(PresencePayload.builder()
-                            .participantId(ctx.userId.toString())
-                            .displayName(ctx.displayName)
-                            .action("left")
-                            .participantCount(count)
-                            .build())
-                    .ts(System.currentTimeMillis())
-                    .build();
-            sessionManager.broadcast(watchSpaceIdStr, presenceEnv);
+                int count = sessionManager.getParticipantCount(watchSpaceIdStr);
 
-            log.info("User {} disconnected from space {}, remaining: {}", ctx.displayName, watchSpaceIdStr, count);
+                WsEnvelope presenceEnv = WsEnvelope.builder()
+                        .event("room.presence.update")
+                        .watchSpaceId(watchSpaceIdStr)
+                        .payload(PresencePayload.builder()
+                                .participantId(ctx.userId.toString())
+                                .displayName(ctx.displayName)
+                                .action("left")
+                                .participantCount(count)
+                                .build())
+                        .ts(System.currentTimeMillis())
+                        .build();
+                sessionManager.broadcast(watchSpaceIdStr, presenceEnv);
+
+                log.info("User {} disconnected from space {}, remaining: {}", ctx.displayName, watchSpaceIdStr, count);
+            }
         }
         } finally {
             MDC.remove("correlationId");
