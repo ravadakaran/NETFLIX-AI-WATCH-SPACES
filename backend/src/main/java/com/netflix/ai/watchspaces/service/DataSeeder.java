@@ -264,6 +264,22 @@ public class DataSeeder implements CommandLineRunner {
                 .build();
         demoSpace = watchSpaceRepository.save(demoSpace);
 
+        // 6. Compute and persist title embeddings for pgvector recommendation scoring
+        log.info("Computing title embeddings for recommendation engine...");
+        List<Title> allTitles = List.of(cyberpunk, cosmos, shadow, neonHorizon, echoes);
+        for (Title title : allTitles) {
+            try {
+                String embeddingInput = title.getName() + " — " + title.getGenre() + ". " + title.getDescription();
+                List<Double> embedding = geminiService.getEmbedding(embeddingInput);
+                if (embedding != null && !embedding.isEmpty()) {
+                    titleRepository.updateEmbedding(title.getId(), embedding.toString());
+                    log.info("  ✓ Embedded title: {}", title.getName());
+                }
+            } catch (Exception e) {
+                log.warn("  ✗ Failed to embed title '{}': {}", title.getName(), e.getMessage());
+            }
+        }
+
         log.info("Database successfully seeded! Demo Watch Space available at code 'NX-DEMO'.");
     }
 

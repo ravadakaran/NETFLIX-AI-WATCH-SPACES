@@ -14,7 +14,7 @@ const screens = [
 
 const outDir = path.join(__dirname, 'stitch_screens_nocturne');
 if (!fs.existsSync(outDir)) {
-  fs.mkdirSync(outDir, { recursive: true });
+  fs.mkdirSync(outDir, { recursive: true })
 }
 
 function download(item) {

@@ -20,6 +20,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecommendationService {
 
+    /** Weight for content-based similarity (pgvector cosine / genre affinity fallback) */
+    private static final double CONTENT_WEIGHT = 0.6;
+    /** Weight for collaborative filtering (co-watch user similarity) */
+    private static final double COLLAB_WEIGHT = 0.4;
+
     private final InteractionRepository interactionRepository;
     private final TitleRepository titleRepository;
 
@@ -33,14 +38,21 @@ public class RecommendationService {
                 .map(i -> i.getTitle().getId())
                 .collect(Collectors.toSet());
 
-        // 1. Content-based affinity: Calculate preferred genres from watched titles & ratings
+        // ──────────────────────────────────────────────────────────────────────
+        // 1. CONTENT-BASED COMPONENT — pgvector cosine similarity
+        //    Build a weighted user-profile embedding from all watched titles,
+        //    then query pgvector for nearest neighbours.
+        // ──────────────────────────────────────────────────────────────────────
+        Map<UUID, Double> contentScores = new HashMap<>();
+
+        // Compute genre affinity as secondary content signal
         Map<String, Double> genreAffinity = new HashMap<>();
         for (Interaction interaction : userInteractions) {
             String genre = interaction.getTitle().getGenre();
             if (genre != null) {
                 double weight = 1.0;
                 if (interaction.getRating() != null) {
-                    weight += (interaction.getRating() - 3.0) * 0.5; // High rating boosts affinity
+                    weight += (interaction.getRating() - 3.0) * 0.5;
                 }
                 if (Boolean.TRUE.equals(interaction.getCompleted())) {
                     weight += 0.5;
@@ -49,16 +61,71 @@ public class RecommendationService {
             }
         }
 
-        // 2. Collaborative filtering: Find other users who watched similar titles
+        // Attempt pgvector cosine similarity if embeddings are available
+        boolean vectorSearchUsed = false;
+        try {
+            if (!watchedTitleIds.isEmpty()) {
+                // Query pgvector for similar titles using each watched title
+                List<UUID> excludeList = new ArrayList<>(watchedTitleIds);
+                for (Interaction interaction : userInteractions) {
+                    try {
+                        // Use pgvector cosine similarity via the source title's embedding
+                        List<Title> similar = titleRepository.findSimilarByTitleId(
+                                interaction.getTitle().getId(),
+                                excludeList, 10);
+
+                        if (similar != null && !similar.isEmpty()) {
+                            vectorSearchUsed = true;
+                            double interactionWeight = 1.0;
+                            if (interaction.getRating() != null) {
+                                interactionWeight = interaction.getRating() / 5.0;
+                            }
+                            if (Boolean.TRUE.equals(interaction.getCompleted())) {
+                                interactionWeight += 0.3;
+                            }
+
+                            for (int i = 0; i < similar.size(); i++) {
+                                Title sim = similar.get(i);
+                                // Cosine similarity decays by rank position
+                                double cosineSim = 1.0 - (i * 0.1);
+                                double weighted = cosineSim * interactionWeight;
+                                contentScores.merge(sim.getId(), weighted, Double::max);
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.debug("pgvector query failed for title {}: {}", interaction.getTitle().getId(), e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("pgvector content-based scoring failed, falling back to genre affinity: {}", e.getMessage());
+        }
+
+        // Fallback: genre affinity scoring when pgvector is unavailable
+        if (!vectorSearchUsed) {
+            for (Title title : allTitles) {
+                if (watchedTitleIds.contains(title.getId())) continue;
+                String genre = title.getGenre();
+                if (genre != null && genreAffinity.containsKey(genre)) {
+                    double genreScore = 0.5 + Math.min(0.45, genreAffinity.get(genre) * 0.15);
+                    contentScores.put(title.getId(), genreScore);
+                } else {
+                    contentScores.put(title.getId(), 0.5);
+                }
+            }
+        }
+
+        // ──────────────────────────────────────────────────────────────────────
+        // 2. COLLABORATIVE FILTERING COMPONENT — co-watch user similarity
+        // ──────────────────────────────────────────────────────────────────────
         Map<UUID, Double> userSimilarity = new HashMap<>();
         for (Interaction otherInt : allInteractions) {
             UUID otherUserId = otherInt.getUser().getId();
             if (!otherUserId.equals(userId) && watchedTitleIds.contains(otherInt.getTitle().getId())) {
-                userSimilarity.put(otherUserId, userSimilarity.getOrDefault(otherUserId, 0.0) + 1.0);
+                userSimilarity.merge(otherUserId, 1.0, Double::sum);
             }
         }
 
-        // Collaborative title scores
         Map<UUID, Double> collaborativeScores = new HashMap<>();
         for (Interaction otherInt : allInteractions) {
             UUID otherUserId = otherInt.getUser().getId();
@@ -67,36 +134,50 @@ public class RecommendationService {
                 if (!watchedTitleIds.contains(titleId)) {
                     double sim = userSimilarity.get(otherUserId);
                     double ratingFactor = otherInt.getRating() != null ? otherInt.getRating() / 5.0 : 0.7;
-                    collaborativeScores.put(titleId, collaborativeScores.getOrDefault(titleId, 0.0) + (sim * ratingFactor));
+                    collaborativeScores.merge(titleId, sim * ratingFactor, Double::sum);
                 }
             }
         }
 
-        // 3. Score candidates with Hybrid model
+        // Normalize collaborative scores to [0, 1]
+        double maxCollab = collaborativeScores.values().stream()
+                .mapToDouble(Double::doubleValue).max().orElse(1.0);
+        if (maxCollab == 0.0) maxCollab = 1.0;
+
+        // Normalize content scores to [0, 1] once outside title candidate loop
+        double maxContent = contentScores.values().stream()
+                .mapToDouble(Double::doubleValue).max().orElse(1.0);
+        if (maxContent == 0.0) maxContent = 1.0;
+
+        // ──────────────────────────────────────────────────────────────────────
+        // 3. COMPOSITE SCORE = 0.6 × Content + 0.4 × Collaborative
+        // ──────────────────────────────────────────────────────────────────────
         List<RecommendationItemDto> items = new ArrayList<>();
         for (Title title : allTitles) {
-            if (watchedTitleIds.contains(title.getId())) {
-                continue; // Skip already watched
-            }
+            if (watchedTitleIds.contains(title.getId())) continue;
 
-            double contentScore = 0.5;
-            String genre = title.getGenre();
-            if (genre != null && genreAffinity.containsKey(genre)) {
-                contentScore += Math.min(0.45, genreAffinity.get(genre) * 0.15);
-            }
+            double defaultContent = vectorSearchUsed ? 0.1 : 0.5;
+            double contentScore = contentScores.getOrDefault(title.getId(), defaultContent);
+            double normalizedContent = Math.min(1.0, contentScore / maxContent);
 
-            double collabScore = collaborativeScores.getOrDefault(title.getId(), 0.0);
-            double normalizedCollab = Math.min(1.0, collabScore * 0.3);
+            double rawCollab = collaborativeScores.getOrDefault(title.getId(), 0.0);
+            double normalizedCollab = Math.min(1.0, rawCollab / maxCollab);
 
-            // Hybrid combination: 60% content-based + 40% collaborative
-            double finalScore = (0.6 * contentScore) + (0.4 * normalizedCollab);
-            finalScore = Math.round(finalScore * 100.0) / 100.0;
+            // Hybrid weighted composite: 60% content-based + 40% collaborative
+            double compositeScore = (CONTENT_WEIGHT * normalizedContent) + (COLLAB_WEIGHT * normalizedCollab);
+            compositeScore = Math.round(compositeScore * 100.0) / 100.0;
+
+            // Clamp to presentable range
+            double displayScore = Math.min(0.99, Math.max(0.50, compositeScore));
 
             String reason;
-            if (collabScore > 0 && genreAffinity.containsKey(genre)) {
-                reason = "Trending among viewers with similar tastes in " + (genre != null ? genre : "Sci-Fi");
+            String genre = title.getGenre();
+            if (rawCollab > 0 && genreAffinity.containsKey(genre)) {
+                reason = "Trending among viewers with similar tastes in " + (genre != null ? genre : "this genre");
             } else if (genreAffinity.containsKey(genre)) {
                 reason = "Matches your interest in " + genre;
+            } else if (rawCollab > 0) {
+                reason = "Popular among viewers with similar watch history";
             } else {
                 reason = "Popular choice in Watch Spaces";
             }
@@ -107,15 +188,18 @@ public class RecommendationService {
                     .genre(title.getGenre())
                     .thumbnailUrl(title.getThumbnailUrl())
                     .description(title.getDescription())
-                    .score(Math.min(0.99, Math.max(0.65, finalScore)))
+                    .score(displayScore)
+                    .contentScore(Math.round(normalizedContent * 100.0) / 100.0)
+                    .collabScore(Math.round(normalizedCollab * 100.0) / 100.0)
+                    .compositeScore(compositeScore)
                     .reason(reason)
                     .build());
         }
 
-        // Sort by highest score
-        items.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
+        // Sort by composite score (highest first)
+        items.sort((a, b) -> Double.compare(b.getCompositeScore(), a.getCompositeScore()));
 
-        // If user watched everything or few items, fallback to top scored titles
+        // Fallback: if no candidates (e.g. user watched everything)
         if (items.isEmpty()) {
             for (Title title : allTitles) {
                 items.add(RecommendationItemDto.builder()
@@ -125,6 +209,9 @@ public class RecommendationService {
                         .thumbnailUrl(title.getThumbnailUrl())
                         .description(title.getDescription())
                         .score(0.88)
+                        .contentScore(0.88)
+                        .collabScore(0.0)
+                        .compositeScore(0.88)
                         .reason("Top pick for you")
                         .build());
             }

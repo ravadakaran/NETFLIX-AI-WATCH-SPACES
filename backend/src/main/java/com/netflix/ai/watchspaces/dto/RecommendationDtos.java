@@ -22,7 +22,10 @@ public class RecommendationDtos {
         private String genre;
         private String thumbnailUrl;
         private String description;
-        private double score;
+        private double score;           // Final composite score (kept for backward compat)
+        private double contentScore;    // Content-based similarity component (0.0–1.0)
+        private double collabScore;     // Collaborative filtering component (0.0–1.0)
+        private double compositeScore;  // Weighted composite: 0.6*content + 0.4*collab
         private String reason;
     }
 

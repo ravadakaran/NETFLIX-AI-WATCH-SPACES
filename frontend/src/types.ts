@@ -206,6 +206,9 @@ export interface RecommendationItem {
   thumbnailUrl: string;
   description: string;
   score: number;
+  contentScore?: number;
+  collabScore?: number;
+  compositeScore?: number;
   reason: string;
 }
 
